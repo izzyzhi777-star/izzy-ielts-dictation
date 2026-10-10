@@ -324,7 +324,13 @@
       if (state.sync.autoSync && state.sync.token && state.sync.gistId && !document.hidden) {
         syncCloudData(false);
       }
-    }, 120000);
+    }, 60000);
+    const syncWhenAvailable = () => {
+      if (state.sync.autoSync && state.sync.token && state.sync.gistId) syncCloudData(false);
+    };
+    window.addEventListener("focus", syncWhenAvailable);
+    window.addEventListener("online", syncWhenAvailable);
+    window.addEventListener("pageshow", syncWhenAvailable);
     window.addEventListener("pagehide", () => {
       if (state.sync.autoSync && state.sync.token && state.sync.gistId) syncCloudData(false);
     });
@@ -1059,6 +1065,7 @@
       if (state.listening.audio) {
         state.listening.audio.playbackRate = Number(dom.listeningSpeed.value) || 1;
         state.listening.audio.preservesPitch = true;
+        state.listening.audio.webkitPreservesPitch = true;
         updateMediaSessionPosition();
       }
     });
@@ -1449,6 +1456,7 @@
   }
 
   function startDateRound(customItems = null, source = "normal", modeOverride = null) {
+    primeAudioElement(state.audio);
     stopListening();
     stopPlayback();
     if (modeOverride) state.dateMode = modeOverride;
@@ -1634,6 +1642,7 @@
   }
 
   async function playCurrentDate() {
+    primeAudioElement(state.audio);
     stopListening();
     const item = currentDateItem();
     if (!item) return;
@@ -1674,6 +1683,7 @@
   }
 
   async function playWeekday(weekday) {
+    primeAudioElement(state.audio);
     stopListening();
     if (state.playingWeekday === weekday && state.playing) {
       stopPlayback();
@@ -1710,6 +1720,7 @@
   }
 
   function startRound(customNumbers = null, source = "normal") {
+    primeAudioElement(state.audio);
     stopListening();
     stopPlayback();
     const wrongRetry = source === "wrong" || (Array.isArray(customNumbers) && customNumbers.length > 0);
@@ -2019,6 +2030,7 @@
   }
 
   async function playCurrent() {
+    primeAudioElement(state.audio);
     stopListening();
     const number = currentNumber();
     if (number === null) return;
@@ -2043,6 +2055,7 @@
   }
 
   async function playDirectoryNumber(number) {
+    primeAudioElement(state.audio);
     stopListening();
     const key = `number:${number}`;
     if (state.playingWord === key && state.playing) {
@@ -2068,6 +2081,7 @@
   }
 
   async function playDirectoryText(text, key) {
+    primeAudioElement(state.audio);
     stopListening();
     if (state.playingWord === key && state.playing) {
       stopPlayback();
@@ -2159,6 +2173,10 @@
     let index = startIndex;
 
     while (token === state.listening.token && state.listening.started && !sleepExpired()) {
+      if (!state.listening.playing) {
+        await wait(300);
+        continue;
+      }
       const entry = playlist[index];
       if (!entry) break;
       setListeningTrack(index);
@@ -2319,6 +2337,26 @@
     }
   }
 
+  function primeAudioElement(audio) {
+    if (!audio || audio.__izzyPrimed) return;
+    try {
+      const url = URL.createObjectURL(neuralVoice.silence(0.024));
+      audio.loop = false;
+      audio.volume = 1;
+      audio.src = url;
+      const promise = audio.play();
+      const finish = () => {
+        audio.__izzyPrimed = true;
+        try { audio.pause(); } catch (error) { console.debug(error); }
+        URL.revokeObjectURL(url);
+      };
+      if (promise?.then) promise.then(finish).catch(() => URL.revokeObjectURL(url));
+      else finish();
+    } catch (error) {
+      console.debug("Audio unlock unavailable.", error);
+    }
+  }
+
   function playAudio(source, token) {
     return new Promise((resolve, reject) => {
       if (token !== state.token) {
@@ -2339,6 +2377,7 @@
       audio.onerror = () => finish(new Error(`Cannot play ${source}`));
       audio.playbackRate = settings.speed;
       audio.preservesPitch = true;
+      audio.webkitPreservesPitch = true;
       const resolved = new URL(source, window.location.href).href;
       if (audio.src !== resolved) {
         audio.src = source;
@@ -2360,6 +2399,7 @@
     if (state.audio) {
       state.audio.playbackRate = settings.speed;
       state.audio.preservesPitch = true;
+      state.audio.webkitPreservesPitch = true;
     }
   }
 
@@ -2533,7 +2573,7 @@
     state.listening.playlist = playlist;
     state.listening.index = 0;
     state.listening.currentTrack = -1;
-    state.listening.playing = false;
+    state.listening.playing = true;
     state.listening.preparing = true;
     state.listening.consumedSeconds = 0;
     state.listening.lastTime = 0;
@@ -2546,57 +2586,26 @@
     try {
       await preloadVoicePackForPlaylist(playlist, token, (completed, total) => {
         if (token !== state.listening.token || !total) return;
-        dom.listeningEnglish.textContent = "正在缓存内置 Sonia 语音";
-        dom.listeningChinese.textContent = `内置语音 ${completed} / ${total} · 首次会稍慢，之后立即播放`;
-        dom.listeningProgressBar.style.width = `${(completed / total) * 60}%`;
-        dom.listeningPlayButton.textContent = "缓存中";
-      });
-      if (token !== state.listening.token) return;
-      const prepared = await prepareListeningStream(playlist, token, (completed, total, entry) => {
-        if (token !== state.listening.token) return;
-        dom.listeningProgress.textContent = `${completed} / ${total}`;
-        dom.listeningEnglish.textContent = "正在生成连续音频";
-        dom.listeningChinese.textContent = `连续音频 ${completed} / ${total} · ${entry.english || entry.audioText || ""}`;
-        dom.listeningProgressBar.style.width = `${60 + (completed / total) * 40}%`;
+        dom.listeningEnglish.textContent = "正在准备 Sonia 语音";
+        dom.listeningChinese.textContent = `${completed} / ${total} · 首次会稍慢，之后立即播放`;
+        dom.listeningProgressBar.style.width = `${(completed / total) * 100}%`;
         dom.listeningPlayButton.textContent = "准备中";
       });
       if (token !== state.listening.token) return;
-      if (prepared.failed) throw new Error("Some neural voice segments failed");
-      state.listening.timeline = prepared.timeline;
-      state.listening.totalDuration = prepared.duration;
-      if (state.listening.audioUrl) URL.revokeObjectURL(state.listening.audioUrl);
-      state.listening.audioUrl = URL.createObjectURL(prepared.blob);
-      const audio = state.listening.audio;
-      audio.pause();
-      audio.loop = true;
-      audio.volume = 1;
-      audio.playbackRate = Number(dom.listeningSpeed.value) || 1;
-      audio.preservesPitch = true;
-      audio.src = state.listening.audioUrl;
-      audio.load();
       state.listening.preparing = false;
-      state.listening.playing = true;
-      state.listening.currentTrack = -1;
-      setListeningTrack(0);
-      renderListening();
-      await audio.play();
-      if (prepared.failed) {
-        dom.listeningChinese.textContent += ` · ${prepared.failed} 条语音暂时跳过`;
-      }
-    } catch (error) {
-      console.warn("Continuous neural stream unavailable; switching to resilient direct playback.", error);
-      if (token !== state.listening.token) return;
-      state.listening.preparing = false;
-      state.listening.directFallback = true;
-      state.listening.timeline = [];
-      state.listening.totalDuration = 0;
       state.listening.playing = true;
       state.listening.audio.loop = false;
       state.listening.audio.volume = 1;
-      dom.listeningEnglish.textContent = "正在播放";
-      dom.listeningChinese.textContent = "已启用备用流畅语音，手机仍在后台保持播放。";
+      state.listening.currentTrack = -1;
       renderListening();
       await playListeningSequentially(playlist, token, 0);
+    } catch (error) {
+      state.listening.preparing = false;
+      state.listening.playing = false;
+      console.error(error);
+      dom.listeningEnglish.textContent = "随身听暂时不可用";
+      dom.listeningChinese.textContent = "请重新点击开始；已缓存的 Sonia 语音不会丢失。";
+      renderListening();
     }
   }
 
@@ -2611,9 +2620,20 @@
   }
 
   function changeListeningIndex(offset) {
-    if (!state.listening.playlist.length || !state.listening.timeline.length) return;
+    if (!state.listening.playlist.length) return;
     const total = state.listening.playlist.length;
     const next = (state.listening.index + offset + total) % total;
+    if (!state.listening.timeline.length) {
+      const wasPlaying = state.listening.playing;
+      stopListeningAudio();
+      state.listening.playing = wasPlaying;
+      state.listening.audio.loop = false;
+      state.listening.audio.volume = 1;
+      const token = ++state.listening.token;
+      setListeningTrack(next);
+      if (wasPlaying) playListeningSequentially(state.listening.playlist, token, next);
+      return;
+    }
     const segment = state.listening.timeline[next];
     const audio = state.listening.audio;
     if (segment && Number.isFinite(audio.duration) && audio.duration > 0) {
@@ -2808,12 +2828,17 @@
 
   async function playRepeatedSpeech(text, repeat, token, options = {}) {
     const speechBlob = await getSpeechBlob(text, options);
-    const parts = [];
-    for (let index = 0; index < Math.max(1, repeat); index += 1) {
-      parts.push(speechBlob);
-      if (index < repeat - 1) parts.push(neuralVoice.silence(0.85));
+    const url = URL.createObjectURL(speechBlob);
+    try {
+      for (let index = 0; index < Math.max(1, repeat); index += 1) {
+        if (token !== state.token) return;
+        await playAudio(url, token);
+        if (token !== state.token) return;
+        if (index < repeat - 1) await wait(850);
+      }
+    } finally {
+      URL.revokeObjectURL(url);
     }
-    await playAudioBlob(neuralVoice.compose(parts), token);
   }
 
   function playListeningAudio(source, token) {
@@ -2836,6 +2861,7 @@
       audio.onerror = () => finish(new Error("Listening audio failed"));
       audio.playbackRate = Number(dom.listeningSpeed.value) || 1;
       audio.preservesPitch = true;
+      audio.webkitPreservesPitch = true;
       const resolved = new URL(source, window.location.href).href;
       if (audio.src !== resolved) {
         audio.src = source;
@@ -3246,6 +3272,7 @@
   }
 
   function startCustomPractice(items = null, source = "all") {
+    primeAudioElement(state.audio);
     const sourceItems = Array.isArray(items) ? items : state.customItems;
     if (!sourceItems.length) {
       if (source !== "hearing") switchTab("custom");
@@ -3275,6 +3302,7 @@
   }
 
   async function playCurrentCustom() {
+    primeAudioElement(state.audio);
     const item = currentCustomItem();
     if (!item) return;
     stopListening();
@@ -3697,6 +3725,7 @@
   }
 
   async function playWrongBookEntry(type, index) {
+    primeAudioElement(state.audio);
     const entry = type === "number"
       ? { key: `number:${state.wrongNumbers[index]}`, number: state.wrongNumbers[index] }
       : state.wrongDates[index];
