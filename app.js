@@ -1491,7 +1491,6 @@
   }
 
   function startDateRound(customItems = null, source = "normal", modeOverride = null) {
-    primeAudioElement(state.audio);
     stopListening();
     stopPlayback();
     if (modeOverride) state.dateMode = modeOverride;
@@ -1529,10 +1528,8 @@
     dom.dateUserAnswerRow.hidden = true;
     dom.dateEnglishRow.hidden = true;
     renderDateSession();
-    window.setTimeout(() => {
-      dom.dateAnswerInput.focus();
-      playCurrentDate();
-    }, 120);
+    dom.dateAnswerInput.focus();
+    playCurrentDate();
   }
 
   function currentDateItem() {
@@ -1657,7 +1654,7 @@
     dom.dateEnglishRow.hidden = true;
     renderDateSession();
     dom.dateAnswerInput.focus();
-    if (autoPlay) window.setTimeout(playCurrentDate, 150);
+    if (autoPlay) playCurrentDate();
   }
 
   function finishDateRound() {
@@ -1677,14 +1674,12 @@
   }
 
   async function playCurrentDate() {
-    primeAudioElement(state.audio);
     stopListening();
     const item = currentDateItem();
     if (!item) return;
     stopPlayback();
     const token = ++state.token;
     setPlaying(true);
-    await wait(50);
     try {
       dom.datePlayStatus.textContent = "正在生成流畅英式语音";
       await playRepeatedSpeech(item.audioText, settings.repeat, token);
@@ -1718,7 +1713,6 @@
   }
 
   async function playWeekday(weekday) {
-    primeAudioElement(state.audio);
     stopListening();
     if (state.playingWeekday === weekday && state.playing) {
       stopPlayback();
@@ -1755,7 +1749,6 @@
   }
 
   function startRound(customNumbers = null, source = "normal") {
-    primeAudioElement(state.audio);
     stopListening();
     stopPlayback();
     const wrongRetry = source === "wrong" || (Array.isArray(customNumbers) && customNumbers.length > 0);
@@ -1782,10 +1775,8 @@
     dom.result.classList.remove("is-wrong");
     dom.userAnswerRow.hidden = true;
     renderSession();
-    window.setTimeout(() => {
-      dom.answerInput.focus();
-      playCurrent();
-    }, 120);
+    dom.answerInput.focus();
+    playCurrent();
   }
 
   function generateRangeNumbers(range) {
@@ -2033,7 +2024,7 @@
     dom.userAnswerRow.hidden = true;
     renderSession();
     dom.answerInput.focus();
-    if (autoPlay) window.setTimeout(playCurrent, 150);
+    if (autoPlay) playCurrent();
   }
 
   function finishRound() {
@@ -2065,14 +2056,12 @@
   }
 
   async function playCurrent() {
-    primeAudioElement(state.audio);
     stopListening();
     const number = currentNumber();
     if (number === null) return;
     stopPlayback();
     const token = ++state.token;
     setPlaying(true);
-    await wait(50);
 
     try {
       dom.playStatus.textContent = "正在生成流畅英式语音";
@@ -2090,7 +2079,6 @@
   }
 
   async function playDirectoryNumber(number) {
-    primeAudioElement(state.audio);
     stopListening();
     const key = `number:${number}`;
     if (state.playingWord === key && state.playing) {
@@ -2116,7 +2104,6 @@
   }
 
   async function playDirectoryText(text, key) {
-    primeAudioElement(state.audio);
     stopListening();
     if (state.playingWord === key && state.playing) {
       stopPlayback();
@@ -2183,22 +2170,7 @@
   }
 
   async function playNumberAudio(number, token) {
-    try {
-      const blob = await getSpeechBlob(numberToEnglish(number), { number });
-      await playAudioBlob(blob, token);
-      return;
-    } catch (error) {
-      console.debug("Neural number audio unavailable.", error);
-    }
-    const chunks = splitNumberIntoSpeechChunks(number);
-    for (const chunk of chunks) {
-      if (token !== state.token) return;
-      try {
-        await playAudio(getYoudaoAudioUrl(chunk), token);
-      } catch (error) {
-        await speakEnglishFallback(chunk, token);
-      }
-    }
+    await playSmartText(numberToEnglish(number), token);
   }
 
   async function playListeningSequentially(playlist, token, startIndex = 0) {
@@ -2246,9 +2218,13 @@
   }
 
   async function playSmartListeningText(text, token) {
-    const immediateBlob = await getImmediateSpeechBlob(text);
-    if (immediateBlob) {
-      await playListeningAudioBlob(immediateBlob, token);
+    const immediate = getSyncSpeechSource(text);
+    if (immediate) {
+      try {
+        await playListeningAudio(immediate.source, token);
+      } finally {
+        if (immediate.revoke) URL.revokeObjectURL(immediate.source);
+      }
       return;
     }
     const warmup = warmNeuralSpeech(text);
@@ -2297,10 +2273,67 @@
     }
   }
 
+  function getSyncSpeechSource(text) {
+    const normalized = neuralVoice.normalizeText(text);
+    if (!normalized) return null;
+    const voiceEntry = state.voicePackIndex[normalized];
+    if (voiceEntry?.file) {
+      return { source: `audio/voice-pack/${voiceEntry.file}`, revoke: false };
+    }
+    const blob = state.audioBlobCache.get(`text:${normalized}`);
+    if (blob?.size) {
+      return { source: URL.createObjectURL(blob), revoke: true };
+    }
+    return null;
+  }
+
+  async function getImmediateSpeechBlob(text, options = {}) {
+    const normalized = neuralVoice.normalizeText(text);
+    if (!normalized) return null;
+    await state.voicePackPromise;
+    const voiceEntry = state.voicePackIndex[normalized];
+    const cacheKey = voiceEntry?.file ? `pack:${voiceEntry.file}` : `text:${normalized}`;
+    if (voiceEntry?.file || state.audioBlobCache.has(cacheKey)) {
+      return getSpeechBlob(normalized, options);
+    }
+    return null;
+  }
+
+  function warmNeuralSpeech(text, options = {}) {
+    return getSpeechBlob(text, options).catch((error) => {
+      console.debug("Sonia voice will be cached later.", error);
+      return null;
+    });
+  }
+
+  function speakBrowserText(text, rate, token, tokenScope = "main") {
+    const value = String(text || "").trim();
+    const currentToken = tokenScope === "listening" ? state.listening.token : state.token;
+    if (!value || !window.speechSynthesis || token !== currentToken) {
+      return Promise.reject(new Error("Browser speech unavailable"));
+    }
+    return new Promise((resolve, reject) => {
+      const utterance = new SpeechSynthesisUtterance(value);
+      const language = neuralVoice.containsChinese(value) ? "zh" : "en";
+      const voice = pickBrowserVoice(language);
+      if (voice) utterance.voice = voice;
+      utterance.lang = voice?.lang || (language === "zh" ? "zh-CN" : "en-GB");
+      utterance.rate = Number(rate) || 1;
+      utterance.pitch = 1;
+      utterance.onend = resolve;
+      utterance.onerror = (event) => reject(new Error(event.error || "Browser speech failed"));
+      window.speechSynthesis.speak(utterance);
+    });
+  }
+
   async function playSmartText(text, token) {
-    const immediateBlob = await getImmediateSpeechBlob(text);
-    if (immediateBlob) {
-      await playAudioBlob(immediateBlob, token);
+    const immediate = getSyncSpeechSource(text);
+    if (immediate) {
+      try {
+        await playAudio(immediate.source, token);
+      } finally {
+        if (immediate.revoke) URL.revokeObjectURL(immediate.source);
+      }
       return;
     }
     const warmup = warmNeuralSpeech(text);
@@ -2611,33 +2644,23 @@
     state.listening.timeline = [];
     state.listening.totalDuration = 0;
     state.listening.directFallback = false;
-    unlockListeningAudio();
+    state.listening.preparing = false;
+    state.listening.audio.loop = false;
+    state.listening.audio.volume = 1;
     configureSleepTimer();
     renderListening();
-    try {
-      await preloadVoicePackForPlaylist(playlist, token, (completed, total) => {
-        if (token !== state.listening.token || !total) return;
-        dom.listeningEnglish.textContent = "正在准备 Sonia 语音";
-        dom.listeningChinese.textContent = `${completed} / ${total} · 首次会稍慢，之后立即播放`;
-        dom.listeningProgressBar.style.width = `${(completed / total) * 100}%`;
-        dom.listeningPlayButton.textContent = "准备中";
-      });
+    playListeningSequentially(playlist, token, 0).catch((error) => {
       if (token !== state.listening.token) return;
-      state.listening.preparing = false;
-      state.listening.playing = true;
-      state.listening.audio.loop = false;
-      state.listening.audio.volume = 1;
-      state.listening.currentTrack = -1;
-      renderListening();
-      await playListeningSequentially(playlist, token, 0);
-    } catch (error) {
-      state.listening.preparing = false;
       state.listening.playing = false;
       console.error(error);
       dom.listeningEnglish.textContent = "随身听暂时不可用";
       dom.listeningChinese.textContent = "请重新点击开始；已缓存的 Sonia 语音不会丢失。";
       renderListening();
-    }
+    });
+    preloadVoicePackForPlaylist(playlist, token, (completed, total) => {
+      if (token !== state.listening.token || !total) return;
+      dom.listeningProgress.textContent = `缓存 ${completed} / ${total}`;
+    }).catch((error) => console.debug("Voice preload stopped.", error));
   }
 
   function toggleListeningPlayback() {
@@ -2858,18 +2881,17 @@
   }
 
   async function playRepeatedSpeech(text, repeat, token, options = {}) {
-    const immediateBlob = await getImmediateSpeechBlob(text, options);
-    if (immediateBlob) {
-      const url = URL.createObjectURL(immediateBlob);
+    const immediate = getSyncSpeechSource(text);
+    if (immediate) {
       try {
         for (let index = 0; index < Math.max(1, repeat); index += 1) {
           if (token !== state.token) return;
-          await playAudio(url, token);
+          await playAudio(immediate.source, token);
           if (token !== state.token) return;
           if (index < repeat - 1) await wait(850);
         }
       } finally {
-        URL.revokeObjectURL(url);
+        if (immediate.revoke) URL.revokeObjectURL(immediate.source);
       }
       return;
     }
@@ -3320,7 +3342,6 @@
   }
 
   function startCustomPractice(items = null, source = "all") {
-    primeAudioElement(state.audio);
     const sourceItems = Array.isArray(items) ? items : state.customItems;
     if (!sourceItems.length) {
       if (source !== "hearing") switchTab("custom");
@@ -3343,21 +3364,17 @@
     dom.customAnswerInput.value = "";
     dom.customResult.hidden = true;
     renderCustomSession();
-    window.setTimeout(() => {
-      dom.customAnswerInput.focus();
-      playCurrentCustom();
-    }, 120);
+    dom.customAnswerInput.focus();
+    playCurrentCustom();
   }
 
   async function playCurrentCustom() {
-    primeAudioElement(state.audio);
     const item = currentCustomItem();
     if (!item) return;
     stopListening();
     stopPlayback();
     const token = ++state.token;
     setPlaying(true);
-    await wait(50);
     try {
       dom.customPlayStatus.textContent = "正在播放即时英式女声，Sonia 语音会在后台缓存";
       await playRepeatedSpeech(item.text, settings.repeat, token);
@@ -3437,7 +3454,7 @@
     dom.customUserAnswerRow.hidden = true;
     renderCustomSession();
     dom.customAnswerInput.focus();
-    if (autoPlay) window.setTimeout(playCurrentCustom, 150);
+    if (autoPlay) playCurrentCustom();
   }
 
   function finishCustomRound() {
@@ -3773,7 +3790,6 @@
   }
 
   async function playWrongBookEntry(type, index) {
-    primeAudioElement(state.audio);
     const entry = type === "number"
       ? { key: `number:${state.wrongNumbers[index]}`, number: state.wrongNumbers[index] }
       : state.wrongDates[index];
