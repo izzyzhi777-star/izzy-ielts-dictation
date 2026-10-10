@@ -236,6 +236,8 @@
     copySyncCodeButton: $("copySyncCodeButton"),
     copySyncPackageButton: $("copySyncPackageButton"),
     connectFromClipboardButton: $("connectFromClipboardButton"),
+    copyVocabularyButton: $("copyVocabularyButton"),
+    importVocabularyButton: $("importVocabularyButton"),
     syncAutoToggle: $("syncAutoToggle"),
     syncStatus: $("syncStatus")
   };
@@ -1078,6 +1080,28 @@
         updateSyncStatus(`无法从剪贴板连接：${String(error.message || error).slice(0, 100)}`, true);
       }
     });
+    dom.copyVocabularyButton.addEventListener("click", async () => {
+      try {
+        const pack = `IZZY-IELTS-DATA|${JSON.stringify(buildSyncSnapshot())}`;
+        await navigator.clipboard.writeText(pack);
+        updateSyncStatus("全部词库已复制。请在 Safari 设置中点击“从剪贴板导入词库”。");
+      } catch (error) {
+        updateSyncStatus(`复制词库失败：${String(error.message || error).slice(0, 100)}`, true);
+      }
+    });
+    dom.importVocabularyButton.addEventListener("click", async () => {
+      try {
+        const text = (await navigator.clipboard.readText()).trim();
+        if (!text.startsWith("IZZY-IELTS-DATA|")) throw new Error("剪贴板中没有有效的词库数据");
+        const remote = JSON.parse(text.slice("IZZY-IELTS-DATA|".length));
+        const merged = mergeSyncSnapshots(buildSyncSnapshot(), remote);
+        applySyncSnapshot(merged);
+        updateSyncStatus(`词库导入完成 · 共 ${state.customItems.length} 条词汇`);
+      } catch (error) {
+        updateSyncStatus(`导入失败：${String(error.message || error).slice(0, 100)}`, true);
+      }
+    });
+
     dom.syncAutoToggle.addEventListener("change", () => {
       state.sync.autoSync = dom.syncAutoToggle.checked;
       saveSyncConfig();
