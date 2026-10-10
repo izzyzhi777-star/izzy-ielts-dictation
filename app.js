@@ -287,6 +287,14 @@
     if (state.sync.autoSync && state.sync.token && state.sync.gistId) {
       window.setTimeout(() => syncCloudData(false), 1200);
     }
+    window.setInterval(() => {
+      if (state.sync.autoSync && state.sync.token && state.sync.gistId && !document.hidden) {
+        syncCloudData(false);
+      }
+    }, 120000);
+    window.addEventListener("pagehide", () => {
+      if (state.sync.autoSync && state.sync.token && state.sync.gistId) syncCloudData(false);
+    });
   }
 
   async function loadVoicePackIndex() {
@@ -448,6 +456,24 @@
       wrongDates: state.wrongDates,
       hearingWrong: state.hearingWrong
     };
+  }
+
+  async function oneClickSync() {
+    const token = dom.githubTokenInput.value.trim();
+    if (!token) {
+      dom.githubTokenInput.focus();
+      updateSyncStatus("请先填写 GitHub Token，然后点击一键同步。", true);
+      return;
+    }
+    state.sync.token = token;
+    state.sync.gistId = dom.syncCodeInput.value.trim();
+    saveSyncConfig();
+    if (!state.sync.gistId) {
+      updateSyncStatus("首次使用，正在创建 PC / 手机同步空间…");
+      await createSyncSpace();
+      if (!state.sync.gistId) return;
+    }
+    await syncCloudData(true);
   }
 
   async function createSyncSpace() {
@@ -795,7 +821,7 @@
 
     dom.createSyncSpaceButton.addEventListener("click", createSyncSpace);
     dom.connectSyncSpaceButton.addEventListener("click", connectSyncSpace);
-    dom.syncNowButton.addEventListener("click", () => syncCloudData(true));
+    dom.syncNowButton.addEventListener("click", oneClickSync);
     dom.copySyncCodeButton.addEventListener("click", async () => {
       const code = dom.syncCodeInput.value.trim();
       if (!code) return;
@@ -851,6 +877,9 @@
     });
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) stopPlayback();
+      if (!document.hidden && state.sync.autoSync && state.sync.token && state.sync.gistId) {
+        syncCloudData(false);
+      }
     });
   }
 

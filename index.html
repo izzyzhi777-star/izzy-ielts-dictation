@@ -669,12 +669,17 @@
           <label for="syncCodeInput">同步码 / Gist ID</label>
           <input id="syncCodeInput" type="text" autocomplete="off" placeholder="创建后会生成，其他设备填写同一个">
         </div>
-        <div class="sync-actions">
-          <button class="primary-button" id="createSyncSpaceButton" type="button">创建同步空间</button>
-          <button class="secondary-button" id="connectSyncSpaceButton" type="button">连接同步码</button>
-          <button class="secondary-button" id="syncNowButton" type="button">立即同步</button>
-          <button class="text-button" id="copySyncCodeButton" type="button">复制同步码</button>
+        <div class="sync-actions sync-main-actions">
+          <button class="primary-button" id="syncNowButton" type="button">一键同步 PC / 手机</button>
         </div>
+        <details class="sync-advanced">
+          <summary>首次配对 / 高级设置</summary>
+          <div class="sync-actions">
+            <button class="secondary-button" id="createSyncSpaceButton" type="button">创建同步空间</button>
+            <button class="secondary-button" id="connectSyncSpaceButton" type="button">连接同步码</button>
+            <button class="text-button" id="copySyncCodeButton" type="button">复制同步码</button>
+          </div>
+        </details>
         <label class="sync-auto">
           <input id="syncAutoToggle" type="checkbox" checked>
           <span>修改后自动同步</span>

@@ -2321,3 +2321,28 @@ footer {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+
+.sync-main-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+.sync-main-actions .button {
+  width: 100%;
+  min-height: 46px;
+  font-size: 13px;
+}
+
+.sync-advanced {
+  margin-top: 12px;
+}
+
+.sync-advanced summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.sync-advanced .sync-actions {
+  margin-top: 10px;
+}
