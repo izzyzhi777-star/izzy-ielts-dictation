@@ -63,6 +63,7 @@
     dateOrderOptions: $("dateOrderOptions"),
     panels: Array.from(document.querySelectorAll("[data-panel]")),
     settingsButton: $("settingsButton"),
+    mobileSettingsButton: $("mobileSettingsButton"),
     settingsDrawer: $("drawerBackdrop"),
     closeSettingsButton: $("closeSettingsButton"),
     rangeButtons: Array.from(document.querySelectorAll("[data-range]")),
@@ -233,6 +234,8 @@
     connectSyncSpaceButton: $("connectSyncSpaceButton"),
     syncNowButton: $("syncNowButton"),
     copySyncCodeButton: $("copySyncCodeButton"),
+    copySyncPackageButton: $("copySyncPackageButton"),
+    connectFromClipboardButton: $("connectFromClipboardButton"),
     syncAutoToggle: $("syncAutoToggle"),
     syncStatus: $("syncStatus")
   };
@@ -876,6 +879,7 @@
       button.addEventListener("click", () => selectMode(button.dataset.mode));
     });
     dom.settingsButton.addEventListener("click", openSettings);
+    dom.mobileSettingsButton?.addEventListener("click", openSettings);
     dom.closeSettingsButton.addEventListener("click", closeSettings);
     dom.settingsDrawer.addEventListener("click", (event) => {
       if (event.target === dom.settingsDrawer) closeSettings();
@@ -1041,6 +1045,37 @@
         updateSyncStatus("同步码已复制，可发送到另一台设备输入。");
       } catch (error) {
         updateSyncStatus(`同步码：${code}`);
+      }
+    });
+    dom.copySyncPackageButton.addEventListener("click", async () => {
+      if (!state.sync.token || !state.sync.gistId) {
+        updateSyncStatus("请先在已有词汇的设备点击一键同步，再复制连接信息。", true);
+        return;
+      }
+      const pack = `IZZY-IELTS-SYNC|${state.sync.token}|${state.sync.gistId}`;
+      try {
+        await navigator.clipboard.writeText(pack);
+        updateSyncStatus("连接信息已复制。请在 Safari 的设置中点击“从剪贴板连接”。");
+      } catch (error) {
+        updateSyncStatus("浏览器未允许复制，请先点“复制同步码”，再手动填写 Token。", true);
+      }
+    });
+    dom.connectFromClipboardButton.addEventListener("click", async () => {
+      try {
+        const text = (await navigator.clipboard.readText()).trim();
+        if (!text.startsWith("IZZY-IELTS-SYNC|")) throw new Error("剪贴板中没有有效的连接信息");
+        const [, token, gistId] = text.split("|");
+        if (!token || !gistId) throw new Error("连接信息不完整");
+        dom.githubTokenInput.value = token;
+        dom.syncCodeInput.value = gistId;
+        state.sync.token = token;
+        state.sync.gistId = gistId;
+        state.sync.autoSync = true;
+        dom.syncAutoToggle.checked = true;
+        saveSyncConfig();
+        await syncCloudData(true);
+      } catch (error) {
+        updateSyncStatus(`无法从剪贴板连接：${String(error.message || error).slice(0, 100)}`, true);
       }
     });
     dom.syncAutoToggle.addEventListener("change", () => {
@@ -2211,24 +2246,42 @@
   }
 
   async function playSmartListeningText(text, token) {
-    if (state.listening.directFallback) {
-      await playFallbackSpeech(text, token);
+    const immediateBlob = await getImmediateSpeechBlob(text);
+    if (immediateBlob) {
+      await playListeningAudioBlob(immediateBlob, token);
       return;
     }
+    const warmup = warmNeuralSpeech(text);
     try {
-      const blob = await getSpeechBlob(text);
-      await playListeningAudioBlob(blob, token);
+      await speakBrowserText(text, Number(dom.listeningSpeed.value) || 1, token, "listening");
+      return;
     } catch (error) {
-      state.listening.directFallback = true;
-      console.warn("Switching this listening session to direct voice.", error);
-      await playFallbackSpeech(text, token);
+      console.debug("Browser listening voice unavailable.", error);
     }
+    const blob = await warmup;
+    if (blob) {
+      await playListeningAudioBlob(blob, token);
+      return;
+    }
+    await playFallbackSpeech(text, token);
   }
 
   async function playFallbackSpeech(text, token) {
     if (token !== state.listening.token) return;
     const value = String(text || "").trim();
     if (!value) return;
+    const warmup = warmNeuralSpeech(value);
+    try {
+      await speakBrowserText(value, Number(dom.listeningSpeed.value) || 1, token, "listening");
+      return;
+    } catch (error) {
+      console.debug("Browser listening fallback unavailable.", error);
+    }
+    const blob = await warmup;
+    if (blob) {
+      await playListeningAudioBlob(blob, token);
+      return;
+    }
     const language = neuralVoice.containsChinese(value) ? "zh" : "en";
     const sources = language === "en"
       ? [getBaiduTtsUrl(value, language), getYoudaoAudioUrl(value)]
@@ -2242,68 +2295,46 @@
         console.debug("Direct online voice unavailable.", error);
       }
     }
-    if (!window.speechSynthesis || token !== state.listening.token) return;
-    return new Promise((resolve) => {
-      const utterance = new SpeechSynthesisUtterance(value);
-      const voice = pickBrowserVoice(language);
-      if (voice) utterance.voice = voice;
-      utterance.lang = voice?.lang || (language === "zh" ? "zh-CN" : "en-GB");
-      utterance.rate = Number(dom.listeningSpeed.value) || 1;
-      utterance.onend = resolve;
-      utterance.onerror = resolve;
-      window.speechSynthesis.speak(utterance);
-    });
   }
 
   async function playSmartText(text, token) {
+    const immediateBlob = await getImmediateSpeechBlob(text);
+    if (immediateBlob) {
+      await playAudioBlob(immediateBlob, token);
+      return;
+    }
+    const warmup = warmNeuralSpeech(text);
     try {
-      const blob = await getSpeechBlob(text);
-      await playAudioBlob(blob, token);
+      await speakBrowserText(text, settings.speed, token);
       return;
     } catch (error) {
-      console.debug("Neural speech unavailable.", error);
+      console.debug("Browser speech unavailable; using cached neural voice.", error);
     }
-    const words = String(text).trim().split(/\s+/).filter(Boolean);
-    if (words.length <= 3) {
-      try {
-        await playAudio(getYoudaoAudioUrl(text), token);
-        return;
-      } catch (error) {
-        console.debug("Youdao speech unavailable.", error);
-      }
-    }
-    await speakEnglishFallback(text, token);
+    const blob = await warmup;
+    if (!blob) throw new Error("No speech audio available");
+    await playAudioBlob(blob, token);
   }
 
   async function speakEnglishFallback(text, token, options = {}) {
-    const currentToken = options.tokenScope === "listening" ? state.listening.token : state.token;
+    const tokenScope = options.tokenScope === "listening" ? "listening" : "main";
+    const currentToken = tokenScope === "listening" ? state.listening.token : state.token;
     if (token !== currentToken) return;
+    const warmup = warmNeuralSpeech(text);
     try {
-      const blob = await getSpeechBlob(text);
-      if (options.tokenScope === "listening") await playListeningAudioBlob(blob, token);
+      await speakBrowserText(text, options.rate ?? settings.speed, token, tokenScope);
+      return;
+    } catch (error) {
+      console.debug("Browser speech fallback unavailable.", error);
+    }
+    const blob = await warmup;
+    if (blob) {
+      if (tokenScope === "listening") await playListeningAudioBlob(blob, token);
       else await playAudioBlob(blob, token);
       return;
-    } catch (error) {
-      console.debug("Neural speech fallback unavailable.", error);
     }
-    try {
-      if (options.tokenScope === "listening") await playListeningAudio(getBaiduTtsUrl(text), token);
-      else await playAudio(getBaiduTtsUrl(text), token);
-      return;
-    } catch (error) {
-      console.debug("Baidu speech unavailable, using browser voice.", error);
-    }
-    if (!window.speechSynthesis || token !== currentToken) return;
-    return new Promise((resolve) => {
-      const utterance = new SpeechSynthesisUtterance(text);
-      const voice = pickBrowserVoice("en");
-      if (voice) utterance.voice = voice;
-      utterance.lang = voice?.lang || "en-GB";
-      utterance.rate = Number(options.rate ?? settings.speed) || 1;
-      utterance.onend = resolve;
-      utterance.onerror = resolve;
-      window.speechSynthesis.speak(utterance);
-    });
+    const fallback = neuralVoice.containsChinese(text) ? getBaiduTtsUrl(text, "zh") : getYoudaoAudioUrl(text);
+    if (tokenScope === "listening") await playListeningAudio(fallback, token);
+    else await playAudio(fallback, token);
   }
 
   function pickBrowserVoice(language) {
@@ -2827,17 +2858,34 @@
   }
 
   async function playRepeatedSpeech(text, repeat, token, options = {}) {
-    const speechBlob = await getSpeechBlob(text, options);
-    const url = URL.createObjectURL(speechBlob);
-    try {
-      for (let index = 0; index < Math.max(1, repeat); index += 1) {
-        if (token !== state.token) return;
-        await playAudio(url, token);
-        if (token !== state.token) return;
-        if (index < repeat - 1) await wait(850);
+    const immediateBlob = await getImmediateSpeechBlob(text, options);
+    if (immediateBlob) {
+      const url = URL.createObjectURL(immediateBlob);
+      try {
+        for (let index = 0; index < Math.max(1, repeat); index += 1) {
+          if (token !== state.token) return;
+          await playAudio(url, token);
+          if (token !== state.token) return;
+          if (index < repeat - 1) await wait(850);
+        }
+      } finally {
+        URL.revokeObjectURL(url);
       }
-    } finally {
-      URL.revokeObjectURL(url);
+      return;
+    }
+
+    const warmup = warmNeuralSpeech(text, options);
+    for (let index = 0; index < Math.max(1, repeat); index += 1) {
+      if (token !== state.token) return;
+      try {
+        await speakBrowserText(text, settings.speed, token);
+      } catch (error) {
+        const blob = await warmup;
+        if (!blob) throw error;
+        await playAudioBlob(blob, token);
+      }
+      if (token !== state.token) return;
+      if (index < repeat - 1) await wait(850);
     }
   }
 
@@ -3311,7 +3359,7 @@
     setPlaying(true);
     await wait(50);
     try {
-      dom.customPlayStatus.textContent = "正在生成流畅英式语音";
+      dom.customPlayStatus.textContent = "正在播放即时英式女声，Sonia 语音会在后台缓存";
       await playRepeatedSpeech(item.text, settings.repeat, token);
       if (token === state.token) {
         setPlaying(false);

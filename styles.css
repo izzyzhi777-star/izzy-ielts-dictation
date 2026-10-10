@@ -178,6 +178,10 @@ p {
   color: var(--ink);
 }
 
+.nav-settings-tab {
+  display: none;
+}
+
 .nav-badge {
   min-width: 22px;
   padding: 1px 5px;
@@ -1219,12 +1223,26 @@ footer {
   }
 
   .primary-nav {
+    justify-content: flex-start;
     margin-top: 16px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+
+  .primary-nav::-webkit-scrollbar {
+    display: none;
   }
 
   .nav-tab {
-    min-width: 0;
-    padding: 0 8px;
+    flex: 0 0 auto;
+    min-width: 82px;
+    padding: 0 10px;
+  }
+
+  .nav-settings-tab {
+    display: inline-flex;
+    color: var(--signal);
   }
 
   .tab-panel {
