@@ -2184,3 +2184,140 @@ footer {
     border-right: 0;
   }
 }
+
+.sync-group .setting-copy {
+  margin-bottom: 14px;
+}
+
+.sync-field {
+  display: grid;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.sync-field label {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.sync-field input {
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  font-size: 11px;
+}
+
+.sync-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.sync-actions .button {
+  min-height: 36px;
+  padding: 0 12px;
+  font-size: 11px;
+}
+
+.sync-auto {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  color: var(--ink-soft);
+  font-size: 11px;
+}
+
+.sync-auto input {
+  accent-color: var(--signal);
+}
+
+.sync-status {
+  margin-top: 12px;
+  padding: 10px;
+  background: var(--paper-soft);
+  color: var(--muted);
+  font-size: 10px;
+  overflow-wrap: anywhere;
+}
+
+.sync-token-link {
+  display: inline-block;
+  margin-top: 10px;
+  color: var(--signal);
+  font-size: 10px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.sync-group {
+  background: var(--paper-soft);
+}
+
+.sync-field {
+  display: grid;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.sync-field label {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.sync-field input {
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  font-size: 11px;
+}
+
+.sync-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.sync-actions .button {
+  min-height: 36px;
+  padding: 0 12px;
+  font-size: 11px;
+}
+
+.sync-auto {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  font-size: 11px;
+}
+
+.sync-auto input {
+  accent-color: var(--signal);
+}
+
+.sync-status {
+  margin-top: 12px;
+  padding: 10px;
+  background: var(--paper);
+  color: var(--muted);
+  font-size: 10px;
+  overflow-wrap: anywhere;
+}
+
+.sync-token-link {
+  display: inline-block;
+  margin-top: 10px;
+  color: var(--signal);
+  font-size: 10px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

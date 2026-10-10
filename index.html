@@ -656,6 +656,33 @@
         </div>
       </section>
 
+      <section class="setting-group sync-group">
+        <div class="setting-copy">
+          <h3>PC / 手机数据同步</h3>
+          <p>使用你自己的 GitHub 私密 Gist 同步。Token 只保存在当前设备，不会发送到其他服务器。</p>
+        </div>
+        <div class="sync-field">
+          <label for="githubTokenInput">GitHub Token</label>
+          <input id="githubTokenInput" type="password" autocomplete="off" placeholder="只填一次，需 gist 权限">
+        </div>
+        <div class="sync-field">
+          <label for="syncCodeInput">同步码 / Gist ID</label>
+          <input id="syncCodeInput" type="text" autocomplete="off" placeholder="创建后会生成，其他设备填写同一个">
+        </div>
+        <div class="sync-actions">
+          <button class="primary-button" id="createSyncSpaceButton" type="button">创建同步空间</button>
+          <button class="secondary-button" id="connectSyncSpaceButton" type="button">连接同步码</button>
+          <button class="secondary-button" id="syncNowButton" type="button">立即同步</button>
+          <button class="text-button" id="copySyncCodeButton" type="button">复制同步码</button>
+        </div>
+        <label class="sync-auto">
+          <input id="syncAutoToggle" type="checkbox" checked>
+          <span>修改后自动同步</span>
+        </label>
+        <div class="sync-status" id="syncStatus">尚未连接同步空间</div>
+        <a class="sync-token-link" href="https://github.com/settings/tokens/new?scopes=gist&description=IZZY-IELTS-SYNC" target="_blank" rel="noreferrer">在手机 GitHub 创建 gist Token</a>
+      </section>
+
       <div class="drawer-note">
         <strong>当前音频</strong>
         <p>13–19 与整十数字使用较慢的专属 WAV，其他数字使用标准 IELTS 英音语速。</p>

@@ -5,6 +5,7 @@
   const WRONG_KEY = "number-dictation-wrong-v2";
   const CUSTOM_KEY = "number-dictation-custom-v1";
   const HEARING_WRONG_KEY = "number-dictation-hearing-wrong-v1";
+  const SYNC_KEY = "izzy-ielts-sync-v1";
   const EBBINGHAUS_INTERVALS = [
     5 * 60 * 1000,
     30 * 60 * 1000,
@@ -216,13 +217,22 @@
     listeningRepeat: $("listeningRepeat"),
     listeningSpeed: $("listeningSpeed"),
     listeningInterval: $("listeningInterval"),
-    listeningSleep: $("listeningSleep")
+    listeningSleep: $("listeningSleep"),
+    githubTokenInput: $("githubTokenInput"),
+    syncCodeInput: $("syncCodeInput"),
+    createSyncSpaceButton: $("createSyncSpaceButton"),
+    connectSyncSpaceButton: $("connectSyncSpaceButton"),
+    syncNowButton: $("syncNowButton"),
+    copySyncCodeButton: $("copySyncCodeButton"),
+    syncAutoToggle: $("syncAutoToggle"),
+    syncStatus: $("syncStatus")
   };
 
   const settings = loadSettings();
   const loadedWrongData = loadWrongData();
   const loadedCustomItems = loadCustomItems();
   const loadedHearingWrong = loadHearingWrong();
+  const loadedSyncConfig = loadSyncConfig();
   const state = {
     activeTab: "dictation",
     range: "basic",
@@ -232,6 +242,12 @@
     customEditorId: null,
     customSession: createEmptyCustomSession(),
     hearingWrong: loadedHearingWrong,
+    sync: {
+      ...loadedSyncConfig,
+      inFlight: false,
+      timer: null,
+      applyingRemote: false
+    },
     session: createEmptySession(),
     dateMode: "phrase",
     dateSession: createEmptyDateSession(),
@@ -268,6 +284,9 @@
     bindEvents();
     loadVoicePackIndex();
     renderAll();
+    if (state.sync.autoSync && state.sync.token && state.sync.gistId) {
+      window.setTimeout(() => syncCloudData(false), 1200);
+    }
   }
 
   async function loadVoicePackIndex() {
@@ -300,6 +319,7 @@
     } catch (error) {
       console.warn("Could not save settings.", error);
     }
+    scheduleCloudSync();
   }
 
   function loadWrongData() {
@@ -331,6 +351,7 @@
     } catch (error) {
       console.warn("Could not save wrong book.", error);
     }
+    scheduleCloudSync();
   }
 
   function loadCustomItems() {
@@ -361,6 +382,7 @@
     } catch (error) {
       console.warn("Could not save custom vocabulary.", error);
     }
+    scheduleCloudSync();
   }
 
   function saveHearingWrong() {
@@ -369,6 +391,221 @@
     } catch (error) {
       console.warn("Could not save hearing wrong book.", error);
     }
+    scheduleCloudSync();
+  }
+
+  function loadSyncConfig() {
+    try {
+      const raw = localStorage.getItem(SYNC_KEY);
+      const parsed = raw ? JSON.parse(raw) : {};
+      return {
+        token: String(parsed.token || ""),
+        gistId: String(parsed.gistId || ""),
+        autoSync: parsed.autoSync !== false,
+        lastSyncAt: parsed.lastSyncAt ? Number(parsed.lastSyncAt) : null
+      };
+    } catch (error) {
+      return { token: "", gistId: "", autoSync: true, lastSyncAt: null };
+    }
+  }
+
+  function saveSyncConfig() {
+    try {
+      localStorage.setItem(SYNC_KEY, JSON.stringify({
+        token: state.sync.token,
+        gistId: state.sync.gistId,
+        autoSync: state.sync.autoSync,
+        lastSyncAt: state.sync.lastSyncAt
+      }));
+    } catch (error) {
+      console.warn("Could not save sync config.", error);
+    }
+  }
+
+  function scheduleCloudSync() {
+    if (!state.sync.autoSync || state.sync.applyingRemote || !state.sync.token || !state.sync.gistId) return;
+    if (state.sync.timer) window.clearTimeout(state.sync.timer);
+    state.sync.timer = window.setTimeout(() => syncCloudData(false), 1800);
+  }
+
+  function syncHeaders() {
+    return {
+      "Accept": "application/vnd.github+json",
+      "Authorization": `Bearer ${state.sync.token}`,
+      "Content-Type": "application/json",
+      "X-GitHub-Api-Version": "2022-11-28"
+    };
+  }
+
+  function buildSyncSnapshot() {
+    return {
+      version: 1,
+      app: "IZZY IELTS-DICTATION",
+      updatedAt: Date.now(),
+      settings: { ...settings },
+      customItems: state.customItems,
+      wrongNumbers: state.wrongNumbers,
+      wrongDates: state.wrongDates,
+      hearingWrong: state.hearingWrong
+    };
+  }
+
+  async function createSyncSpace() {
+    const token = dom.githubTokenInput.value.trim();
+    if (!token) {
+      dom.githubTokenInput.focus();
+      updateSyncStatus("请先填写 GitHub Token", true);
+      return;
+    }
+    state.sync.token = token;
+    state.sync.gistId = "";
+    updateSyncStatus("正在创建同步空间…");
+    try {
+      const response = await fetch("https://api.github.com/gists", {
+        method: "POST",
+        headers: syncHeaders(),
+        body: JSON.stringify({
+          description: "IZZY IELTS-DICTATION Sync",
+          public: false,
+          files: {
+            "izzy-sync.json": {
+              content: JSON.stringify(buildSyncSnapshot(), null, 2)
+            }
+          }
+        })
+      });
+      if (!response.ok) throw new Error(await response.text());
+      const gist = await response.json();
+      state.sync.gistId = gist.id;
+      saveSyncConfig();
+      dom.syncCodeInput.value = gist.id;
+      state.sync.lastSyncAt = Date.now();
+      updateSyncStatus("同步空间已创建，可在另一台设备输入同步码连接。");
+    } catch (error) {
+      updateSyncStatus(`创建失败：${String(error.message || error).slice(0, 120)}`, true);
+    }
+  }
+
+  async function connectSyncSpace() {
+    const token = dom.githubTokenInput.value.trim();
+    const gistId = dom.syncCodeInput.value.trim();
+    if (!token || !gistId) {
+      updateSyncStatus("Token 和同步码都不能为空", true);
+      return;
+    }
+    state.sync.token = token;
+    state.sync.gistId = gistId;
+    saveSyncConfig();
+    await syncCloudData(true);
+  }
+
+  async function syncCloudData(manual = true) {
+    if (state.sync.inFlight) return;
+    if (!state.sync.token || !state.sync.gistId) {
+      if (manual) updateSyncStatus("请先创建同步空间，或输入另一台设备的同步码连接。", true);
+      return;
+    }
+    state.sync.inFlight = true;
+    updateSyncStatus("正在同步数据…");
+    try {
+      const response = await fetch(`https://api.github.com/gists/${state.sync.gistId}`, {
+        headers: syncHeaders(),
+        cache: "no-store"
+      });
+      if (!response.ok) throw new Error(await response.text());
+      const gist = await response.json();
+      const file = gist.files?.["izzy-sync.json"] || Object.values(gist.files || {})[0];
+      const remote = file?.content ? JSON.parse(file.content) : null;
+      const merged = mergeSyncSnapshots(buildSyncSnapshot(), remote);
+      applySyncSnapshot(merged);
+      await writeSyncSnapshot(merged);
+      state.sync.lastSyncAt = Date.now();
+      saveSyncConfig();
+      updateSyncStatus(`同步完成 · ${new Date().toLocaleTimeString("zh-CN")}`);
+    } catch (error) {
+      updateSyncStatus(`同步失败：${String(error.message || error).slice(0, 120)}`, true);
+    } finally {
+      state.sync.inFlight = false;
+    }
+  }
+
+  async function writeSyncSnapshot(snapshot) {
+    const response = await fetch(`https://api.github.com/gists/${state.sync.gistId}`, {
+      method: "PATCH",
+      headers: syncHeaders(),
+      body: JSON.stringify({
+        files: { "izzy-sync.json": { content: JSON.stringify(snapshot, null, 2) } }
+      })
+    });
+    if (!response.ok) throw new Error(await response.text());
+  }
+
+  function mergeSyncSnapshots(local, remote) {
+    if (!remote) return local;
+    const newer = Number(remote.updatedAt || 0) > Number(local.updatedAt || 0);
+    const mergeById = (a = [], b = [], dateField = "updatedAt") => {
+      const map = new Map();
+      [...a, ...b].forEach((item) => {
+        if (!item?.id) return;
+        const current = map.get(item.id);
+        const currentTime = Number(current?.[dateField] || current?.createdAt || 0);
+        const nextTime = Number(item?.[dateField] || item?.createdAt || 0);
+        if (!current || nextTime >= currentTime) map.set(item.id, item);
+      });
+      return Array.from(map.values());
+    };
+    const mergeDateWrong = (a = [], b = []) => {
+      const map = new Map();
+      [...a, ...b].forEach((item) => {
+        if (!item?.key) return;
+        const old = map.get(item.key);
+        if (!old || Number(item.createdAt || 0) >= Number(old.createdAt || 0)) map.set(item.key, item);
+      });
+      return Array.from(map.values());
+    };
+    return {
+      version: 1,
+      updatedAt: Date.now(),
+      settings: newer ? { ...local.settings, ...remote.settings } : local.settings,
+      customItems: mergeById(local.customItems, remote.customItems),
+      hearingWrong: mergeById(local.hearingWrong, remote.hearingWrong, "lastReviewedAt"),
+      wrongNumbers: Array.from(new Set([...(local.wrongNumbers || []), ...(remote.wrongNumbers || [])])).sort((a, b) => a - b),
+      wrongDates: mergeDateWrong(local.wrongDates, remote.wrongDates)
+    };
+  }
+
+  function applySyncSnapshot(snapshot) {
+    if (!snapshot) return;
+    state.sync.applyingRemote = true;
+    Object.assign(settings, snapshot.settings || {});
+    state.customItems = snapshot.customItems || [];
+    state.hearingWrong = snapshot.hearingWrong || [];
+    state.wrongNumbers = snapshot.wrongNumbers || [];
+    state.wrongDates = snapshot.wrongDates || [];
+    saveSettings();
+    saveCustomItems();
+    saveHearingWrong();
+    saveWrongData();
+    state.sync.applyingRemote = false;
+    renderAll();
+  }
+
+  function updateSyncStatus(message, isError = false) {
+    if (!dom.syncStatus) return;
+    dom.syncStatus.textContent = message;
+    dom.syncStatus.style.color = isError ? "var(--signal)" : "var(--muted)";
+  }
+
+  function renderSyncStatus() {
+    if (!dom.githubTokenInput) return;
+    dom.githubTokenInput.value = state.sync.token || "";
+    dom.syncCodeInput.value = state.sync.gistId || "";
+    dom.syncAutoToggle.checked = state.sync.autoSync !== false;
+    updateSyncStatus(
+      state.sync.gistId
+        ? `已连接同步码 ${state.sync.gistId.slice(0, 10)}…${state.sync.lastSyncAt ? ` · 上次同步 ${new Date(state.sync.lastSyncAt).toLocaleTimeString("zh-CN")}` : ""}`
+        : "尚未连接同步空间"
+    );
   }
 
   function createEmptyCustomSession() {
@@ -555,6 +792,25 @@
     dom.reviewAllWordsButton.addEventListener("click", () => startHearingReview("all"));
     dom.customList.addEventListener("click", handleCustomListClick);
     dom.hearingWrongList.addEventListener("click", handleHearingWrongClick);
+
+    dom.createSyncSpaceButton.addEventListener("click", createSyncSpace);
+    dom.connectSyncSpaceButton.addEventListener("click", connectSyncSpace);
+    dom.syncNowButton.addEventListener("click", () => syncCloudData(true));
+    dom.copySyncCodeButton.addEventListener("click", async () => {
+      const code = dom.syncCodeInput.value.trim();
+      if (!code) return;
+      try {
+        await navigator.clipboard.writeText(code);
+        updateSyncStatus("同步码已复制，可发送到另一台设备输入。");
+      } catch (error) {
+        updateSyncStatus(`同步码：${code}`);
+      }
+    });
+    dom.syncAutoToggle.addEventListener("change", () => {
+      state.sync.autoSync = dom.syncAutoToggle.checked;
+      saveSyncConfig();
+      if (state.sync.autoSync) scheduleCloudSync();
+    });
 
     dom.startListeningButton.addEventListener("click", startListening);
     dom.listeningPlayButton.addEventListener("click", toggleListeningPlayback);
