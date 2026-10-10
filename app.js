@@ -1190,7 +1190,7 @@
     setPlaying(true);
     renderWeekdays();
     try {
-      await playAudio(getTextAudioSource(weekday), token);
+      await playSmartText(weekday, token);
     } catch (error) {
       await speakEnglishFallback(weekday, token);
     } finally {
@@ -1590,7 +1590,7 @@
     setPlaying(true);
     renderWordDirectory();
     try {
-      await playAudio(getTextAudioSource(text), token);
+      await playSmartText(text, token);
     } catch (error) {
       await speakEnglishFallback(text, token);
     } finally {
@@ -1602,12 +1602,94 @@
     }
   }
 
+  function getYoudaoAudioUrl(text) {
+    const params = new URLSearchParams({ audio: text, type: "2" });
+    return `https://dict.youdao.com/dictvoice?${params.toString()}`;
+  }
+
+  function splitNumberIntoSpeechChunks(number) {
+    const value = Number(number);
+    if (value < 100) return [numberToEnglish(value)];
+    const chunks = [];
+    let remaining = value;
+    const scales = [[1000000000, "billion"], [1000000, "million"], [1000, "thousand"]];
+    scales.forEach(([scale, label]) => {
+      if (remaining < scale) return;
+      const count = Math.floor(remaining / scale);
+      const parts = splitUnderHundredForSpeech(count);
+      parts[parts.length - 1] = `${parts[parts.length - 1]} ${label}`;
+      chunks.push(...parts);
+      remaining %= scale;
+    });
+    if (remaining > 0) chunks.push(...splitUnderHundredForSpeech(remaining));
+    return chunks.filter(Boolean);
+  }
+
+  function splitUnderHundredForSpeech(number) {
+    const value = Number(number);
+    if (value < 100) return [numberToEnglish(value)];
+    const hundreds = Math.floor(value / 100);
+    const remainder = value % 100;
+    if (!remainder) return [`${numberToEnglish(hundreds)} hundred`];
+    return [`${numberToEnglish(hundreds)} hundred`, numberToEnglish(remainder)];
+  }
+
   async function playNumberAudio(number, token) {
     try {
       await playAudio(getAudioSource(number), token);
+      return;
     } catch (error) {
-      await speakEnglishFallback(numberToEnglish(number), token);
+      // The static GitHub Pages build has no local speech API.
     }
+    const chunks = splitNumberIntoSpeechChunks(number);
+    for (const chunk of chunks) {
+      if (token !== state.token) return;
+      try {
+        await playAudio(getYoudaoAudioUrl(chunk), token);
+      } catch (error) {
+        await speakEnglishFallback(chunk, token);
+      }
+    }
+  }
+
+  async function playSmartListeningText(text, token) {
+    try {
+      await playListeningAudio(getTextAudioSource(text), token);
+      return;
+    } catch (error) {
+      const words = String(text).trim().split(/\s+/).filter(Boolean);
+      if (words.length <= 3) {
+        try {
+          await playListeningAudio(getYoudaoAudioUrl(text), token);
+          return;
+        } catch (error) {
+          // Continue to browser speech.
+        }
+      }
+      await speakEnglishFallback(text, token, {
+        rate: Number(dom.listeningSpeed.value) || 1,
+        tokenScope: "listening"
+      });
+    }
+  }
+
+  async function playSmartText(text, token) {
+    try {
+      await playAudio(getTextAudioSource(text), token);
+      return;
+    } catch (error) {
+      // Fall through to the online dictionary voice.
+    }
+    const words = String(text).trim().split(/\s+/).filter(Boolean);
+    if (words.length <= 3) {
+      try {
+        await playAudio(getYoudaoAudioUrl(text), token);
+        return;
+      } catch (error) {
+        // Final fallback is the browser voice.
+      }
+    }
+    await speakEnglishFallback(text, token);
   }
 
   function speakEnglishFallback(text, token, options = {}) {
@@ -1851,14 +1933,25 @@
       const repeat = Number(dom.listeningRepeat.value) || 1;
       for (let count = 0; count < repeat; count += 1) {
         if (token !== state.listening.token || !state.listening.playing || sleepExpired()) return;
-        const source = entry.kind === "number" ? getAudioSource(entry.number) : getTextAudioSource(entry.audioText);
-        try {
-          await playListeningAudio(source, token);
-        } catch (error) {
-          await speakEnglishFallback(entry.english, token, {
-            rate: Number(dom.listeningSpeed.value) || 1,
-            tokenScope: "listening"
-          });
+        if (entry.kind === "number") {
+          try {
+            await playListeningAudio(getAudioSource(entry.number), token);
+          } catch (error) {
+            const chunks = splitNumberIntoSpeechChunks(entry.number);
+            for (const chunk of chunks) {
+              if (token !== state.listening.token) return;
+              try {
+                await playListeningAudio(getYoudaoAudioUrl(chunk), token);
+              } catch (chunkError) {
+                await speakEnglishFallback(chunk, token, {
+                  rate: Number(dom.listeningSpeed.value) || 1,
+                  tokenScope: "listening"
+                });
+              }
+            }
+          }
+        } else {
+          await playSmartListeningText(entry.audioText, token);
         }
       }
       if (dom.listeningMode.value === "bilingual" && token === state.listening.token && state.listening.playing) {
@@ -2230,7 +2323,7 @@
       for (let index = 0; index < settings.repeat; index += 1) {
         if (token !== state.token) return;
         dom.customPlayStatus.textContent = `正在播放第 ${index + 1} / ${settings.repeat} 遍`;
-        await playAudio(getTextAudioSource(item.text), token);
+        await playSmartText(item.text, token);
         if (index < settings.repeat - 1) await wait(850);
       }
       if (token === state.token) {
