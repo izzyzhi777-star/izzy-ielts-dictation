@@ -342,7 +342,7 @@
     try {
       const raw = localStorage.getItem(SETTINGS_KEY);
       const loaded = { ...DEFAULT_SETTINGS, ...(raw ? JSON.parse(raw) : {}) };
-      if (!["sonia", "ryan", "libby", "mix"].includes(loaded.voice)) loaded.voice = "sonia";
+      loaded.voice = "sonia";
       return loaded;
     } catch (error) {
       console.warn("Could not load settings.", error);
@@ -633,6 +633,7 @@
     if (!snapshot) return;
     state.sync.applyingRemote = true;
     Object.assign(settings, snapshot.settings || {});
+    settings.voice = "sonia";
     state.customItems = snapshot.customItems || [];
     state.hearingWrong = snapshot.hearingWrong || [];
     state.wrongNumbers = snapshot.wrongNumbers || [];
@@ -1931,6 +1932,16 @@
     }
   }
 
+  function getBaiduTtsUrl(text) {
+    const params = new URLSearchParams({
+      lan: "en",
+      text,
+      spd: "3",
+      source: "web"
+    });
+    return `https://fanyi.baidu.com/gettts?${params.toString()}`;
+  }
+
   function getYoudaoAudioUrl(text) {
     const params = new URLSearchParams({ audio: text, type: "2" });
     return `https://dict.youdao.com/dictvoice?${params.toString()}`;
@@ -2021,13 +2032,18 @@
     await speakEnglishFallback(text, token);
   }
 
-  function speakEnglishFallback(text, token, options = {}) {
+  async function speakEnglishFallback(text, token, options = {}) {
+    const currentToken = options.tokenScope === "listening" ? state.listening.token : state.token;
+    if (token !== currentToken) return;
+    try {
+      if (options.tokenScope === "listening") await playListeningAudio(getBaiduTtsUrl(text), token);
+      else await playAudio(getBaiduTtsUrl(text), token);
+      return;
+    } catch (error) {
+      console.debug("Baidu speech unavailable, using browser voice.", error);
+    }
+    if (!window.speechSynthesis || token !== currentToken) return;
     return new Promise((resolve) => {
-      const currentToken = options.tokenScope === "listening" ? state.listening.token : state.token;
-      if (!window.speechSynthesis || token !== currentToken) {
-        resolve();
-        return;
-      }
       const utterance = new SpeechSynthesisUtterance(text);
       const voices = window.speechSynthesis.getVoices();
       const voice = voices.find((item) => /en-GB/i.test(item.lang))
@@ -2165,26 +2181,37 @@
         });
       });
     }
-    if (selected.has("custom")) {
+    if (selected.has("custom") || selected.has("examples")) {
       state.customItems.forEach((item) => {
-        entries.push({
-          kind: "text",
-          english: item.text,
-          chinese: item.translation || item.text,
-          audioText: item.text,
-          key: `custom:${item.id}`
-        });
-      });
-    }
-    if (selected.has("examples")) {
-      state.customItems.filter((item) => item.example).forEach((item) => {
-        entries.push({
-          kind: "text",
-          english: item.example,
-          chinese: item.exampleTranslation || item.example,
-          audioText: item.example,
-          key: `example:${item.id}`
-        });
+        const parts = [];
+        if (selected.has("custom")) {
+          parts.push({
+            kind: "text",
+            english: item.text,
+            chinese: item.translation || item.text,
+            audioText: item.text
+          });
+        }
+        if (selected.has("examples") && item.example) {
+          parts.push({
+            kind: "text",
+            english: item.example,
+            chinese: item.exampleTranslation || item.example,
+            audioText: item.example
+          });
+        }
+        if (!parts.length) return;
+        if (parts.length === 1) {
+          entries.push({ ...parts[0], key: `custom:${item.id}` });
+        } else {
+          entries.push({
+            kind: "group",
+            parts,
+            english: parts.map((part) => part.english).join(" / "),
+            chinese: parts.map((part) => part.chinese).join(" / "),
+            key: `custom-group:${item.id}`
+          });
+        }
       });
     }
     if (selected.has("hearing")) {
@@ -2271,31 +2298,34 @@
     renderListening();
     try {
       const repeat = Number(dom.listeningRepeat.value) || 1;
-      for (let count = 0; count < repeat; count += 1) {
-        if (token !== state.listening.token || !state.listening.playing || sleepExpired()) return;
-        if (entry.kind === "number") {
-          try {
-            await playListeningAudio(getAudioSource(entry.number), token);
-          } catch (error) {
-            const chunks = splitNumberIntoSpeechChunks(entry.number);
-            for (const chunk of chunks) {
-              if (token !== state.listening.token) return;
-              try {
-                await playListeningAudio(getYoudaoAudioUrl(chunk), token);
-              } catch (chunkError) {
-                await speakEnglishFallback(chunk, token, {
-                  rate: Number(dom.listeningSpeed.value) || 1,
-                  tokenScope: "listening"
-                });
+      const parts = entry.kind === "group" ? entry.parts : [entry];
+      for (const part of parts) {
+        for (let count = 0; count < repeat; count += 1) {
+          if (token !== state.listening.token || !state.listening.playing || sleepExpired()) return;
+          if (part.kind === "number") {
+            try {
+              await playListeningAudio(getAudioSource(part.number), token);
+            } catch (error) {
+              const chunks = splitNumberIntoSpeechChunks(part.number);
+              for (const chunk of chunks) {
+                if (token !== state.listening.token) return;
+                try {
+                  await playListeningAudio(getYoudaoAudioUrl(chunk), token);
+                } catch (chunkError) {
+                  await speakEnglishFallback(chunk, token, {
+                    rate: Number(dom.listeningSpeed.value) || 1,
+                    tokenScope: "listening"
+                  });
+                }
               }
             }
+          } else {
+            await playSmartListeningText(part.audioText, token);
           }
-        } else {
-          await playSmartListeningText(entry.audioText, token);
         }
-      }
-      if (dom.listeningMode.value === "bilingual" && token === state.listening.token && state.listening.playing) {
-        await speakChinese(entry.chinese, token);
+        if (dom.listeningMode.value === "bilingual" && token === state.listening.token && state.listening.playing) {
+          await speakChinese(part.chinese, token);
+        }
       }
       if (token !== state.listening.token || !state.listening.playing || sleepExpired()) return;
       await wait((Number(dom.listeningInterval.value) || 1) * 1000);
@@ -2311,6 +2341,7 @@
       }
     }
   }
+
 
   function playListeningAudio(source, token) {
     return new Promise((resolve, reject) => {
