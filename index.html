@@ -4,7 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#ffffff">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="IZZY Dictation">
   <title>IZZY IELTS-DICTATION</title>
+  <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -338,7 +342,7 @@
           <div>
             <p class="section-kicker">AUDIO PLAYER</p>
             <h2>英文数字随身听</h2>
-            <p>可连续播放数字、月份、日期序数、完整日期和错题。支持睡眠定时、重复次数、速度、中英对照和间隔时间。</p>
+            <p>连续播放数字、月份、日期、词句、例句和笔记，一次生成完整音频流；手机熄屏后仍可继续播放，并支持睡眠定时与中英对照。</p>
           </div>
           <button class="primary-button listening-start" id="startListeningButton" type="button">开始随身听</button>
         </div>
@@ -377,6 +381,7 @@
               <label><input type="checkbox" data-listening-category="dates" checked><span>完整日期</span></label>
               <label><input type="checkbox" data-listening-category="custom"><span>我的词句</span></label>
               <label><input type="checkbox" data-listening-category="examples"><span>我的例句</span></label>
+              <label><input type="checkbox" data-listening-category="notes"><span>我的笔记</span></label>
               <label><input type="checkbox" data-listening-category="hearing"><span>听力错词</span></label>
               <label><input type="checkbox" data-listening-category="wrong"><span>数字日期错题</span></label>
             </div>
@@ -712,6 +717,7 @@
     </aside>
   </div>
 
+  <script src="neural-voice.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

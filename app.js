@@ -26,6 +26,7 @@
     mode: "english",
     voice: "sonia"
   };
+  const neuralVoice = window.IzzyNeuralVoice;
   const RANGE_CONFIG = {
     basic: { min: 1, max: 100, count: 100, shuffled: false },
     hundreds: { min: 100, max: 1000, count: 100, shuffled: true },
@@ -267,6 +268,9 @@
     audio: new Audio(),
     voicePackIndex: {},
     voicePackLoaded: false,
+    voicePackPromise: null,
+    audioBlobCache: new Map(),
+    neuralCooldownUntil: 0,
     ipaMap: new Map(),
     ipaLoadPromise: null,
     customAutoTranslation: true,
@@ -278,8 +282,19 @@
       index: 0,
       token: 0,
       audio: null,
+      audioUrl: "",
+      timeline: [],
+      totalDuration: 0,
+      preparing: false,
+      prepareToken: 0,
+      consumedSeconds: 0,
+      lastTime: 0,
+      currentTrack: -1,
       sleepDeadline: 0,
-      sleepTimer: null
+      sleepAudioDeadline: 0,
+      sleepTimer: null,
+      mediaHandlersReady: false,
+      directFallback: false
     },
     autoSubmitTimer: null,
     preloaded: ""
@@ -290,11 +305,16 @@
   function init() {
     state.audio.preload = "auto";
     state.audio.setAttribute("playsinline", "");
+    state.audio.setAttribute("webkit-playsinline", "");
     state.listening.audio = new Audio();
     state.listening.audio.preload = "auto";
     state.listening.audio.setAttribute("playsinline", "");
+    state.listening.audio.setAttribute("webkit-playsinline", "");
+    state.listening.audio.volume = 1;
     bindEvents();
-    loadVoicePackIndex();
+    state.voicePackPromise = loadVoicePackIndex();
+    setupListeningAudio();
+    setupMediaSession();
     state.ipaLoadPromise = loadIpaDictionary();
     renderAll();
     if (state.sync.autoSync && state.sync.token && state.sync.gistId) {
@@ -308,6 +328,145 @@
     window.addEventListener("pagehide", () => {
       if (state.sync.autoSync && state.sync.token && state.sync.gistId) syncCloudData(false);
     });
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("sw.js").catch((error) => console.debug("Service worker unavailable.", error));
+    }
+  }
+
+  function setupListeningAudio() {
+    const audio = state.listening.audio;
+    audio.addEventListener("loadedmetadata", () => {
+      if (Number.isFinite(audio.duration) && audio.duration > 0) {
+        state.listening.totalDuration = audio.duration;
+      }
+      updateMediaSessionPosition();
+    });
+    audio.addEventListener("play", () => {
+      if (!state.listening.started) return;
+      state.listening.playing = true;
+      state.listening.lastTime = audio.currentTime;
+      updateMediaSessionState("playing");
+      renderListening();
+    });
+    audio.addEventListener("pause", () => {
+      if (!state.listening.started) return;
+      updateMediaSessionState("paused");
+      renderListening();
+    });
+    audio.addEventListener("timeupdate", updateListeningProgress);
+    audio.addEventListener("error", () => {
+      if (!state.listening.started) return;
+      dom.listeningEnglish.textContent = "音频暂时不可用";
+      dom.listeningChinese.textContent = "请重新点击播放，已生成的语音会继续保留。";
+      state.listening.playing = false;
+      renderListening();
+    });
+  }
+
+  function setupMediaSession() {
+    if (!("mediaSession" in navigator) || state.listening.mediaHandlersReady) return;
+    state.listening.mediaHandlersReady = true;
+    const handlers = {
+      play: () => resumeListeningAudio(),
+      pause: () => pauseListeningAudio(),
+      nexttrack: () => changeListeningIndex(1),
+      previoustrack: () => changeListeningIndex(-1),
+      seekbackward: (details) => seekListeningBy(-(details.seekOffset || 15)),
+      seekforward: (details) => seekListeningBy(details.seekOffset || 15),
+      stop: () => stopListening()
+    };
+    Object.entries(handlers).forEach(([action, handler]) => {
+      try { navigator.mediaSession.setActionHandler(action, handler); } catch (error) { console.debug(error); }
+    });
+  }
+
+  function updateMediaSessionMetadata(entry, index = state.listening.index) {
+    if (!("mediaSession" in navigator) || !window.MediaMetadata || !entry) return;
+    const title = String(entry.english || entry.audioText || "IELTS Dictation").slice(0, 120);
+    const subtitle = String(entry.chinese || "").slice(0, 120);
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title,
+      artist: subtitle || "IZZY IELTS-DICTATION",
+      album: `Sonia 英式神经女声 · ${index + 1} / ${state.listening.playlist.length}`
+    });
+  }
+
+  function updateMediaSessionState(mediaState) {
+    if (!("mediaSession" in navigator)) return;
+    try { navigator.mediaSession.playbackState = mediaState; } catch (error) { console.debug(error); }
+  }
+
+  function updateMediaSessionPosition() {
+    const audio = state.listening.audio;
+    if (!("mediaSession" in navigator) || !navigator.mediaSession.setPositionState) return;
+    if (!Number.isFinite(audio.duration) || audio.duration <= 0) return;
+    try {
+      navigator.mediaSession.setPositionState({
+        duration: audio.duration,
+        playbackRate: audio.playbackRate || 1,
+        position: Math.min(audio.currentTime, Math.max(0, audio.duration - 0.01))
+      });
+    } catch (error) {
+      console.debug(error);
+    }
+  }
+
+  function updateListeningProgress() {
+    if (!state.listening.started) return;
+    const audio = state.listening.audio;
+    const delta = audio.currentTime - state.listening.lastTime;
+    if (Number.isFinite(delta) && delta > 0 && delta < 10) {
+      state.listening.consumedSeconds += delta * (Number(audio.playbackRate) || 1);
+    }
+    state.listening.lastTime = audio.currentTime;
+    const duration = Number.isFinite(audio.duration) && audio.duration > 0
+      ? audio.duration
+      : state.listening.totalDuration;
+    if (duration > 0 && state.listening.timeline.length) {
+      const scaledTime = (audio.currentTime / duration) * state.listening.totalDuration;
+      const index = state.listening.timeline.findIndex((segment) => scaledTime < segment.end);
+      setListeningTrack(index < 0 ? state.listening.timeline.length - 1 : index);
+    }
+    updateMediaSessionPosition();
+    if (state.listening.sleepAudioDeadline > 0 && state.listening.consumedSeconds >= state.listening.sleepAudioDeadline) {
+      stopListening();
+      dom.listeningSleepStatus.textContent = "睡眠模式已结束";
+    }
+  }
+
+  function setListeningTrack(index) {
+    if (index < 0 || index >= state.listening.playlist.length) return;
+    if (state.listening.currentTrack === index) return;
+    state.listening.currentTrack = index;
+    state.listening.index = index;
+    const current = state.listening.playlist[index];
+    updateMediaSessionMetadata(current, index);
+    renderListening();
+  }
+
+  function resumeListeningAudio() {
+    if (!state.listening.audio?.src) return;
+    state.listening.playing = true;
+    state.listening.audio.play().catch((error) => {
+      console.debug(error);
+      state.listening.playing = false;
+      renderListening();
+    });
+  }
+
+  function pauseListeningAudio() {
+    state.listening.playing = false;
+    try { state.listening.audio.pause(); } catch (error) { console.debug(error); }
+    renderListening();
+  }
+
+  function seekListeningBy(seconds) {
+    const audio = state.listening.audio;
+    if (!state.listening.started || !audio?.src || !Number.isFinite(audio.duration)) return;
+    const target = Math.max(0, Math.min(audio.duration - 0.05, audio.currentTime + seconds));
+    audio.currentTime = target;
+    state.listening.lastTime = target;
+    updateListeningProgress();
   }
 
   async function loadIpaDictionary() {
@@ -336,6 +495,7 @@
       state.voicePackIndex = {};
       state.voicePackLoaded = false;
     }
+    return state.voicePackIndex;
   }
 
   function loadSettings() {
@@ -888,8 +1048,19 @@
     dom.listeningPreviousButton.addEventListener("click", () => changeListeningIndex(-1));
     dom.listeningNextButton.addEventListener("click", () => changeListeningIndex(1));
     dom.listeningSleep.addEventListener("change", configureSleepTimer);
+    const restartListeningIfActive = () => {
+      if (state.listening.started && !state.listening.preparing) startListening();
+    };
+    dom.listeningMode.addEventListener("change", restartListeningIfActive);
+    dom.listeningRepeat.addEventListener("change", restartListeningIfActive);
+    dom.listeningInterval.addEventListener("change", restartListeningIfActive);
+    dom.listeningCategories.addEventListener("change", restartListeningIfActive);
     dom.listeningSpeed.addEventListener("change", () => {
-      if (state.listening.audio) state.listening.audio.playbackRate = Number(dom.listeningSpeed.value) || 1;
+      if (state.listening.audio) {
+        state.listening.audio.playbackRate = Number(dom.listeningSpeed.value) || 1;
+        state.listening.audio.preservesPitch = true;
+        updateMediaSessionPosition();
+      }
     });
 
     dom.startWrongRoundButton.addEventListener("click", startWrongRound);
@@ -921,7 +1092,6 @@
       }
     });
     document.addEventListener("visibilitychange", () => {
-      if (document.hidden) stopPlayback();
       if (!document.hidden && state.sync.autoSync && state.sync.token && state.sync.gistId) {
         syncCloudData(false);
       }
@@ -1457,7 +1627,7 @@
     const item = currentDateItem();
     if (!item || state.playing) return;
     const source = getTextAudioSource(item.audioText);
-    if (state.preloaded === source) return;
+    if (!source || state.preloaded === source) return;
     state.preloaded = source;
     state.audio.src = source;
     state.audio.load();
@@ -1472,13 +1642,8 @@
     setPlaying(true);
     await wait(50);
     try {
-      for (let index = 0; index < settings.repeat; index += 1) {
-        if (token !== state.token) return;
-        dom.datePlayStatus.textContent = `正在播放第 ${index + 1} / ${settings.repeat} 遍`;
-        await playAudio(getTextAudioSource(item.audioText), token);
-        if (token !== state.token) return;
-        if (index < settings.repeat - 1) await wait(850);
-      }
+      dom.datePlayStatus.textContent = "正在生成流畅英式语音";
+      await playRepeatedSpeech(item.audioText, settings.repeat, token);
       if (token === state.token) {
         setPlaying(false);
         dom.datePlayStatus.textContent = "播放完成，请填写答案";
@@ -1535,6 +1700,7 @@
   function getTextAudioSource(text) {
     const voiceEntry = state.voicePackIndex[text];
     if (voiceEntry?.file) return `audio/voice-pack/${voiceEntry.file}`;
+    if (!["localhost", "127.0.0.1"].includes(window.location.hostname)) return "";
     const params = new URLSearchParams({ text, voice: settings.voice });
     return `/api/text-speech?${params.toString()}`;
   }
@@ -1834,7 +2000,7 @@
     const number = currentNumber();
     if (number === null || state.playing) return;
     const source = getAudioSource(number);
-    if (state.preloaded === source) return;
+    if (!source || state.preloaded === source) return;
     state.preloaded = source;
     state.audio.src = source;
     state.audio.load();
@@ -1844,6 +2010,7 @@
     const value = Number(number);
     const voiceEntry = state.voicePackIndex[numberToEnglish(value)];
     if (voiceEntry?.file) return `audio/voice-pack/${voiceEntry.file}`;
+    if (!["localhost", "127.0.0.1"].includes(window.location.hostname)) return "";
     const params = new URLSearchParams({
       number: String(value),
       voice: settings.voice
@@ -1861,16 +2028,8 @@
     await wait(50);
 
     try {
-      for (let index = 0; index < settings.repeat; index += 1) {
-        if (token !== state.token) return;
-        dom.playStatus.textContent = `正在播放第 ${index + 1} / ${settings.repeat} 遍`;
-        await playNumberAudio(number, token);
-        if (token !== state.token) return;
-        if (index < settings.repeat - 1) {
-          dom.playStatus.textContent = "准备重播";
-          await wait(850);
-        }
-      }
+      dom.playStatus.textContent = "正在生成流畅英式语音";
+      await playRepeatedSpeech(numberToEnglish(number), settings.repeat, token, { number });
       if (token === state.token) {
         setPlaying(false);
         dom.playStatus.textContent = "播放完成，请填写答案";
@@ -1932,9 +2091,9 @@
     }
   }
 
-  function getBaiduTtsUrl(text) {
+  function getBaiduTtsUrl(text, language = "en") {
     const params = new URLSearchParams({
-      lan: "en",
+      lan: language,
       text,
       spd: "3",
       source: "web"
@@ -1976,10 +2135,11 @@
 
   async function playNumberAudio(number, token) {
     try {
-      await playAudio(getAudioSource(number), token);
+      const blob = await getSpeechBlob(numberToEnglish(number), { number });
+      await playAudioBlob(blob, token);
       return;
     } catch (error) {
-      // The static GitHub Pages build has no local speech API.
+      console.debug("Neural number audio unavailable.", error);
     }
     const chunks = splitNumberIntoSpeechChunks(number);
     for (const chunk of chunks) {
@@ -1992,33 +2152,98 @@
     }
   }
 
-  async function playSmartListeningText(text, token) {
-    try {
-      await playListeningAudio(getTextAudioSource(text), token);
-      return;
-    } catch (error) {
-      const words = String(text).trim().split(/\s+/).filter(Boolean);
-      if (words.length <= 3) {
-        try {
-          await playListeningAudio(getYoudaoAudioUrl(text), token);
-          return;
-        } catch (error) {
-          // Continue to browser speech.
+  async function playListeningSequentially(playlist, token, startIndex = 0) {
+    const repeat = Math.max(1, Number(dom.listeningRepeat.value) || 1);
+    const bilingual = dom.listeningMode.value === "bilingual";
+    const intervalMs = Math.max(0, Number(dom.listeningInterval.value) || 1) * 1000;
+    let index = startIndex;
+
+    while (token === state.listening.token && state.listening.started && !sleepExpired()) {
+      const entry = playlist[index];
+      if (!entry) break;
+      setListeningTrack(index);
+      renderListening();
+      let failedPart = false;
+      const parts = entry.kind === "group" ? entry.parts : [entry];
+      for (const part of parts) {
+        if (token !== state.listening.token || !state.listening.started || sleepExpired()) return;
+        for (let count = 0; count < repeat; count += 1) {
+          if (token !== state.listening.token || !state.listening.started || sleepExpired()) return;
+          const text = part.kind === "number" ? numberToEnglish(part.number) : (part.audioText || part.english);
+          try {
+            await playSmartListeningText(text, token);
+          } catch (error) {
+            failedPart = true;
+            console.warn("Listening segment failed.", text, error);
+            break;
+          }
+          if (count < repeat - 1) await wait(320);
         }
+        if (failedPart) break;
+        if (bilingual && !part.skipTranslation && part.chinese && part.chinese !== part.english && part.chinese !== part.audioText) {
+          await wait(280);
+          await playFallbackSpeech(part.chinese, token);
+        }
+        await wait(340);
       }
-      await speakEnglishFallback(text, token, {
-        rate: Number(dom.listeningSpeed.value) || 1,
-        tokenScope: "listening"
-      });
+      if (token !== state.listening.token || !state.listening.started || sleepExpired()) return;
+      await wait(intervalMs);
+      index = (index + 1) % playlist.length;
     }
+  }
+
+  async function playSmartListeningText(text, token) {
+    if (state.listening.directFallback) {
+      await playFallbackSpeech(text, token);
+      return;
+    }
+    try {
+      const blob = await getSpeechBlob(text);
+      await playListeningAudioBlob(blob, token);
+    } catch (error) {
+      state.listening.directFallback = true;
+      console.warn("Switching this listening session to direct voice.", error);
+      await playFallbackSpeech(text, token);
+    }
+  }
+
+  async function playFallbackSpeech(text, token) {
+    if (token !== state.listening.token) return;
+    const value = String(text || "").trim();
+    if (!value) return;
+    const language = neuralVoice.containsChinese(value) ? "zh" : "en";
+    const sources = language === "en"
+      ? [getBaiduTtsUrl(value, language), getYoudaoAudioUrl(value)]
+      : [getBaiduTtsUrl(value, language)];
+    for (const source of sources) {
+      if (token !== state.listening.token) return;
+      try {
+        await playListeningAudio(source, token);
+        return;
+      } catch (error) {
+        console.debug("Direct online voice unavailable.", error);
+      }
+    }
+    if (!window.speechSynthesis || token !== state.listening.token) return;
+    return new Promise((resolve) => {
+      const utterance = new SpeechSynthesisUtterance(value);
+      const voice = pickBrowserVoice(language);
+      if (voice) utterance.voice = voice;
+      utterance.lang = voice?.lang || (language === "zh" ? "zh-CN" : "en-GB");
+      utterance.rate = Number(dom.listeningSpeed.value) || 1;
+      utterance.onend = resolve;
+      utterance.onerror = resolve;
+      window.speechSynthesis.speak(utterance);
+    });
   }
 
   async function playSmartText(text, token) {
     try {
-      await playAudio(getTextAudioSource(text), token);
+      const blob = await getSpeechBlob(text);
+      await playAudioBlob(blob, token);
       return;
     } catch (error) {
-      // Fall through to the online dictionary voice.
+      console.debug("Neural speech unavailable.", error);
     }
     const words = String(text).trim().split(/\s+/).filter(Boolean);
     if (words.length <= 3) {
@@ -2026,7 +2251,7 @@
         await playAudio(getYoudaoAudioUrl(text), token);
         return;
       } catch (error) {
-        // Final fallback is the browser voice.
+        console.debug("Youdao speech unavailable.", error);
       }
     }
     await speakEnglishFallback(text, token);
@@ -2035,6 +2260,14 @@
   async function speakEnglishFallback(text, token, options = {}) {
     const currentToken = options.tokenScope === "listening" ? state.listening.token : state.token;
     if (token !== currentToken) return;
+    try {
+      const blob = await getSpeechBlob(text);
+      if (options.tokenScope === "listening") await playListeningAudioBlob(blob, token);
+      else await playAudioBlob(blob, token);
+      return;
+    } catch (error) {
+      console.debug("Neural speech fallback unavailable.", error);
+    }
     try {
       if (options.tokenScope === "listening") await playListeningAudio(getBaiduTtsUrl(text), token);
       else await playAudio(getBaiduTtsUrl(text), token);
@@ -2045,9 +2278,7 @@
     if (!window.speechSynthesis || token !== currentToken) return;
     return new Promise((resolve) => {
       const utterance = new SpeechSynthesisUtterance(text);
-      const voices = window.speechSynthesis.getVoices();
-      const voice = voices.find((item) => /en-GB/i.test(item.lang))
-        || voices.find((item) => /^en/i.test(item.lang));
+      const voice = pickBrowserVoice("en");
       if (voice) utterance.voice = voice;
       utterance.lang = voice?.lang || "en-GB";
       utterance.rate = Number(options.rate ?? settings.speed) || 1;
@@ -2055,6 +2286,37 @@
       utterance.onerror = resolve;
       window.speechSynthesis.speak(utterance);
     });
+  }
+
+  function pickBrowserVoice(language) {
+    if (!window.speechSynthesis) return null;
+    const voices = window.speechSynthesis.getVoices();
+    if (language === "zh") {
+      return voices.find((item) => /^zh/i.test(item.lang)) || null;
+    }
+    const preferred = voices.find((item) => /samantha|serena|sonia|libby|google uk english female|microsoft.*(aria|jenny|sonia|libby)/i.test(item.name));
+    if (preferred && /^en/i.test(preferred.lang)) return preferred;
+    return voices.find((item) => /^en-GB/i.test(item.lang) && !/daniel|karen/i.test(item.name))
+      || voices.find((item) => /^en/i.test(item.lang) && !/daniel|karen/i.test(item.name))
+      || null;
+  }
+
+  async function playAudioBlob(blob, token) {
+    const url = URL.createObjectURL(blob);
+    try {
+      await playAudio(url, token);
+    } finally {
+      URL.revokeObjectURL(url);
+    }
+  }
+
+  async function playListeningAudioBlob(blob, token) {
+    const url = URL.createObjectURL(blob);
+    try {
+      await playListeningAudio(url, token);
+    } finally {
+      URL.revokeObjectURL(url);
+    }
   }
 
   function playAudio(source, token) {
@@ -2181,7 +2443,7 @@
         });
       });
     }
-    if (selected.has("custom") || selected.has("examples")) {
+    if (selected.has("custom") || selected.has("examples") || selected.has("notes")) {
       state.customItems.forEach((item) => {
         const parts = [];
         if (selected.has("custom")) {
@@ -2189,7 +2451,8 @@
             kind: "text",
             english: item.text,
             chinese: item.translation || item.text,
-            audioText: item.text
+            audioText: item.text,
+            partType: "word"
           });
         }
         if (selected.has("examples") && item.example) {
@@ -2197,7 +2460,18 @@
             kind: "text",
             english: item.example,
             chinese: item.exampleTranslation || item.example,
-            audioText: item.example
+            audioText: item.example,
+            partType: "example"
+          });
+        }
+        if (selected.has("notes") && item.note) {
+          parts.push({
+            kind: "text",
+            english: item.note,
+            chinese: item.note,
+            audioText: item.note,
+            partType: "note",
+            skipTranslation: true
           });
         }
         if (!parts.length) return;
@@ -2245,7 +2519,8 @@
     return shuffle(Array.from(unique.values()));
   }
 
-  function startListening() {
+  async function startListening() {
+    if (state.listening.preparing) return;
     const playlist = buildListeningPlaylist();
     if (!playlist.length) {
       dom.listeningEnglish.textContent = "还没有选择播放内容";
@@ -2253,95 +2528,254 @@
       return;
     }
     stopListening();
+    const token = ++state.listening.token;
     state.listening.started = true;
     state.listening.playlist = playlist;
     state.listening.index = 0;
-    state.listening.playing = true;
+    state.listening.currentTrack = -1;
+    state.listening.playing = false;
+    state.listening.preparing = true;
+    state.listening.consumedSeconds = 0;
+    state.listening.lastTime = 0;
+    state.listening.timeline = [];
+    state.listening.totalDuration = 0;
+    state.listening.directFallback = false;
+    unlockListeningAudio();
     configureSleepTimer();
     renderListening();
-    playListeningIndex();
+    try {
+      const prepared = await prepareListeningStream(playlist, token, (completed, total, entry) => {
+        if (token !== state.listening.token) return;
+        dom.listeningProgress.textContent = `${completed} / ${total}`;
+        dom.listeningEnglish.textContent = "正在生成连续音频";
+        dom.listeningChinese.textContent = `${completed} / ${total} · ${entry.english || entry.audioText || ""}`;
+        dom.listeningProgressBar.style.width = `${(completed / total) * 100}%`;
+        dom.listeningPlayButton.textContent = "准备中";
+      });
+      if (token !== state.listening.token) return;
+      if (prepared.failed) throw new Error("Some neural voice segments failed");
+      state.listening.timeline = prepared.timeline;
+      state.listening.totalDuration = prepared.duration;
+      if (state.listening.audioUrl) URL.revokeObjectURL(state.listening.audioUrl);
+      state.listening.audioUrl = URL.createObjectURL(prepared.blob);
+      const audio = state.listening.audio;
+      audio.pause();
+      audio.loop = true;
+      audio.volume = 1;
+      audio.playbackRate = Number(dom.listeningSpeed.value) || 1;
+      audio.preservesPitch = true;
+      audio.src = state.listening.audioUrl;
+      audio.load();
+      state.listening.preparing = false;
+      state.listening.playing = true;
+      state.listening.currentTrack = -1;
+      setListeningTrack(0);
+      renderListening();
+      await audio.play();
+      if (prepared.failed) {
+        dom.listeningChinese.textContent += ` · ${prepared.failed} 条语音暂时跳过`;
+      }
+    } catch (error) {
+      console.warn("Continuous neural stream unavailable; switching to resilient direct playback.", error);
+      if (token !== state.listening.token) return;
+      state.listening.preparing = false;
+      state.listening.directFallback = true;
+      state.listening.timeline = [];
+      state.listening.totalDuration = 0;
+      state.listening.playing = true;
+      state.listening.audio.loop = false;
+      state.listening.audio.volume = 1;
+      dom.listeningEnglish.textContent = "正在播放";
+      dom.listeningChinese.textContent = "已启用备用流畅语音，手机仍在后台保持播放。";
+      renderListening();
+      await playListeningSequentially(playlist, token, 0);
+    }
   }
 
   function toggleListeningPlayback() {
+    if (state.listening.preparing) return;
     if (!state.listening.started) {
       startListening();
       return;
     }
-    if (state.listening.playing) {
-      stopListeningAudio();
-      state.listening.playing = false;
-      renderListening();
-      return;
-    }
-    state.listening.playing = true;
-    renderListening();
-    playListeningIndex();
+    if (state.listening.playing) pauseListeningAudio();
+    else resumeListeningAudio();
   }
 
   function changeListeningIndex(offset) {
-    if (!state.listening.playlist.length) return;
+    if (!state.listening.playlist.length || !state.listening.timeline.length) return;
     const total = state.listening.playlist.length;
-    state.listening.index = (state.listening.index + offset + total) % total;
-    renderListening();
-    if (state.listening.playing) playListeningIndex();
+    const next = (state.listening.index + offset + total) % total;
+    const segment = state.listening.timeline[next];
+    const audio = state.listening.audio;
+    if (segment && Number.isFinite(audio.duration) && audio.duration > 0) {
+      const scaledStart = (segment.start / state.listening.totalDuration) * audio.duration;
+      audio.currentTime = Math.min(Math.max(0, scaledStart + 0.005), Math.max(0, audio.duration - 0.05));
+      state.listening.lastTime = audio.currentTime;
+    }
+    setListeningTrack(next);
+    if (state.listening.playing) resumeListeningAudio();
   }
 
-  async function playListeningIndex() {
-    if (!state.listening.playing) return;
-    const entry = state.listening.playlist[state.listening.index];
-    if (!entry) {
-      state.listening.index = 0;
-      return playListeningIndex();
-    }
-    stopListeningAudio();
-    const token = ++state.listening.token;
-    renderListening();
+  async function prepareListeningStream(playlist, token, onProgress) {
+    const parts = [];
+    const timeline = [];
+    const repeat = Math.max(1, Number(dom.listeningRepeat.value) || 1);
+    const bilingual = dom.listeningMode.value === "bilingual";
+    const intervalSeconds = Math.max(0, Number(dom.listeningInterval.value) || 1);
+    let cursor = 0;
+    let failed = 0;
+    let speechCount = 0;
+    const voiceSession = neuralVoice.createSession();
+
     try {
-      const repeat = Number(dom.listeningRepeat.value) || 1;
-      const parts = entry.kind === "group" ? entry.parts : [entry];
-      for (const part of parts) {
+      for (let entryIndex = 0; entryIndex < playlist.length; entryIndex += 1) {
+      if (token !== state.listening.token) throw new Error("Listening preparation cancelled");
+      const entry = playlist[entryIndex];
+      const entryStart = cursor;
+      const entryParts = entry.kind === "group" ? entry.parts : [entry];
+      for (let partIndex = 0; partIndex < entryParts.length; partIndex += 1) {
+        const part = entryParts[partIndex];
+        let speechBlob;
+        try {
+          speechBlob = await getSpeechBlobForPart(part, { session: voiceSession });
+        } catch (error) {
+          failed += 1;
+          console.warn("Could not generate listening audio.", part, error);
+          continue;
+        }
+        speechCount += 1;
         for (let count = 0; count < repeat; count += 1) {
-          if (token !== state.listening.token || !state.listening.playing || sleepExpired()) return;
-          if (part.kind === "number") {
-            try {
-              await playListeningAudio(getAudioSource(part.number), token);
-            } catch (error) {
-              const chunks = splitNumberIntoSpeechChunks(part.number);
-              for (const chunk of chunks) {
-                if (token !== state.listening.token) return;
-                try {
-                  await playListeningAudio(getYoudaoAudioUrl(chunk), token);
-                } catch (chunkError) {
-                  await speakEnglishFallback(chunk, token, {
-                    rate: Number(dom.listeningSpeed.value) || 1,
-                    tokenScope: "listening"
-                  });
-                }
-              }
-            }
-          } else {
-            await playSmartListeningText(part.audioText, token);
+          parts.push(speechBlob);
+          cursor += neuralVoice.estimateDuration(speechBlob);
+          if (count < repeat - 1) {
+            const gap = neuralVoice.silence(0.32);
+            parts.push(gap);
+            cursor += neuralVoice.estimateDuration(gap);
           }
         }
-        if (dom.listeningMode.value === "bilingual" && token === state.listening.token && state.listening.playing) {
-          await speakChinese(part.chinese, token);
+        const shouldTranslate = bilingual && !part.skipTranslation
+          && part.chinese && part.chinese !== part.english && part.chinese !== part.audioText;
+        if (shouldTranslate) {
+          const translationGap = neuralVoice.silence(0.28);
+          parts.push(translationGap);
+          cursor += neuralVoice.estimateDuration(translationGap);
+          try {
+            const translationBlob = await getSpeechBlob(String(part.chinese), { session: voiceSession });
+            parts.push(translationBlob);
+            cursor += neuralVoice.estimateDuration(translationBlob);
+          } catch (error) {
+            failed += 1;
+            console.warn("Could not generate translation audio.", part.chinese, error);
+          }
+        }
+        if (partIndex < entryParts.length - 1) {
+          const groupGap = neuralVoice.silence(0.34);
+          parts.push(groupGap);
+          cursor += neuralVoice.estimateDuration(groupGap);
         }
       }
-      if (token !== state.listening.token || !state.listening.playing || sleepExpired()) return;
-      await wait((Number(dom.listeningInterval.value) || 1) * 1000);
-      if (token !== state.listening.token || !state.listening.playing || sleepExpired()) return;
-      state.listening.index = (state.listening.index + 1) % state.listening.playlist.length;
-      playListeningIndex();
-    } catch (error) {
-      console.error(error);
-      if (token === state.listening.token && state.listening.playing) {
-        await wait(800);
-        state.listening.index = (state.listening.index + 1) % state.listening.playlist.length;
-        playListeningIndex();
+      const entryEnd = cursor;
+      timeline.push({
+        entryIndex,
+        start: entryStart,
+        end: Math.max(entryEnd, entryStart + 0.05),
+        duration: Math.max(0.05, entryEnd - entryStart)
+      });
+      if (intervalSeconds > 0) {
+        const interval = neuralVoice.silence(intervalSeconds);
+        parts.push(interval);
+        cursor += neuralVoice.estimateDuration(interval);
       }
+      onProgress?.(entryIndex + 1, playlist.length, entry);
+      await wait(0);
+    }
+      if (!speechCount) {
+        throw new Error("No neural speech was generated");
+      }
+      return {
+        blob: neuralVoice.compose(parts),
+        timeline,
+        duration: Math.max(0.1, cursor),
+        failed
+      };
+    } finally {
+      voiceSession.close();
     }
   }
 
+  function unlockListeningAudio() {
+    const audio = state.listening.audio;
+    try {
+      if (state.listening.audioUrl) {
+        URL.revokeObjectURL(state.listening.audioUrl);
+        state.listening.audioUrl = "";
+      }
+      const silenceBlob = neuralVoice.silence(0.12);
+      state.listening.audioUrl = URL.createObjectURL(silenceBlob);
+      audio.loop = true;
+      audio.volume = 0;
+      audio.src = state.listening.audioUrl;
+      audio.play().catch((error) => console.debug("Audio unlock skipped.", error));
+    } catch (error) {
+      console.debug(error);
+    }
+  }
+
+  async function getSpeechBlobForPart(part, options = {}) {
+    if (!part) throw new Error("Missing listening part");
+    if (part.kind === "number") {
+      return getSpeechBlob(numberToEnglish(Number(part.number)), { ...options, number: part.number });
+    }
+    return getSpeechBlob(part.audioText || part.english || part.text || "", options);
+  }
+
+  async function getSpeechBlob(text, options = {}) {
+    const normalized = neuralVoice.normalizeText(text);
+    if (!normalized) throw new Error("Missing speech text");
+    await state.voicePackPromise;
+    const voiceEntry = state.voicePackIndex[normalized];
+    const cacheKey = voiceEntry?.file ? `pack:${voiceEntry.file}` : `text:${normalized}`;
+    if (state.audioBlobCache.has(cacheKey)) return state.audioBlobCache.get(cacheKey);
+    let blob = null;
+
+    if (voiceEntry?.file) {
+      blob = await neuralVoice.fetchAudioBlob(`audio/voice-pack/${voiceEntry.file}`);
+    } else if (["localhost", "127.0.0.1"].includes(window.location.hostname)) {
+      try {
+        const params = new URLSearchParams({ text: normalized, voice: settings.voice });
+        blob = await neuralVoice.fetchAudioBlob(`/api/text-speech?${params.toString()}`);
+      } catch (error) {
+        console.debug("Local speech endpoint unavailable.", error);
+      }
+    }
+
+    if (!blob) {
+      if (Date.now() < state.neuralCooldownUntil) throw new Error("Neural voice is cooling down");
+      const requestedVoice = options.voice || (neuralVoice.containsChinese(normalized) ? "zh-CN-XiaoxiaoNeural" : "en-GB-SoniaNeural");
+      try {
+        blob = options.session
+          ? await options.session.synthesize(normalized, { voice: requestedVoice })
+          : await neuralVoice.synthesize(normalized, { voice: requestedVoice });
+      } catch (error) {
+        state.neuralCooldownUntil = Date.now() + 60000;
+        throw error;
+      }
+    }
+    if (!blob?.size) throw new Error("Empty speech audio");
+    state.audioBlobCache.set(cacheKey, blob);
+    return blob;
+  }
+
+  async function playRepeatedSpeech(text, repeat, token, options = {}) {
+    const speechBlob = await getSpeechBlob(text, options);
+    const parts = [];
+    for (let index = 0; index < Math.max(1, repeat); index += 1) {
+      parts.push(speechBlob);
+      if (index < repeat - 1) parts.push(neuralVoice.silence(0.85));
+    }
+    await playAudioBlob(neuralVoice.compose(parts), token);
+  }
 
   function playListeningAudio(source, token) {
     return new Promise((resolve, reject) => {
@@ -2377,31 +2811,16 @@
     });
   }
 
-  function speakChinese(text, token) {
-    return new Promise((resolve) => {
-      if (!window.speechSynthesis || token !== state.listening.token) {
-        resolve();
-        return;
-      }
-      const utterance = new SpeechSynthesisUtterance(text);
-      const voice = window.speechSynthesis.getVoices().find((item) => /^zh/i.test(item.lang));
-      if (voice) utterance.voice = voice;
-      utterance.lang = voice?.lang || "zh-CN";
-      utterance.rate = Number(dom.listeningSpeed.value) || 1;
-      utterance.onend = resolve;
-      utterance.onerror = resolve;
-      window.speechSynthesis.speak(utterance);
-    });
-  }
-
   function stopListeningAudio() {
     state.listening.token += 1;
-    if (state.listening.audio) {
-      try {
-        state.listening.audio.pause();
-      } catch (error) {
-        console.debug(error);
-      }
+    const audio = state.listening.audio;
+    if (audio) {
+      try { audio.pause(); } catch (error) { console.debug(error); }
+      try { audio.removeAttribute("src"); audio.load(); } catch (error) { console.debug(error); }
+    }
+    if (state.listening.audioUrl) {
+      try { URL.revokeObjectURL(state.listening.audioUrl); } catch (error) { console.debug(error); }
+      state.listening.audioUrl = "";
     }
     if (window.speechSynthesis) window.speechSynthesis.cancel();
   }
@@ -2410,9 +2829,18 @@
     stopListeningAudio();
     state.listening.playing = false;
     state.listening.started = false;
+    state.listening.preparing = false;
+    state.listening.currentTrack = -1;
+    state.listening.timeline = [];
+    state.listening.totalDuration = 0;
+    state.listening.consumedSeconds = 0;
+    state.listening.lastTime = 0;
     if (state.listening.sleepTimer) window.clearInterval(state.listening.sleepTimer);
     state.listening.sleepTimer = null;
     state.listening.sleepDeadline = 0;
+    state.listening.sleepAudioDeadline = 0;
+    state.listening.directFallback = false;
+    updateMediaSessionState("none");
     renderListening();
   }
 
@@ -2421,6 +2849,7 @@
     state.listening.sleepTimer = null;
     const minutes = Number(dom.listeningSleep.value) || 0;
     state.listening.sleepDeadline = minutes ? Date.now() + minutes * 60000 : 0;
+    state.listening.sleepAudioDeadline = minutes ? state.listening.consumedSeconds + minutes * 60 : 0;
     if (!minutes) {
       dom.listeningSleepStatus.textContent = "睡眠模式关闭";
       return;
@@ -2439,7 +2868,8 @@
   }
 
   function sleepExpired() {
-    return state.listening.sleepDeadline > 0 && Date.now() >= state.listening.sleepDeadline;
+    return (state.listening.sleepDeadline > 0 && Date.now() >= state.listening.sleepDeadline)
+      || (state.listening.sleepAudioDeadline > 0 && state.listening.consumedSeconds >= state.listening.sleepAudioDeadline);
   }
 
   function formatClock(milliseconds) {
@@ -2456,7 +2886,11 @@
     dom.listeningProgress.textContent = `${index} / ${total}`;
     dom.listeningEnglish.textContent = current?.english || "准备开始";
     dom.listeningChinese.textContent = current?.chinese || "选择内容后点击开始";
-    dom.listeningPlayButton.textContent = state.listening.playing ? "暂停" : (state.listening.started ? "继续" : "播放");
+    dom.listeningPlayButton.textContent = state.listening.preparing
+      ? "准备中"
+      : state.listening.playing
+        ? "暂停"
+        : (state.listening.started ? "继续" : "播放");
     dom.listeningProgressBar.style.width = total ? `${(index / total) * 100}%` : "0%";
     if (!state.listening.sleepDeadline) dom.listeningSleepStatus.textContent = "睡眠模式关闭";
   }
@@ -2810,12 +3244,8 @@
     setPlaying(true);
     await wait(50);
     try {
-      for (let index = 0; index < settings.repeat; index += 1) {
-        if (token !== state.token) return;
-        dom.customPlayStatus.textContent = `正在播放第 ${index + 1} / ${settings.repeat} 遍`;
-        await playSmartText(item.text, token);
-        if (index < settings.repeat - 1) await wait(850);
-      }
+      dom.customPlayStatus.textContent = "正在生成流畅英式语音";
+      await playRepeatedSpeech(item.text, settings.repeat, token);
       if (token === state.token) {
         setPlaying(false);
         dom.customPlayStatus.textContent = "播放完成，请填写答案";
@@ -3036,7 +3466,7 @@
       stopPlayback();
       const token = ++state.token;
       setPlaying(true);
-      playAudio(getTextAudioSource(item.text), token).finally(() => setPlaying(false));
+      playSmartText(item.text, token).finally(() => setPlaying(false));
     }
     if (button.dataset.action === "edit") openCustomEditor(item.id);
     if (button.dataset.action === "delete") {
@@ -3055,7 +3485,7 @@
       stopPlayback();
       const token = ++state.token;
       setPlaying(true);
-      playAudio(getTextAudioSource(item.text), token).finally(() => setPlaying(false));
+      playSmartText(item.text, token).finally(() => setPlaying(false));
     }
     if (button.dataset.action === "retry") {
       startCustomPractice([{ id: item.id, text: item.text, translation: item.translation, note: item.note }], "hearing");
@@ -3245,7 +3675,7 @@
       if (type === "number") {
         await playNumberAudio(entry.number, token);
       } else {
-        await playAudio(getTextAudioSource(entry.data.audioText), token);
+        await playSmartText(entry.data.audioText, token);
       }
     } catch (error) {
       console.error(error);
