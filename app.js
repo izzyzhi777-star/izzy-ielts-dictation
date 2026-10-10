@@ -2727,7 +2727,7 @@
         cursor += neuralVoice.estimateDuration(interval);
       }
       onProgress?.(entryIndex + 1, playlist.length, entry);
-      await wait(0);
+      await Promise.resolve();
     }
       if (!speechCount) {
         throw new Error("No neural speech was generated");
