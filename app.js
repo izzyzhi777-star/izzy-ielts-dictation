@@ -2547,8 +2547,8 @@
       await preloadVoicePackForPlaylist(playlist, token, (completed, total) => {
         if (token !== state.listening.token || !total) return;
         dom.listeningEnglish.textContent = "正在缓存内置 Sonia 语音";
-        dom.listeningChinese.textContent = `${completed} / ${total} · 首次会稍慢，之后立即播放`;
-        dom.listeningProgressBar.style.width = `${(completed / total) * 100}%`;
+        dom.listeningChinese.textContent = `内置语音 ${completed} / ${total} · 首次会稍慢，之后立即播放`;
+        dom.listeningProgressBar.style.width = `${(completed / total) * 60}%`;
         dom.listeningPlayButton.textContent = "缓存中";
       });
       if (token !== state.listening.token) return;
@@ -2556,8 +2556,8 @@
         if (token !== state.listening.token) return;
         dom.listeningProgress.textContent = `${completed} / ${total}`;
         dom.listeningEnglish.textContent = "正在生成连续音频";
-        dom.listeningChinese.textContent = `${completed} / ${total} · ${entry.english || entry.audioText || ""}`;
-        dom.listeningProgressBar.style.width = `${(completed / total) * 100}%`;
+        dom.listeningChinese.textContent = `连续音频 ${completed} / ${total} · ${entry.english || entry.audioText || ""}`;
+        dom.listeningProgressBar.style.width = `${60 + (completed / total) * 40}%`;
         dom.listeningPlayButton.textContent = "准备中";
       });
       if (token !== state.listening.token) return;
