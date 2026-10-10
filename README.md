@@ -1,4 +1,4 @@
-# 数字听写 · IELTS 英音 1–90 billion
+# IZZY IELTS-DICTATION
 
 本小程序用于训练雅思听力中的数字，默认使用 Sonia 英式女声，也可以切换 Ryan、Libby 或男女混播。首次播放新数字或日期时会自动生成并缓存英式神经语音。
 
