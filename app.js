@@ -2322,6 +2322,7 @@
       utterance.pitch = 1;
       utterance.onend = resolve;
       utterance.onerror = (event) => reject(new Error(event.error || "Browser speech failed"));
+      try { window.speechSynthesis.cancel(); window.speechSynthesis.resume(); } catch (error) { console.debug(error); }
       window.speechSynthesis.speak(utterance);
     });
   }
