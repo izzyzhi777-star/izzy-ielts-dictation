@@ -1,0 +1,668 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ffffff">
+  <title>Izzy 雅思听写</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div>
+        <div>
+          <p class="brand-kicker">IELTS LISTENING · BRITISH ENGLISH</p>
+          <h1>Izzy 雅思听写 <span>1–90B</span></h1>
+        </div>
+      </div>
+
+      <nav class="primary-nav" aria-label="主导航">
+        <button class="nav-tab is-active" type="button" data-tab="dictation">数字日期</button>
+        <button class="nav-tab" type="button" data-tab="listening">随身听</button>
+        <button class="nav-tab" type="button" data-tab="custom">我的词句</button>
+        <button class="nav-tab" type="button" data-tab="words">词库</button>
+        <button class="nav-tab" type="button" data-tab="wrong">
+          数字错题
+          <span class="nav-badge" id="navWrongCount">0</span>
+        </button>
+        <button class="nav-tab" type="button" data-tab="hearingwrong">
+          听力错词
+          <span class="nav-badge" id="navHearingWrongCount">0</span>
+        </button>
+      </nav>
+
+      <button class="gear-button" id="settingsButton" type="button" aria-label="打开设置">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2.8v2.1"/><path d="M12 19.1v2.1"/><path d="m4.5 4.5 1.5 1.5"/><path d="m18 18 1.5 1.5"/><path d="M2.8 12h2.1"/><path d="M19.1 12h2.1"/><path d="m4.5 19.5 1.5-1.5"/><path d="M18 6l1.5-1.5"/><circle cx="12" cy="12" r="7.2"/></svg>
+      </button>
+    </header>
+
+    <main>
+      <section class="tab-panel is-active" id="tab-dictation" data-panel="dictation">
+        <div class="category-switch" role="group" aria-label="数字与日期分类">
+          <button class="is-active" type="button" data-subtab="dictation">数字听写</button>
+          <button type="button" data-subtab="dates">日期专项</button>
+        </div>
+        <div class="section-intro">
+          <div>
+            <p class="section-kicker">DICTATION PRACTICE</p>
+            <h2>听清，再写下答案</h2>
+            <p>1–100 音频已内置；大数字会自动生成并缓存。提交方式、语速、播放次数、声音和数字顺序都可以在右上角设置中调整。</p>
+          </div>
+          <div class="practice-selectors">
+            <div class="range-switch" role="group" aria-label="数字范围">
+              <button class="range-button is-active" type="button" data-range="basic">
+                <span>基础</span><strong>1–100</strong>
+              </button>
+              <button class="range-button" type="button" data-range="hundreds">
+                <span>百位</span><strong>100–1,000</strong>
+              </button>
+              <button class="range-button" type="button" data-range="thousands">
+                <span>千位</span><strong>1,000–10,000</strong>
+              </button>
+              <button class="range-button" type="button" data-range="large">
+                <span>全范围</span><strong>1–90 billion</strong>
+              </button>
+            </div>
+            <div class="mode-switch" role="group" aria-label="拼写方式">
+              <button class="mode-button is-active" type="button" data-mode="english">
+                <span>01</span>
+                <strong>英文拼写</strong>
+                <small>one hundred twenty</small>
+              </button>
+              <button class="mode-button" type="button" data-mode="digits">
+                <span>02</span>
+                <strong>阿拉伯数字</strong>
+                <small>120</small>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="dictation-layout">
+          <section class="exercise-card" aria-live="polite">
+            <div class="exercise-topline">
+              <div class="exercise-meta">
+                <span id="sessionLabel">本轮 0 / 100</span>
+                <span class="hairline"></span>
+                <span id="modeLabel">英文拼写 · 顺序</span>
+              </div>
+              <div class="exercise-actions">
+                <button class="text-button" id="restartButton" type="button" disabled>重开本轮</button>
+                <button class="text-button" id="stopButton" type="button" disabled>停止播报</button>
+              </div>
+            </div>
+            <div class="progress-track" aria-hidden="true"><span id="progressBar"></span></div>
+
+            <div class="start-screen" id="startScreen">
+              <div class="start-index" aria-hidden="true">01</div>
+              <div class="start-copy">
+                <p class="section-kicker">READY</p>
+                <h2 id="startTitle">从 1 到 100，按顺序拼写英文</h2>
+                <p id="startDescription">点击开始后使用英式神经语音播报。答案提交后光标会留在输入框，按 Enter 即可进入下一题。</p>
+                <button class="primary-button" id="startButton" type="button">开始听写</button>
+              </div>
+            </div>
+
+            <div class="question-screen" id="questionScreen" hidden>
+              <div class="question-heading">
+                <div class="question-index">
+                  <strong id="questionIndex">01</strong>
+                  <span id="questionTotal">/ 100</span>
+                </div>
+                <div class="question-tags">
+                  <span class="tag" id="answerTag">英文拼写</span>
+                  <span class="tag tag-muted" id="orderTag">顺序播报</span>
+                </div>
+              </div>
+
+              <section class="listen-panel">
+                <div class="listen-copy">
+                  <p class="section-kicker">LISTEN</p>
+                  <h2 id="listenTitle">听音后填写英文单词</h2>
+                  <p id="listenHint">例如听到 thirteen，请填写 thirteen。</p>
+                </div>
+                <button class="play-button" id="playButton" type="button" aria-label="播放当前数字">
+                  <svg class="icon-play" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 9 6-9 6V6Z"/></svg>
+                  <svg class="icon-stop" viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10"/></svg>
+                </button>
+                <div class="play-meta">
+                  <strong id="playStatus">按播放键开始</strong>
+                  <span id="repeatLabel">播放 2 遍 · 1.0×</span>
+                  <button class="text-button" id="replayButton" type="button">重播当前数字</button>
+                </div>
+              </section>
+
+              <section class="answer-section">
+                <div class="answer-label-row">
+                  <label for="answerInput">你的答案</label>
+                  <span id="submitModeHint">手动提交</span>
+                </div>
+                <div class="answer-wrap">
+                  <input id="answerInput" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="在这里填写">
+                </div>
+                <div class="answer-actions">
+                  <button class="primary-button" id="submitButton" type="button">提交答案</button>
+                  <button class="secondary-button" id="nextButton" type="button" hidden>下一题</button>
+                </div>
+              </section>
+
+              <section class="result" id="result" hidden>
+                <div class="result-head">
+                  <strong id="resultMark">正确</strong>
+                  <span id="resultNote"></span>
+                </div>
+                <div class="result-line">
+                  <span>正确答案</span>
+                  <p id="correctAnswer"></p>
+                </div>
+                <div class="result-line wrong-line" id="userAnswerRow" hidden>
+                  <span>你的答案</span>
+                  <p id="userAnswer"></p>
+                </div>
+              </section>
+            </div>
+
+            <div class="complete-screen" id="completeScreen" hidden>
+              <div class="complete-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg></div>
+              <p class="section-kicker">ROUND COMPLETE</p>
+              <h2>本轮听写完成</h2>
+              <p id="completeSummary">共 0 题，正确 0 题。</p>
+              <div class="complete-actions">
+                <button class="primary-button" id="againButton" type="button">再练一次</button>
+                <button class="secondary-button" id="reviewWrongButton" type="button">去错题本</button>
+              </div>
+            </div>
+          </section>
+
+          <aside class="session-aside">
+            <div class="aside-head">
+              <p class="section-kicker">SESSION</p>
+              <h3>本轮概览</h3>
+            </div>
+            <div class="stat-grid">
+              <div><strong id="asideCorrect">0</strong><span>正确</span></div>
+              <div><strong id="asideWrong">0</strong><span>错误</span></div>
+            </div>
+            <div class="aside-info">
+              <div><span>语音</span><strong id="asideVoice">Sonia 神经女声</strong></div>
+              <div><span>播放</span><strong id="asideRepeat">2 遍</strong></div>
+              <div><span>速度</span><strong id="asideSpeed">1.0×</strong></div>
+              <div><span>顺序</span><strong id="asideOrder">顺序</strong></div>
+            </div>
+            <div class="aside-note">
+              <span class="note-number">13</span>
+              <p>13–19 和整十数字使用独立慢速音频，teens 与 ty 会更清楚。</p>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="tab-panel" id="tab-dates" data-panel="dates">
+        <div class="category-switch" role="group" aria-label="数字与日期分类">
+          <button type="button" data-subtab="dictation">数字听写</button>
+          <button class="is-active" type="button" data-subtab="dates">日期专项</button>
+        </div>
+        <div class="section-intro date-intro">
+          <div>
+            <p class="section-kicker">DATE LISTENING</p>
+            <h2>日期专项</h2>
+            <p>日期专项使用离线 IELTS 标准英音。语音会完整播报星期、日期和月份，你填写“星期 + 阿拉伯日号 + 月份英文”。</p>
+          </div>
+          <div class="date-mode-switch" role="group" aria-label="日期听写模式">
+            <button class="date-mode-button is-active" type="button" data-date-mode="phrase">
+              <span>01</span>
+              <strong>星期 + 月日</strong>
+              <small>Saturday, the fourth of February</small>
+            </button>
+            <button class="date-mode-button" type="button" data-date-mode="day-number">
+              <span>02</span>
+              <strong>日期数字 1–31</strong>
+              <small>the twenty-seventh → 27</small>
+            </button>
+          </div>
+        </div>
+
+        <div class="date-layout">
+          <section class="date-exercise" aria-live="polite">
+            <div class="exercise-topline">
+              <div class="exercise-meta">
+                <span id="dateProgressLabel">日期听写 0 / 100</span>
+                <span class="hairline"></span>
+                <span id="dateModeLabel">月日英文</span>
+              </div>
+              <div class="exercise-actions">
+                <button class="text-button" id="restartDateButton" type="button" disabled>重开日期听写</button>
+                <button class="text-button" id="stopDateButton" type="button" disabled>停止播报</button>
+              </div>
+            </div>
+            <div class="progress-track" aria-hidden="true"><span id="dateProgressBar"></span></div>
+
+            <div class="date-start" id="dateStartScreen">
+              <div class="date-start-index" aria-hidden="true">01</div>
+              <div>
+                <p class="section-kicker">READY FOR DATES</p>
+                <h2 id="dateStartTitle">先听英文日期，再拼写完整短语</h2>
+                <p id="dateStartDescription">例如听到 “the twenty-seventh of June”，填写相同英文。提交后光标会继续留在输入框。</p>
+                <button class="primary-button" id="startDateButton" type="button">开始日期听写</button>
+              </div>
+            </div>
+
+            <div class="date-question" id="dateQuestionScreen" hidden>
+              <div class="question-heading">
+                <div class="question-index">
+                  <strong id="dateQuestionIndex">01</strong>
+                  <span id="dateQuestionTotal">/ 100</span>
+                </div>
+                <div class="question-tags">
+                  <span class="tag" id="dateAnswerTag">日期英文</span>
+                  <span class="tag tag-muted">British English</span>
+                </div>
+              </div>
+
+              <section class="listen-panel date-listen-panel">
+                <div class="listen-copy">
+                  <p class="section-kicker">LISTEN</p>
+                  <h2 id="dateListenTitle">听音后填写日期英文</h2>
+                  <p id="dateListenHint">只播报 “the twenty-seventh of June”，不播报星期。</p>
+                </div>
+                <button class="play-button" id="datePlayButton" type="button" aria-label="播放当前日期">
+                  <svg class="icon-play" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 9 6-9 6V6Z"/></svg>
+                  <svg class="icon-stop" viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10"/></svg>
+                </button>
+                <div class="play-meta">
+                  <strong id="datePlayStatus">按播放键开始</strong>
+                  <span id="dateRepeatLabel">播放 2 遍 · 1.0×</span>
+                  <button class="text-button" id="dateReplayButton" type="button">重播日期</button>
+                </div>
+              </section>
+
+              <section class="answer-section">
+                <div class="answer-label-row">
+                  <label for="dateAnswerInput" id="dateAnswerLabel">日期英文</label>
+                  <span id="dateSubmitModeHint">手动提交</span>
+                </div>
+                <div class="answer-wrap">
+                  <input id="dateAnswerInput" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="填写英文日期">
+                </div>
+                <div class="answer-actions">
+                  <button class="primary-button" id="submitDateButton" type="button">提交答案</button>
+                  <button class="secondary-button" id="nextDateButton" type="button" hidden>下一题</button>
+                </div>
+              </section>
+
+              <section class="result date-result" id="dateResult" hidden>
+                <div class="result-head">
+                  <strong id="dateResultMark">正确</strong>
+                  <span id="dateResultNote"></span>
+                </div>
+                <div class="result-line">
+                  <span>正确答案</span>
+                  <p id="dateCorrectAnswer"></p>
+                </div>
+                <div class="result-line date-english-row" id="dateEnglishRow">
+                  <span>英文拼写</span>
+                  <p id="dateEnglishAnswer"></p>
+                </div>
+                <div class="result-line wrong-line" id="dateUserAnswerRow" hidden>
+                  <span>你的答案</span>
+                  <p id="dateUserAnswer"></p>
+                </div>
+              </section>
+            </div>
+
+            <div class="complete-screen" id="dateCompleteScreen" hidden>
+              <div class="complete-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg></div>
+              <p class="section-kicker">DATE ROUND COMPLETE</p>
+              <h2>本轮日期听写完成</h2>
+              <p id="dateCompleteSummary">共 0 题，正确 0 题。</p>
+              <button class="primary-button" id="againDateButton" type="button">再练一轮</button>
+            </div>
+          </section>
+
+          <aside class="weekday-panel">
+            <div class="aside-head">
+              <p class="section-kicker">WEEKDAY VOICE</p>
+              <h3>星期发音目录</h3>
+            </div>
+            <p class="weekday-note">点击任意星期即可播放英文发音。</p>
+            <div class="weekday-list" id="weekdayList"></div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="tab-panel" id="tab-listening" data-panel="listening">
+        <div class="section-intro listening-intro">
+          <div>
+            <p class="section-kicker">AUDIO PLAYER</p>
+            <h2>英文数字随身听</h2>
+            <p>可连续播放数字、月份、日期序数、完整日期和错题。支持睡眠定时、重复次数、速度、中英对照和间隔时间。</p>
+          </div>
+          <button class="primary-button listening-start" id="startListeningButton" type="button">开始随身听</button>
+        </div>
+
+        <div class="listening-layout">
+          <section class="listening-player">
+            <div class="listening-topline">
+              <span id="listeningProgress">0 / 0</span>
+              <span id="listeningSleepStatus">睡眠模式关闭</span>
+            </div>
+            <div class="listening-now">
+              <p class="section-kicker">NOW PLAYING</p>
+              <h2 id="listeningEnglish">准备开始</h2>
+              <p id="listeningChinese">选择内容后点击开始</p>
+            </div>
+            <div class="listening-controls">
+              <button class="small-action" id="listeningPreviousButton" type="button" aria-label="上一题">‹</button>
+              <button class="primary-button listening-play" id="listeningPlayButton" type="button">播放</button>
+              <button class="small-action" id="listeningNextButton" type="button" aria-label="下一题">›</button>
+            </div>
+            <div class="listening-progress-track"><span id="listeningProgressBar"></span></div>
+          </section>
+
+          <aside class="listening-settings">
+            <div class="aside-head">
+              <p class="section-kicker">PLAYLIST &amp; TIMER</p>
+              <h3>随身听设置</h3>
+            </div>
+            <div class="listening-options" id="listeningCategories">
+              <label><input type="checkbox" data-listening-category="numbers" checked><span>数字 1–100</span></label>
+              <label><input type="checkbox" data-listening-category="hundreds"><span>数字 100–1,000</span></label>
+              <label><input type="checkbox" data-listening-category="thousands"><span>数字 1,000–10,000</span></label>
+              <label><input type="checkbox" data-listening-category="large"><span>大数字 1–90B</span></label>
+              <label><input type="checkbox" data-listening-category="months" checked><span>月份</span></label>
+              <label><input type="checkbox" data-listening-category="ordinals" checked><span>日期序数 1–31</span></label>
+              <label><input type="checkbox" data-listening-category="dates" checked><span>完整日期</span></label>
+              <label><input type="checkbox" data-listening-category="custom"><span>我的词句</span></label>
+              <label><input type="checkbox" data-listening-category="hearing"><span>听力错词</span></label>
+              <label><input type="checkbox" data-listening-category="wrong"><span>数字日期错题</span></label>
+            </div>
+            <label class="listening-setting"><span>播放模式</span><select id="listeningMode"><option value="english">只念英文</option><option value="bilingual">中英对照</option></select></label>
+            <label class="listening-setting"><span>每题重复</span><select id="listeningRepeat"><option value="1">1 次</option><option value="2" selected>2 次</option><option value="3">3 次</option><option value="5">5 次</option></select></label>
+            <label class="listening-setting"><span>播放速度</span><select id="listeningSpeed"><option value="0.75">0.75×</option><option value="1" selected>1.0×</option><option value="1.2">1.2×</option><option value="1.5">1.5×</option></select></label>
+            <label class="listening-setting"><span>间隔时间</span><select id="listeningInterval"><option value="0.5">0.5 秒</option><option value="1" selected>1 秒</option><option value="2">2 秒</option><option value="3">3 秒</option><option value="5">5 秒</option></select></label>
+            <label class="listening-setting"><span>睡眠模式</span><select id="listeningSleep"><option value="0">关闭</option><option value="5">5 分钟</option><option value="10">10 分钟</option><option value="20">20 分钟</option><option value="30">30 分钟</option><option value="60">60 分钟</option></select></label>
+          </aside>
+        </div>
+      </section>
+
+      <section class="tab-panel" id="tab-custom" data-panel="custom">
+        <div class="section-intro">
+          <div>
+            <p class="section-kicker">MY VOCABULARY</p>
+            <h2>我的词句</h2>
+            <p>添加单词、词组或句子。系统会自动生成中文翻译，你可以修改翻译、补充笔记，并按现有速度、重复次数、间隔和提交方式练习。</p>
+          </div>
+          <button class="primary-button" id="newCustomButton" type="button">添加词句</button>
+        </div>
+
+        <section class="custom-editor" id="customEditor" hidden>
+          <div class="custom-editor-head">
+            <div>
+              <p class="section-kicker">ADD / EDIT</p>
+              <h3 id="customEditorTitle">添加英文内容</h3>
+            </div>
+            <button class="icon-button" id="closeCustomEditorButton" type="button" aria-label="关闭编辑">×</button>
+          </div>
+          <label class="custom-field">
+            <span>英文内容</span>
+            <textarea id="customEnglishInput" rows="2" placeholder="例如：accommodation / public transport / The lecture begins at eight thirty."></textarea>
+          </label>
+          <label class="custom-field">
+            <span>中文翻译</span>
+            <div class="custom-inline">
+              <input id="customChineseInput" type="text" placeholder="点击自动翻译，或手动填写">
+              <button class="secondary-button" id="translateCustomButton" type="button">自动翻译</button>
+            </div>
+          </label>
+          <label class="custom-field">
+            <span>个人笔记</span>
+            <textarea id="customNoteInput" rows="3" placeholder="记录易错点、搭配或记忆方法"></textarea>
+          </label>
+          <div class="custom-editor-actions">
+            <button class="primary-button" id="saveCustomButton" type="button">保存词句</button>
+            <button class="text-button" id="cancelCustomEditButton" type="button">取消</button>
+          </div>
+        </section>
+
+        <div class="custom-layout">
+          <section class="custom-practice" aria-live="polite">
+            <div class="exercise-topline">
+              <div class="exercise-meta">
+                <span id="customProgressLabel">我的词句 0 / 0</span>
+                <span class="hairline"></span>
+                <span id="customModeLabel">拼写练习</span>
+              </div>
+              <div class="exercise-actions">
+                <button class="text-button" id="restartCustomButton" type="button" disabled>重开本轮</button>
+                <button class="text-button" id="stopCustomButton" type="button" disabled>停止播报</button>
+              </div>
+            </div>
+            <div class="progress-track" aria-hidden="true"><span id="customProgressBar"></span></div>
+
+            <div class="custom-start" id="customStartScreen">
+              <div>
+                <p class="section-kicker">READY</p>
+                <h2 id="customStartTitle">先添加你要拼写的英文</h2>
+                <p id="customStartDescription">保存词句后，可以听英文、填写拼写，并查看中文翻译和笔记。</p>
+                <button class="primary-button" id="startCustomPracticeButton" type="button">开始我的词句练习</button>
+              </div>
+            </div>
+
+            <div class="custom-question" id="customQuestionScreen" hidden>
+              <div class="question-heading">
+                <div class="question-index">
+                  <strong id="customQuestionIndex">01</strong>
+                  <span id="customQuestionTotal">/ 0</span>
+                </div>
+                <div class="question-tags"><span class="tag">我的词句</span></div>
+              </div>
+              <section class="listen-panel">
+                <div class="listen-copy">
+                  <p class="section-kicker">LISTEN</p>
+                  <h2>听英文，填写完整拼写</h2>
+                  <p id="customListenHint">按 Tab 可重播当前内容</p>
+                </div>
+                <button class="play-button" id="customPlayButton" type="button" aria-label="播放当前词句">
+                  <svg class="icon-play" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 9 6-9 6V6Z"/></svg>
+                  <svg class="icon-stop" viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10"/></svg>
+                </button>
+                <div class="play-meta">
+                  <strong id="customPlayStatus">按播放键开始</strong>
+                  <button class="text-button" id="customReplayButton" type="button">重播当前词句</button>
+                </div>
+              </section>
+              <section class="answer-section">
+                <div class="answer-label-row">
+                  <label for="customAnswerInput">英文拼写</label>
+                  <span id="customSubmitHint">手动提交</span>
+                </div>
+                <div class="answer-wrap"><input id="customAnswerInput" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="填写完整英文"></div>
+                <div class="answer-actions">
+                  <button class="primary-button" id="submitCustomButton" type="button">提交答案</button>
+                  <button class="secondary-button" id="nextCustomButton" type="button" hidden>下一题</button>
+                </div>
+              </section>
+              <section class="result" id="customResult" hidden>
+                <div class="result-head"><strong id="customResultMark">正确</strong><span id="customResultNote"></span></div>
+                <div class="result-line"><span>正确答案</span><p id="customCorrectAnswer"></p></div>
+                <div class="result-line"><span>中文翻译</span><p id="customCorrectTranslation"></p></div>
+                <div class="result-line"><span>笔记</span><p id="customCorrectNote"></p></div>
+                <div class="result-line wrong-line" id="customUserAnswerRow" hidden><span>你的答案</span><p id="customUserAnswer"></p></div>
+              </section>
+            </div>
+
+            <div class="complete-screen" id="customCompleteScreen" hidden>
+              <div class="complete-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg></div>
+              <p class="section-kicker">MY VOCABULARY COMPLETE</p>
+              <h2>本轮词句练习完成</h2>
+              <p id="customCompleteSummary">共 0 题，正确 0 题。</p>
+              <button class="primary-button" id="againCustomButton" type="button">再练一次</button>
+            </div>
+          </section>
+
+          <aside class="custom-list-panel">
+            <div class="aside-head">
+              <p class="section-kicker">SAVED ITEMS</p>
+              <h3>已保存词句 <span id="customItemCount">0</span></h3>
+            </div>
+            <div class="custom-list" id="customList"></div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="tab-panel" id="tab-hearingwrong" data-panel="hearingwrong">
+        <div class="section-intro">
+          <div>
+            <p class="section-kicker">EBBINGHAUS REVIEW</p>
+            <h2>听力错词本</h2>
+            <p>自定义词句拼错后自动进入。按 5 分钟、30 分钟、12 小时、1/2/4/7/15/30 天安排复习，答对后进入下一阶段。</p>
+          </div>
+          <div class="wrongbook-actions">
+            <button class="primary-button" id="reviewDueWordsButton" type="button">复习到期</button>
+            <button class="secondary-button" id="reviewAllWordsButton" type="button">全部复习</button>
+          </div>
+        </div>
+        <div class="hearing-wrong-summary" id="hearingWrongSummary">暂无错词</div>
+        <div class="hearing-wrong-list" id="hearingWrongList"></div>
+      </section>
+
+      <section class="tab-panel" id="tab-words" data-panel="words">
+        <div class="directory-head">
+          <div>
+            <p class="section-kicker">NUMBER DIRECTORY</p>
+            <h2>数字单词目录</h2>
+            <p>点击任意数字即可播报对应英文，适合先熟悉读音再开始听写。</p>
+          </div>
+          <label class="search-box">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="m16 16 4 4"/></svg>
+            <input id="wordSearch" type="search" placeholder="搜索 13 或 thirteen">
+          </label>
+        </div>
+        <div class="directory-switch" id="directorySwitch" role="group" aria-label="目录分类">
+          <button type="button" class="is-active" data-directory="numbers">数字 1–100</button>
+          <button type="button" data-directory="months">月份</button>
+          <button type="button" data-directory="ordinals">日期序数 1–31</button>
+        </div>
+        <div class="word-grid" id="wordGrid"></div>
+      </section>
+
+      <section class="tab-panel" id="tab-wrong" data-panel="wrong">
+        <div class="wrongbook-head">
+          <div>
+            <p class="section-kicker">WRONG BOOK · DIGITS ONLY</p>
+            <h2>数字错题本</h2>
+            <p>错题重练固定填写阿拉伯数字。答对后会自动移出错题本。</p>
+          </div>
+          <div class="wrongbook-actions">
+            <button class="primary-button" id="startWrongRoundButton" type="button" disabled>数字错题再练</button>
+            <button class="primary-button" id="startWrongDateRoundButton" type="button" disabled>日期错题再练</button>
+            <button class="secondary-button" id="clearWrongBookButton" type="button" disabled>清空错题</button>
+          </div>
+        </div>
+        <div class="wrongbook-list" id="wrongBookList"></div>
+      </section>
+    </main>
+
+    <footer>
+      <span>数字 1–90 billion + 日期专项 · 不上传答案</span>
+      <span>English (UK) · Sonia / Ryan / Libby</span>
+    </footer>
+  </div>
+
+  <div class="drawer-backdrop" id="drawerBackdrop" hidden>
+    <aside class="settings-drawer" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+      <header class="drawer-head">
+        <div>
+          <p class="section-kicker">PREFERENCES</p>
+          <h2 id="settingsTitle">设置</h2>
+        </div>
+        <button class="icon-button" id="closeSettingsButton" type="button" aria-label="关闭设置">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12"/><path d="m18 6-12 12"/></svg>
+        </button>
+      </header>
+
+      <section class="setting-group">
+        <div class="setting-copy">
+          <h3>播报声音</h3>
+          <p>默认使用 Sonia 英式女声，也可以切换 Ryan、Libby 或男女混播。所有音色均来自英式神经语音。</p>
+        </div>
+        <div class="option-grid option-grid-voices" id="voiceOptions">
+          <button type="button" data-voice="sonia" class="is-active">Sonia · 女声</button>
+          <button type="button" data-voice="ryan">Ryan · 男声</button>
+          <button type="button" data-voice="libby">Libby · 女声</button>
+          <button type="button" data-voice="mix">男女混播</button>
+        </div>
+      </section>
+
+      <section class="setting-group">
+        <div class="setting-copy">
+          <h3>播报速度</h3>
+          <p>使用本地音频变速，播放过程不会卡顿。</p>
+        </div>
+        <div class="option-grid option-grid-four" id="speedOptions">
+          <button type="button" data-speed="0.75">0.75×</button>
+          <button type="button" data-speed="1" class="is-active">1.0×</button>
+          <button type="button" data-speed="1.2">1.2×</button>
+          <button type="button" data-speed="1.5">1.5×</button>
+        </div>
+      </section>
+
+      <section class="setting-group">
+        <div class="setting-copy">
+          <h3>提交方式</h3>
+          <p>自动提交会在停止输入约 1 秒后检查答案，下一题仍由你手动进入。</p>
+        </div>
+        <div class="option-grid" id="submitOptions">
+          <button type="button" data-submit="manual" class="is-active">手动提交</button>
+          <button type="button" data-submit="auto">自动提交</button>
+        </div>
+      </section>
+
+      <section class="setting-group">
+        <div class="setting-copy">
+          <h3>播报次数</h3>
+          <p>每道题连续播放的次数。</p>
+        </div>
+        <div class="option-grid option-grid-four" id="repeatOptions">
+          <button type="button" data-repeat="1">1 次</button>
+          <button type="button" data-repeat="2" class="is-active">2 次</button>
+          <button type="button" data-repeat="3">3 次</button>
+          <button type="button" data-repeat="4">4 次</button>
+        </div>
+      </section>
+
+      <section class="setting-group">
+        <div class="setting-copy">
+          <h3>阿拉伯数字顺序</h3>
+          <p>顺序或乱序只作用于 1–100；100 以上每次都会重新随机抽取 100 个数字。</p>
+        </div>
+        <div class="option-grid" id="orderOptions">
+          <button type="button" data-order="sequence" class="is-active">顺序播报</button>
+          <button type="button" data-order="shuffle">乱序播报</button>
+        </div>
+      </section>
+
+      <section class="setting-group">
+        <div class="setting-copy">
+          <h3>日期数字顺序</h3>
+          <p>日期数字模式可选择 1–31 顺序播报，或每次重新开始都乱序。</p>
+        </div>
+        <div class="option-grid" id="dateOrderOptions">
+          <button type="button" data-date-order="sequence" class="is-active">顺序 1–31</button>
+          <button type="button" data-date-order="shuffle">乱序 1–31</button>
+        </div>
+      </section>
+
+      <div class="drawer-note">
+        <strong>当前音频</strong>
+        <p>13–19 与整十数字使用较慢的专属 WAV，其他数字使用标准 IELTS 英音语速。</p>
+      </div>
+    </aside>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

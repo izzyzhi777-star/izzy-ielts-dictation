@@ -1,0 +1,1252 @@
+{
+  "Thursday, the first of January": {
+    "file": "e33a95f5f7fea933e6151e595b667eb42c8ed4763cf4098ec0ba6407e84930ce.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Monday, the second of February": {
+    "file": "aacbe4858237087f7dace1316e0859598a68fa509a3c45c08b7389eed7eccf89.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Tuesday, the third of March": {
+    "file": "6178402d316303fa1671ec904fc33a97bf5dd30d46779429767ec9571c6b1b3d.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Saturday, the fourth of April": {
+    "file": "232391486c7e5e3c5a7cd962a731ea196d3475924f5ada9bfef35f1d8b6a8ced.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Tuesday, the fifth of May": {
+    "file": "5793a07627c2e6e039694b4bcf53a8a0d4b5efe93e16d120c69f923f8a81d365.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Wednesday, the tenth of June": {
+    "file": "77377afa25876142c264639bcd26fcedc65a976e31b783bc03ef1a2f871913dd.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Saturday, the eleventh of July": {
+    "file": "e4d4a3d5596d88461e6f69d0d308b69b51793684ac69ed710fa74e61f2db9c6a.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Wednesday, the twelfth of August": {
+    "file": "a82611aef8d6bdbe5659a8cc5c0ad0afb550dac84ac591994a4da9a9887b5782.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Sunday, the thirteenth of September": {
+    "file": "5c453f32f9ed14ae6b02777e15ae3493f01b1746c1d7d2d214055a98cc339655.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Wednesday, the fourteenth of October": {
+    "file": "36763ee9b0cb5b4bd27b2d5aac13b330eadb8ff97708fead9488df69624ef176.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Sunday, the fifteenth of November": {
+    "file": "11aef25b326e8a7a96c678e21a337051f3d5abcf39e17a3b23e69771d2a85ceb.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Sunday, the twentieth of December": {
+    "file": "bcf4dcbe7ddfeb17381271e6aeba5afcdd84c159da474f7698457de18c5538ca.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Sunday, the fourth of January": {
+    "file": "bcdc577a2e177ecafcaf92611f02771a8a6893b5f4b5059cd8160dd4a8fde8e1.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Thursday, the fifth of February": {
+    "file": "c6035b00c0d49eafbee11dc481f513789b0ceda3110b6f3c0dbf423f42104c72.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Tuesday, the tenth of March": {
+    "file": "7729f06da7053b957473e74bc67d3afe7bcce3cc6104916285ac5f61cc0f198d.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Saturday, the eleventh of April": {
+    "file": "85ec846757e7550809d3b252573afa5f44d6f8817fdc2a1e974625544e151e9c.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Tuesday, the twelfth of May": {
+    "file": "b142a1fa864b237289b0dc37b8226b64c066d5cd3cdc2b45c35c4ced6334e216.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Saturday, the thirteenth of June": {
+    "file": "badcbebc7ea980c04cc71393176ed5314139b7776bfe0121e2daec269c48b392.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Tuesday, the fourteenth of July": {
+    "file": "dee2ce56bee9434753f0ef6a0fb9ba2ade9be65a3ed744f60b7e9912943dd05e.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Saturday, the fifteenth of August": {
+    "file": "b7650baae181c3de5d0a773c869ecbab39675bd2a3045ea1867fafb38946fc55.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Sunday, the twentieth of September": {
+    "file": "94e466fb8928f3d5d0f2d95b4fa04f1c95ba8bffa674d889d6d6bc0e49394577.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Wednesday, the twenty-first of October": {
+    "file": "271564a7e4701554c377728e2eb26e4a5e3bc9924f8cf32abf2bab2c8f51d0ae.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Sunday, the twenty-second of November": {
+    "file": "e7e005fe3ea42dbee87cfdabb2de21bff35e8b22d0d1f65cb62b1165200a2237.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Wednesday, the twenty-third of December": {
+    "file": "49ea25eb60154502d609e71d5f174c56e1aea8f09b539eca4ba950aaaefd2127.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Sunday, the eleventh of January": {
+    "file": "c5e7e49cdd130ab51a5d445ab77e2bf69adc717ce8c3ab9e34fdd95604d22055.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Thursday, the twelfth of February": {
+    "file": "9a538dbc627661bebd4c74b05e9b311c87acbb1e0fddd673bdf0d7b6f25ea575.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Friday, the thirteenth of March": {
+    "file": "127183c141d225603bc9ce447ba3d91068296f8d7dd62d256b53dd305f4139fd.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Tuesday, the fourteenth of April": {
+    "file": "c58eb87b3985a6274ad18c44553d672adc36ccc0e8ec369622be352c40e9a208.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Friday, the fifteenth of May": {
+    "file": "e7344c072408ada6d151c2aef7e4890cd998c0f7d790bfeecdf5494b2023fc94.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Saturday, the twentieth of June": {
+    "file": "356bd0b04338e5bc39c4848add527b10efb3db618a54b59ddbfdd72bf3b8ed4a.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Tuesday, the twenty-first of July": {
+    "file": "0defa3d647a035498ce247863e0b712b5d0c604bdf775930ad8f7a12a6909a95.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Saturday, the twenty-second of August": {
+    "file": "f1bb075e78771b811e48044bbdfe8a2c273b28024a48a0ad84f9929b71551d05.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Wednesday, the twenty-third of September": {
+    "file": "52dfb3911bf905bb544e1df08f1497a94bad78cf616b7a4fb901776d09e97c95.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Saturday, the twenty-fourth of October": {
+    "file": "02d8b001c6b979e154f8bbdbad49e2110716b58f00e5133dba34fe23367c5a88.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Wednesday, the twenty-fifth of November": {
+    "file": "368487952e56375fca02972a0a55a3d4fd7d7501b09b22719c0cf5eae6a77fe2.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Wednesday, the thirtieth of December": {
+    "file": "7f67f63b4ed4ce8448d5e54b6a2e644781ca4a59a155165f2e3ce3d4099454e6.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Wednesday, the fourteenth of January": {
+    "file": "dd54f6fa535ef87ba9f847c8c7937095bad2d65efbe8a9c1443bc672725c2da6.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Sunday, the fifteenth of February": {
+    "file": "652a9f9f258f2dd7ff7edef5a108c3471e4685bd2088d6cc2ca5225f08092571.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Friday, the twentieth of March": {
+    "file": "a7b47000fb0f4b8effbbea78530527b1a6e0129a4aaa620f9ce910fae85f01b0.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Tuesday, the twenty-first of April": {
+    "file": "6fb9a945c5198c84f7a119442099b02cf5f10fa55e062774cabf4f4dd21d5709.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Friday, the twenty-second of May": {
+    "file": "45af70e89c6ba86010f1723d15249121a0b7581f6439b525cab79adeca92d2c0.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Tuesday, the twenty-third of June": {
+    "file": "5491fcd2b01980cae447d1997aaeda47fb89dee0f5e55694d804facf357e07ea.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Friday, the twenty-fourth of July": {
+    "file": "970aa0e15447d45ebc9b4f40c39ee827b2baf94d66fe913dc6da5c5e7f1d05a9.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Tuesday, the twenty-fifth of August": {
+    "file": "72106e4f8954072e93ccc3f9d9e7bb62686e8dc8768679a79d3e318e2b27da0c.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Wednesday, the thirtieth of September": {
+    "file": "802e7ade167a24a557171e0728a6313fbd149c265e6924e0a5bbaad51303bb61.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Saturday, the thirty-first of October": {
+    "file": "5fee73eca2e46bd69638326feb93e7f867ec8e04c8302e67a44d5513772a00ee.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Sunday, the first of November": {
+    "file": "feb9c721bdb4abfce85332ff07dd34ec47fd1116f06ff42261ec6081f6a73520.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Wednesday, the second of December": {
+    "file": "8793c05115a34c3209bc279f302fa7cc4db006d51507c8a843ed484c7d7b4d02.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Wednesday, the twenty-first of January": {
+    "file": "a9dfcedad6df5ffc55ef6f197e4b0961536090be0ada9ff253fdc44cabc85644.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Sunday, the twenty-second of February": {
+    "file": "dc7a65ce55dbf98bfe2bc889e5bff3b5c80c34384fd32d544c37143c191f84ba.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Monday, the twenty-third of March": {
+    "file": "238ad16ed76255b9724cba00ef0d767b97e840eb12180b9dd5d09ae4bc7f3a35.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Friday, the twenty-fourth of April": {
+    "file": "917fbb00f595684853bb184509dda35c0ba660d823057046c0c6a79d026ac369.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Monday, the twenty-fifth of May": {
+    "file": "607ed7e5fbba0b9458645cb1ab6d0c3f7abcb6442b10e9e54d522ccb941145bd.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Tuesday, the thirtieth of June": {
+    "file": "7f3bba612e2cb1d4e48b03ddc4d7bbb564491c4fb098f0978af6be75d0c27cf9.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Friday, the thirty-first of July": {
+    "file": "303e7392fdc68a98c31f43cee6bfc469114dd65e93a9ae539561e29129ef0014.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Saturday, the first of August": {
+    "file": "eccc301febb3cebaf70febf28c50b50da41292325ee22115d0ee573b43e09ee1.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Wednesday, the second of September": {
+    "file": "f73648d9a821934eb23c05fb9b30d1ffc9ee9b300fe9a65f74ce3117882f3a96.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Saturday, the third of October": {
+    "file": "b7412e43a7be34c9d817cb762efeb16e44677d92795a6f659b61d56aa6944f6f.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Wednesday, the fourth of November": {
+    "file": "af9b3cbf380b75340419a9f75963374a0d0b5fad3ab29e4831f1565d457341b0.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Saturday, the fifth of December": {
+    "file": "4ac07f49c047802f4f6af0f489bee495ef36ad122f141bf541208ae7ca6078c6.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Saturday, the twenty-fourth of January": {
+    "file": "f38a0029205098482c49e2c938fa912bb1190f767c9cb505e01b0d7ffeb6db57.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Wednesday, the twenty-fifth of February": {
+    "file": "a219755f47ac147deb5c109cab433f0fad2c4c399e7795c69464a72a80f0e607.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Monday, the thirtieth of March": {
+    "file": "501e02ce5e3be9ac58298f93b3778c1258d75d31bc49a9143fd01fdca90eca6c.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Thursday, the thirtieth of April": {
+    "file": "ed93bdb5ef7ff62571dba9fa30dca8d33a3ed06040941e38cb6d4e857f977730.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Friday, the first of May": {
+    "file": "681987da35f9a953bb5be0d589a5ea187366bada3539085922d46e110beedcc1.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Tuesday, the second of June": {
+    "file": "be55ccff15b056ada4ebf003656572f4ecf048c18dd45834e34bf4e5ca426965.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Friday, the third of July": {
+    "file": "bec0afa60fc664427925b99a293ed4e8953ee054d4ffbf0c1e2e6addd393ab28.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Tuesday, the fourth of August": {
+    "file": "88e12c019b08d176b38181142c7dd2e2ab4a98551911a0b929e75cefed93aa8f.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Saturday, the fifth of September": {
+    "file": "9adbb4b457b6a42ee378829c7ca6dd96117bd537582a5e7e076f8255740ff673.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Saturday, the tenth of October": {
+    "file": "454cfcb4a635e17fc124628f9d4209dc15a3fdf0309362d1dc855c31813c687e.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Wednesday, the eleventh of November": {
+    "file": "0561a83e1c40faca2458003a9d8229f4943d8d7f6410c61a3c3e723d634f5f5a.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Saturday, the twelfth of December": {
+    "file": "dd97df3c2b139358651a4d07a250854a712bdef048bb9fdc927cbd576c01978b.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Saturday, the thirty-first of January": {
+    "file": "ac786ae15a403e109ed9c9fee209ffd5a309fecb44e6d22767b7f6b204dea67b.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Sunday, the first of February": {
+    "file": "cbb1f34897fb2987c5974e717fa27530756c68f5ea843eea856eb25d561c28ed.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Monday, the second of March": {
+    "file": "8b9c1fe8f66f7a5b4ff373aaea0c691f6d106bef2dd099284bcd1d44f17ce7b6.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Friday, the third of April": {
+    "file": "4444be63c48051090d24d20764f723af35f6ea31f99407588bc7cc452d77e32c.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Monday, the fourth of May": {
+    "file": "08011b066c4dcd2d938eed36bd958958cac3eadac7e5d81cfd64c08e2c3041ff.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Friday, the fifth of June": {
+    "file": "99736a38704ae7048277adbb96c7f61fe92daa5055a0e2d378d44b58b810e287.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Friday, the tenth of July": {
+    "file": "1a3e9815d2af3c60dca153021ba7650b448dd71d3ed060531c1d189cc583dcb1.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Tuesday, the eleventh of August": {
+    "file": "f26ab45305f2be04572840a203695d2a75743f8b4a1e20c46d2efaa2ebdeb479.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Saturday, the twelfth of September": {
+    "file": "e350cf7de3ecb75ffec2bb3187b37dd09c551ccd992b2dd55a2b417c01da244b.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Tuesday, the thirteenth of October": {
+    "file": "f11a9303bc701ba73b179a8dab079720cc4fdd097feebe6f2e20749b568a8fa6.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Saturday, the fourteenth of November": {
+    "file": "18fcff97c13ab5bf7bf81fde566e22959b169ed6ae646868ab92d90398c0bbb4.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Tuesday, the fifteenth of December": {
+    "file": "e2a39398aa6f468d28c4907783fbd0431c56a766362a4aea2ef1a09c387bace5.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Saturday, the third of January": {
+    "file": "c9cfb96399ac6d235edc6964d17773eecb494e5081acef8af2251f1323adb8e9.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Wednesday, the fourth of February": {
+    "file": "889096d8bab4a3106a4f98742fcdd949eb0fd91a3c54cb97850b1bf76c0bb172.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Thursday, the fifth of March": {
+    "file": "9f45f7f1c5ac1b79f3421cd482c5eb8acfbd579c65b0f25be495f07eb35f13ef.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Friday, the tenth of April": {
+    "file": "b9e63b582eee79aa84cc01a38e7defcf17e75229dca42696061f8fe3bef777f3.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Monday, the eleventh of May": {
+    "file": "157ccbebf13d20f1b434f9c5d6d69ec6a8233f325d90f85d08430874326823ec.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Friday, the twelfth of June": {
+    "file": "19b632e1cad803baadf47007c6880df01caf77223dc84b30369744f6f5ed0928.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Monday, the thirteenth of July": {
+    "file": "bd93ee1c04137bd579c2a2a386616f6e1eb74030751b3325ec3a1d0db91e11a1.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Friday, the fourteenth of August": {
+    "file": "6a5c28e0e589ace20f61e87fd51affcf9c4413e335118de0750f1055925e1c25.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Tuesday, the fifteenth of September": {
+    "file": "2be27ec126a0522a3aa667d817d137b2a4f0ec04f87399af586ba45e307d6b48.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Tuesday, the twentieth of October": {
+    "file": "465b82b4393d309c147f3c56fe6d0483fe96d060c66b14120906f46f87a1d334.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Saturday, the twenty-first of November": {
+    "file": "4babe70590ae39d8dcda38f913fde555977d21b79cb83edbb20843d2d7fb5a1f.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Tuesday, the twenty-second of December": {
+    "file": "a0706fa419544026caaf7b57e67e16290a62aba405788c8c79057bcc3a66b821.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Saturday, the tenth of January": {
+    "file": "906d1d5d27b370e1d1f2fd6cf7487a5bfd7e193b09cfee06ef37a4820bdeacf5.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Wednesday, the eleventh of February": {
+    "file": "6af321f67eb43d51354f3e666fb27ae76d355fbe1bff95cb9cab087215036e0d.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Thursday, the twelfth of March": {
+    "file": "de6d36d1ff890e269412183fece99db2b572af6ba39ca6b4272889810101fc80.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Monday, the thirteenth of April": {
+    "file": "31cbf937672032a4bc622782ce0440d6fe31c0a20e27b38e914f260c062b5466.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "the first": {
+    "file": "b36a95c8e0a6213288990f00c93bbcb6cfa9b75445cc5d0698c7e6f6f2c02720.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "the second": {
+    "file": "a64abdc1053123cd254bc2ed93d5adba9e17713da6e00ac7cb586138b65088c7.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "the third": {
+    "file": "bdbf73598379ae9e9c92a3f550ff68cd14eabcb68c77ca4867a6ec96fb3cd61e.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "the fourth": {
+    "file": "19f926c26394e9c2786d86889f95a76f9a4e0a8a8cc4160ed3728d6a8c1f1a1c.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "the fifth": {
+    "file": "0f263e4b61767f8f9a2835c17958204d9bd4186435152e06fa99fc1385297aa6.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "the sixth": {
+    "file": "a79b1b421487ade0c15cc34813d2b3d17aac6e60a46552d80a1d358ebfaedcb1.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "the seventh": {
+    "file": "5fcf06774eddae867bdf704928fd0bdf7c0e385ae3370b85ccfd594ae90c5d39.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "the eighth": {
+    "file": "7897808eb7a1175210c50a97a5a7aec6b81a9902984efd1d6db98aa1bb23c8cb.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "the ninth": {
+    "file": "be4cd74193134219895e1529a5ddb61bbb935032c736bfc072a58dcf2078066f.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "the tenth": {
+    "file": "06befa2b7b80ab0f7f438c6d0113e4751428242cd909395a3e7f795794b7db0c.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "the eleventh": {
+    "file": "6fb88e0d520c5bad61bd534bfb33fcca9535e7348ad084da30d73b2f77d00201.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "the twelfth": {
+    "file": "d08b9bbffa9b61710ae325eba7a1c8a6791d383ef07dc2891bf4e0b85d670407.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "the thirteenth": {
+    "file": "03e6a063eba8c1fcb6935ea5ecaf0dd1f13dbd7857ba0114bd440e6b36a4d923.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "the fourteenth": {
+    "file": "48f345dec4a77765f59394c733e95135a77c919d55e33d6ee4c31568f620d193.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "the fifteenth": {
+    "file": "c92ce7f39c96efc4b8789b3f3af04ff195d149b67b0cd1f48f6c127bbc110dce.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "the sixteenth": {
+    "file": "a986fd8ae0ee7ccd4b046cb231a9d5fd6a6a98f9ace5e4d7ad588e393a5a8fec.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "the seventeenth": {
+    "file": "d5881188fd279127d61511e21c9c71f2c3e5967e1bfcba83a1560a7177fd810c.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "the eighteenth": {
+    "file": "43f5ca7f518f665ada846ce86c86d61beadd5e04075a513344092e0184e26bf5.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "the nineteenth": {
+    "file": "42e45348438145dca773cbf8bc239f3649cefbaef33ed02601226c30b8284957.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "the twentieth": {
+    "file": "a706ad4551cf8b748ae3e09da380c3f788ad30a75444540d819dab777a9494ba.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "the twenty-first": {
+    "file": "ab0d291a4c2991d721b2423c026629039e055371d44d3e4865bc494e6866d16d.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "the twenty-second": {
+    "file": "43c2a9403662baae543cef02cc1f1af0fb0ba5b1e14d7ae0bd6a9942b5e5e25a.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "the twenty-third": {
+    "file": "29128bf7ad6d405089ac9e3323be20444d6e0670d588771fd8c331e3cf1126a4.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "the twenty-fourth": {
+    "file": "dcbe63c104c5ef654cf7284f3b582e742fcfc9f60516333b4b15b83f9b3e0aa2.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "the twenty-fifth": {
+    "file": "a0650bad6935591963d8275c0c0ad3117a83d11a21d55fd622a94edba235b110.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "the twenty-sixth": {
+    "file": "910e27a3daa410323ce6b76717834116ec39b62bea908e0624eb28f0e1b6049e.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "the twenty-seventh": {
+    "file": "46914c7923ac2c631f2bc2061120d77b8a0deb9a13b80e2c71da80db2478fb0d.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "the twenty-eighth": {
+    "file": "b3bb9468f3e3cf119b3affe505eb01820f67819fe2ed8549ebc8018df84fdc09.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "the twenty-ninth": {
+    "file": "bbcf8d18451cb4dc34673864a0b0bfc8143a68459629f2b8d5bb4066b386d1a4.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "the thirtieth": {
+    "file": "65def07c801bfedd85458688aad9a29286e2641dced59771c72d321c2bc73c91.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "the thirty-first": {
+    "file": "4de40b3af937fd7b1149a3acd1f205e1d4396e42db063de4c0c2da7d706af96a.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Monday": {
+    "file": "99d671b9e56bda2d0c1a3693bef5d5de56b9a35c070cad52dd3b0c36e643c180.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Tuesday": {
+    "file": "a760d1ce5dba078ecebac2487424214a6f684d2450727bdb5600b9d918560a08.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Wednesday": {
+    "file": "ddcc76d0d31f937092fefad6ae3ede5d22f334d6bafe534e7be9c3cb81ffca51.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Thursday": {
+    "file": "b300411ee451b1d6379d1d2b9555b05b70ca707f7b4a58764efef5af41c8eea4.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Friday": {
+    "file": "cce89c02522c39edc8ed57be92cfb47632be43e2e1d71d3983e1ed48d70c8da8.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Saturday": {
+    "file": "2222abd3d81f4684132632f5653ba75c3b1801416043243efc81b42baf7856a1.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "Sunday": {
+    "file": "635d0b96c3ea0dcb0c3ca38c678b4d82185353cc104ffb69ece5607785daf2d7.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "January": {
+    "file": "6c7ce3f43f3a1bd3a278c8502b5443b4d176fc12bd2decd9deb48bc0df7db812.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "February": {
+    "file": "590ab98c2dcc2ef65cde41b14739398468aa83301bcb28b4ffbdbc68bb05169f.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "March": {
+    "file": "1ea4648d4c01f1c9616453fcdea59af00c16bd9beb81cc1a7c37fb05d7143887.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "April": {
+    "file": "858c77e468e201ff11f3ae8994ac1be5424ac31d6383b6af62ce14748db72836.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "May": {
+    "file": "18341a8bf55eac24d5bab75615a4462f49eabfe0477a148b3c76618128158552.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "June": {
+    "file": "27413b2b72417264669a1340cc9d1e7c9cc717978dc62aadeeb70868cc81149f.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "July": {
+    "file": "749b5281b7a7580919017fb40c93edfc06eff49f33fcabe6b791295bf326a3bc.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "August": {
+    "file": "b6dc194f80b12bd4a9a03efb276b6190fed547ebee3682904fa4c3fa3e695a0d.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "September": {
+    "file": "12eb386a55ef64ba24a05d7cf765bc7b902f36083b92b5b37bd2c40444fcdf90.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "October": {
+    "file": "9a7be301e5b12be2bb818eeff289064848d81cfd41074ddc183bc3f73abcef58.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "November": {
+    "file": "8be1555ab65a35e197e5ce47cd031f14ba646ee2ead9dd1c444342abb835c8d0.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "December": {
+    "file": "dfb6b37d3a11603fc5b8cd5cf4b272e21f2bbf7484cc96e6930ce730c6c4e3d3.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "four": {
+    "file": "e68eba869a5eadc7c7cc7968e080519e887d60231f140a295fd71673d2e23c54.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "thirty six": {
+    "file": "407a7ac905b7ade4f0e73ccd8f0f3d1f268460784c485068a4b55deaea8a7d02.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "sixty seven": {
+    "file": "d78650578edb8a968c72f4aae8637a747e31ad40218a06efc0a6972cf6c9313c.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "thirty seven": {
+    "file": "92a404fb32ce879e0b7ffb04bd6f7613c64a03b7bfb8948f383ac57b2a6f73ff.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "five": {
+    "file": "d17c461f82eaf9ccf711354880fefeecc8006c735387b163ae01f4e251e83cd6.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "ninety nine": {
+    "file": "2e9a0ed00783e05234b4bd660196aacded10d95993c4f3d6fd92e97b00ffbb7e.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "sixty eight": {
+    "file": "08ebc1ea968309bbc42a8e87850b02276c45aa5913b1a546fc832418f22bc633.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "one hundred": {
+    "file": "f18076fe7e69d0fd0d379a4fb5a5266b1b157e2be5401e81c657d359fb9d5ea1.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "six": {
+    "file": "bd9c9bb9043509c427b2384d8c15f151ebd3164eaac7674c457f971ac3b5813c.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "thirty eight": {
+    "file": "5fcc59152052312bf5dbd8dcd04462506583932d982dfa7a4922e20b4d20f6db.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "sixty nine": {
+    "file": "949a5cf45c2abc909bc8451669d36c7f19097eace4f8c1cc2901db84611eefe1.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "seven": {
+    "file": "f4de8fbe47e7038faa573c06308ac7575e87677c75f06a879f20735a7d9feab3.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "thirty nine": {
+    "file": "b4c8b1c1dce8d741f09f5bc6df15a0b643773745e99eb3126c75e26c528563e8.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "seventy": {
+    "file": "fcb9a48cb175e0abd5e2b559869d665c6bc6ddfee1e8c34db6cc7eeebf21bbb1.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "eight": {
+    "file": "83d7e3e4bc8541d4c94c79c9b29e0458b1d877d4d705cfb9af98926671690019.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "seventy one": {
+    "file": "f6eef9ce06a7e4f18e4077b824c7b19c49ddf2dfa0614251d6bf252a592cbb66.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "forty": {
+    "file": "f6b2bdb8702b7d9b31ae767ea4090e3196ab75ff9de78b74ebddde0a3d745ed3.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "nine": {
+    "file": "a9df1913358b806e4cd4e36f17700e21190920c6f848558862035025cd2ceaf1.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "ten": {
+    "file": "80beac06d14d670b1225df596f28da6c684edf5c8b9b69500a57456c16de5123.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "seventy two": {
+    "file": "e93e21a516e6c91e46a21791d061b4a4a3ecd29fc0386167d95752b8553687be.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "forty one": {
+    "file": "dfc13c2c46927791cd210530b40037f80e380df6ed70a586cade0e54e4cd5acc.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "eleven": {
+    "file": "a5fc9cfba6c73bf26f4e816b756ccdb8a61be2912b41f7640be3c97ee4919a47.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "seventy three": {
+    "file": "106ec11b011eb3dfc0141d238cde3fa65c91daad101aaecef8f26320cdaf90a6.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "forty two": {
+    "file": "76c81e135ef329b4a0bb6a8f55121aa178ae1f995d616a724b0d6818767a5a5b.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "seventy four": {
+    "file": "769127052bce239b0be8fa3309ac61f04da3c4d0ffaa2da451fc615c174a9274.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "forty three": {
+    "file": "14c7b25f2df8774f9d7666c21c49a29cc30fd5c23637341acb10ec741a69b705.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "twelve": {
+    "file": "a42339957af5ed99420dc975a53c191154e54c4b5404579813cee50bcea64b90.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "forty four": {
+    "file": "2c2e3f9316ea84b9752a514ee2cb3a77c365bab47d610f0cce09066f99ef1eee.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "seventy five": {
+    "file": "603c9916ca85ffd3a713614278c3f1f15215bccc72686d0745e1aa01392b0a36.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "thirteen": {
+    "file": "cef120d1632a2002b1cccc31172e2d1312f882f76a6b960b5ad2f56fc6a29f2b.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "forty five": {
+    "file": "bae79ec9730f71ea5806baba41fa8107ebe9c1788b569a06c9c6b3c139fd828b.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "fourteen": {
+    "file": "e3678e8bf22b3cef7a4401d43531e26bffb606a7dd51c30e715e540eab204703.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "seventy six": {
+    "file": "fbac44156d891f4f7347fcdfb25f0cfdf067cefdc802d6b3dfc650b85cf69b5f.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "forty six": {
+    "file": "204ac20df8a1df5c1f2e22f31ea495aa103b1b38dfeb7843e5f4b0f9a0f16c04.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "seventy seven": {
+    "file": "4604ee4e4609874ce8d07aef6b947e349c1a2a573df469942fababad395528c6.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "fifteen": {
+    "file": "92fdcad89c7e6e7feecc61c308cc40ead2a6973d92c6c1688d7774587fca9bac.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "seventy eight": {
+    "file": "4c9e0a887dcf64c1f31287e28a5d2b61b9c0d9fc0e21b8e85c09a38fb3151baf.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "forty seven": {
+    "file": "f94de17f1fe86c69dfaaba1b5a17c7857996be87303a24d56d1f93a80b64af96.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "sixteen": {
+    "file": "c78096f98429aa841748b2486bbd0eacabe5153494051e09d0933a840a2d63ce.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "forty eight": {
+    "file": "d19f5e77f1000168c03f2684c4ba313bd18f9ae700c5db45749e1df4c2527c0f.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "seventy nine": {
+    "file": "bd751b884886dedf92aa6caca9536bb8720828d411a3e75c439da6e292929ccb.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "seventeen": {
+    "file": "00e98dfa9e710ca4187aff9bf4c4053a532ff96955f8a83a4bcc827379635da5.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "forty nine": {
+    "file": "f91f3a63b051844a3e48cb8811285304afc272f24b0a74818a984bd8702eaed7.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "eighty": {
+    "file": "e6bd852a06229b378f7df4415015e7c5172b725609210f94799e346f7fa5ca33.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "eighteen": {
+    "file": "24eba6c6b813f74c57473beed02b07bbb1d0ce2fb9c2a894be7a9cb69714ddbc.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "fifty": {
+    "file": "838a3fe85f450721cc66110a98d7eb7baba81a41a72a03503d7edf0b5277d15e.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "eighty one": {
+    "file": "335b2186f884ca6f1125a3e582ec62419c13dc6836baebe2f7600df0def8724c.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "nineteen": {
+    "file": "d9e07159e0f750120697b4607fe4a5ab3ef4cd75fb879d204a00be08dd219b65.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "fifty one": {
+    "file": "fcbd602e83ba76d84ea44b27b25b750fc04192dc2718c4f530f380b79c00f145.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "eighty two": {
+    "file": "dfc54bb4ca3e2ac70bf820c288c291e926b68b95404d9979f06df85c13da0627.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "twenty": {
+    "file": "e6e67d26df3c295d9c32c7e3a2776872a7350b5ff956609a0b768e29e9a372de.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "fifty two": {
+    "file": "3ec8bb0c45bbe916a607997907384f7b1575a8ff30f1fc7b68799849e8b3e426.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "eighty three": {
+    "file": "c3f3243b198858e4cb1ffd35ccde9bd2e9590272c482856b98b4294fcac803a0.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "twenty one": {
+    "file": "00d295bba05bd4f26abf1407e814f9861ce3187469dcbf88b0c9e21e38edab4d.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "fifty three": {
+    "file": "e80540dd81477f4e695cb84377a2e12b77fb09489282c7c1c753e59975c12023.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "eighty four": {
+    "file": "9f6ead7e9888625a4d3f3c48b04983cc2fec26ecd62ae8b40cbbe58ae7537a3c.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "twenty two": {
+    "file": "ba9da66204af077fc5f62dbbe52f9103aa39c301cbcbc76b72ce3c15a0fd9ae1.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "fifty four": {
+    "file": "0406f7993eb60fa4174cdf94c46bb6df17c2a802b73ab2d5eb1da19370f99be1.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "twenty three": {
+    "file": "770a4895346de30f44043bed61110adb14f75bd9804a294c6111615acac49a9a.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "eighty five": {
+    "file": "54940342a73f94484cb3e0e26baeb1bacc301187c76a11db2c1e8fd0519b1b51.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "fifty five": {
+    "file": "ad2b3f4f4d62ca455037ad929310ba7ebd28d5dabe5fb9f40009c78655701496.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "twenty four": {
+    "file": "c28a8ff5092310ad5899d85643a6d77da446e515417fb7d006bd9da424746100.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "eighty six": {
+    "file": "b8fe212749921fe5418447cbf7fdc5f656a5fb7392ecccac19afc83e2a8fef96.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "fifty six": {
+    "file": "945e020fde2c12d871e023b74f0aef6593866fb83686fc00c3d40ba91de1d1b6.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "eighty seven": {
+    "file": "deff83e803dce2f8a8493813de9d0c1c2aae0ed3d5a66eb7e8ae12889ce685c5.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "twenty five": {
+    "file": "e12bf1aaaf598b98ce36e42e8b48b5fc2ad9d22b494720007bc895d3ae8546a7.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "fifty seven": {
+    "file": "b4b8e00bf306d30b987d8ccb1783225293b5be72232bd2e59d16edff967d5d15.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "eighty eight": {
+    "file": "116115979a84b85c3e2bba28bae530c71902d3aa406e7e0d7d091c1ca21cd2d1.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "thirty four": {
+    "file": "f65c708295ee175364218fae9bf406d1f18785d94579512436c3c4d9bc6c5d00.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "fifty eight": {
+    "file": "5b7d603b0f97b86eb9fcbdef215e2024370f579fda2eae812500364136501fe9.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "twenty six": {
+    "file": "4acf20748826f9a71d1f6612a3caab9ee027ea53af95bd88529b4e836c3e47a3.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "eighty nine": {
+    "file": "e91b3cfc2fef98e7af73305d130766ff7f93a5cb7cc9b3f79923590854f0390b.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "fifty nine": {
+    "file": "6a389e7a71df0fd2e6e6957c1752dfd156d6ac2585fe80932ab40033f2edcb7b.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "ninety": {
+    "file": "988bd38a535ded33f900c70282a4a24865f8a5ceb8da8a6eea94d9645ba13b9c.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "twenty seven": {
+    "file": "a6377d4372c2469fe8b5abcc74d67b52a2688b66b4640cf9df76122ff5165444.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "ninety one": {
+    "file": "39767dbd87564f688ada76d78163d4f2cc592e780a9985255e763e9bc7a7b274.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "sixty": {
+    "file": "ffe629b9166328a747af37f3d7b9752bd856d5ab4e28eefaa570d6942958c470.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "twenty eight": {
+    "file": "e079e7d0477f570b8fc2da16361c70fda09bac5f8624a7c19c900a3a12643709.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "ninety two": {
+    "file": "895c9d4546133f7cd885160ac4afb8e0370d29ae14ccc9b0bec9b74554bd98da.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "two": {
+    "file": "47e93c422be4f0ceaec92c2fda40655ee693cf3b3d73afc62acb1ce66bb352bd.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "twenty nine": {
+    "file": "bfb96df7522bf6ee162d285eb901cb549ac6af3d280861288b7544b58d020dca.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "sixty two": {
+    "file": "f85a8d53d20070e78e68d2604e54df171f556f79a28f04bd913aac3c74587901.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "ninety three": {
+    "file": "60e590174561877f66243205c06a1a4606181bbfb4a9fea33f22b667ebae9074.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "thirty": {
+    "file": "f79bfac314e3453ca91762de5f1746ec207708d2dbd28c1136c38d884245b918.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "sixty one": {
+    "file": "aca2c3a4aa54531562bc3f8bb9d28dccb496d93eec03cab0f94b5b5a8c811ec6.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "sixty three": {
+    "file": "4760f9dd19b165eca09eab96d7dc61e1021f963287044d7801242dd7ef1b1021.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "ninety four": {
+    "file": "eb6cb7617a0278e4e9be14b2157e86343b2571eee6f18bda0f4a1e2a384dfbda.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "thirty one": {
+    "file": "a7bfc25ea7eac460efb57c1e04395d36e5c4700123d1673ad1b5bc780edef447.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "sixty four": {
+    "file": "a4dc249f65538832d4b3e3f28fa5102075fa4e5792bbc85a68e4186fe271d2a4.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "ninety five": {
+    "file": "cba7dfbb7c389cc8b40ba0c126e7c83e779c89296466eacfdb8433ac71efb5b1.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "one": {
+    "file": "2aaedc850a19d65fc11ebd8e4e21cc6c47847dca90f967eb736e174f584f086e.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "thirty two": {
+    "file": "6d7016a75a6ea4b1c1434b340847d5a202998b303182da7602d093da53294aa5.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "sixty five": {
+    "file": "11aa35e27defc013f5faa3e2c1b7a7214e407dc3886dc921ca2b94e08b26b257.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "ninety six": {
+    "file": "70df06a7514c2f512b3b18afea2fda45bb324deb3c7383a53c0b7db688a729c1.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "three": {
+    "file": "ad2a207db3357b91f7a00deaf991af88be118b5a37ad57b954596eca751eae1f.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "thirty three": {
+    "file": "711b94db74e7f3532828a984c77d2bb49ea7903d06ec1d8a19ff4326c6442de7.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "sixty six": {
+    "file": "d4cd6b5265560330dc53dc4c12f73daf9adc9dd45609aaa9d4cf9fed115bf2f9.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "ninety seven": {
+    "file": "c162dd1304360f54e7dc2a1031b6cdba60df975e32c962c9841b22ae3d966720.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "thirty five": {
+    "file": "d773ebc45e31e9deadff4e229266c80a23878394cb2f55cdef6330d478410e16.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  },
+  "ninety eight": {
+    "file": "3ac68392351904a011a57f047e01b6254a171af1481e71e30a59258b030477f0.mp3",
+    "voice": "en-GB-SoniaNeural",
+    "locale": "en-GB"
+  }
+}
