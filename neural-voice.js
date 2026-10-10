@@ -310,11 +310,11 @@
     const frames = Math.max(0, Math.round((Number(seconds) || 0) * 1000 / SILENCE_FRAME_MS));
     if (!frames) return new Blob([], { type: "audio/mpeg" });
     const source = getSilenceBytes();
-    const parts = new Array(frames);
+    const bytes = new Uint8Array(frames * SILENCE_FRAME_BYTES);
     for (let index = 0; index < frames; index += 1) {
-      parts[index] = source;
+      bytes.set(source, index * SILENCE_FRAME_BYTES);
     }
-    return new Blob(parts, { type: "audio/mpeg" });
+    return new Blob([bytes], { type: "audio/mpeg" });
   }
 
   function compose(parts) {
