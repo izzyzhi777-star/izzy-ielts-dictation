@@ -2544,6 +2544,14 @@
     configureSleepTimer();
     renderListening();
     try {
+      await preloadVoicePackForPlaylist(playlist, token, (completed, total) => {
+        if (token !== state.listening.token || !total) return;
+        dom.listeningEnglish.textContent = "正在缓存内置 Sonia 语音";
+        dom.listeningChinese.textContent = `${completed} / ${total} · 首次会稍慢，之后立即播放`;
+        dom.listeningProgressBar.style.width = `${(completed / total) * 100}%`;
+        dom.listeningPlayButton.textContent = "缓存中";
+      });
+      if (token !== state.listening.token) return;
       const prepared = await prepareListeningStream(playlist, token, (completed, total, entry) => {
         if (token !== state.listening.token) return;
         dom.listeningProgress.textContent = `${completed} / ${total}`;
@@ -2615,6 +2623,37 @@
     }
     setListeningTrack(next);
     if (state.listening.playing) resumeListeningAudio();
+  }
+
+  async function preloadVoicePackForPlaylist(playlist, token, onProgress) {
+    await state.voicePackPromise;
+    const unique = new Map();
+    playlist.forEach((entry) => {
+      const parts = entry.kind === "group" ? entry.parts : [entry];
+      parts.forEach((part) => {
+        const text = part.kind === "number"
+          ? numberToEnglish(Number(part.number))
+          : (part.audioText || part.english || part.text || "");
+        const pack = state.voicePackIndex[text];
+        if (!pack?.file) return;
+        const cacheKey = `pack:${pack.file}`;
+        if (!state.audioBlobCache.has(cacheKey)) unique.set(cacheKey, text);
+      });
+    });
+    const tasks = Array.from(unique.values());
+    if (!tasks.length) return;
+    let cursor = 0;
+    let completed = 0;
+    const worker = async () => {
+      while (cursor < tasks.length && token === state.listening.token) {
+        const index = cursor;
+        cursor += 1;
+        try { await getSpeechBlob(tasks[index]); } catch (error) { console.debug("Voice pack preload failed.", error); }
+        completed += 1;
+        onProgress?.(completed, tasks.length);
+      }
+    };
+    await Promise.all(Array.from({ length: Math.min(8, tasks.length) }, worker));
   }
 
   async function prepareListeningStream(playlist, token, onProgress) {
