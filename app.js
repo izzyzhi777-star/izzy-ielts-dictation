@@ -160,9 +160,14 @@
     customEditorTitle: $("customEditorTitle"),
     closeCustomEditorButton: $("closeCustomEditorButton"),
     customEnglishInput: $("customEnglishInput"),
+    customPhoneticInput: $("customPhoneticInput"),
     customChineseInput: $("customChineseInput"),
+    customExampleInput: $("customExampleInput"),
+    customExampleTranslationInput: $("customExampleTranslationInput"),
     customNoteInput: $("customNoteInput"),
     translateCustomButton: $("translateCustomButton"),
+    translateExampleButton: $("translateExampleButton"),
+    customSaveStatus: $("customSaveStatus"),
     saveCustomButton: $("saveCustomButton"),
     cancelCustomEditButton: $("cancelCustomEditButton"),
     customProgressLabel: $("customProgressLabel"),
@@ -189,7 +194,10 @@
     customResultMark: $("customResultMark"),
     customResultNote: $("customResultNote"),
     customCorrectAnswer: $("customCorrectAnswer"),
+    customCorrectPhonetic: $("customCorrectPhonetic"),
     customCorrectTranslation: $("customCorrectTranslation"),
+    customCorrectExample: $("customCorrectExample"),
+    customCorrectExampleTranslation: $("customCorrectExampleTranslation"),
     customCorrectNote: $("customCorrectNote"),
     customUserAnswerRow: $("customUserAnswerRow"),
     customUserAnswer: $("customUserAnswer"),
@@ -259,6 +267,10 @@
     audio: new Audio(),
     voicePackIndex: {},
     voicePackLoaded: false,
+    ipaMap: new Map(),
+    ipaLoadPromise: null,
+    customAutoTranslation: true,
+    customExampleAutoTranslation: true,
     listening: {
       started: false,
       playing: false,
@@ -283,6 +295,7 @@
     state.listening.audio.setAttribute("playsinline", "");
     bindEvents();
     loadVoicePackIndex();
+    state.ipaLoadPromise = loadIpaDictionary();
     renderAll();
     if (state.sync.autoSync && state.sync.token && state.sync.gistId) {
       window.setTimeout(() => syncCloudData(false), 1200);
@@ -295,6 +308,22 @@
     window.addEventListener("pagehide", () => {
       if (state.sync.autoSync && state.sync.token && state.sync.gistId) syncCloudData(false);
     });
+  }
+
+  async function loadIpaDictionary() {
+    try {
+      const response = await fetch("data/en_UK_ipa.txt", { cache: "force-cache" });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const text = await response.text();
+      const map = new Map();
+      text.split(/\r?\n/).forEach((line) => {
+        const [word, phonetic] = line.split("\t");
+        if (word && phonetic) map.set(word.trim().toLowerCase(), phonetic.trim());
+      });
+      state.ipaMap = map;
+    } catch (error) {
+      console.warn("Could not load IPA dictionary.", error);
+    }
   }
 
   async function loadVoicePackIndex() {
@@ -792,7 +821,22 @@
     dom.closeCustomEditorButton.addEventListener("click", closeCustomEditor);
     dom.cancelCustomEditButton.addEventListener("click", closeCustomEditor);
     dom.translateCustomButton.addEventListener("click", translateCustomText);
+    dom.translateExampleButton.addEventListener("click", translateExampleText);
     dom.saveCustomButton.addEventListener("click", saveCustomItem);
+    dom.customEnglishInput.addEventListener("input", () => {
+      state.customAutoTranslation = true;
+      scheduleCustomAutoFill();
+    });
+    dom.customChineseInput.addEventListener("input", () => {
+      state.customAutoTranslation = false;
+    });
+    dom.customExampleInput.addEventListener("input", () => {
+      state.customExampleAutoTranslation = true;
+      scheduleCustomAutoFill();
+    });
+    dom.customExampleTranslationInput.addEventListener("input", () => {
+      state.customExampleAutoTranslation = false;
+    });
     dom.startCustomPracticeButton.addEventListener("click", () => startCustomPractice());
     dom.restartCustomButton.addEventListener("click", () => startCustomPractice());
     dom.againCustomButton.addEventListener("click", () => startCustomPractice());
@@ -2132,6 +2176,17 @@
         });
       });
     }
+    if (selected.has("examples")) {
+      state.customItems.filter((item) => item.example).forEach((item) => {
+        entries.push({
+          kind: "text",
+          english: item.example,
+          chinese: item.exampleTranslation || item.example,
+          audioText: item.example,
+          key: `example:${item.id}`
+        });
+      });
+    }
     if (selected.has("hearing")) {
       state.hearingWrong.forEach((item) => {
         entries.push({
@@ -2378,10 +2433,18 @@
   function openCustomEditor(itemId = null) {
     const item = state.customItems.find((entry) => entry.id === itemId);
     state.customEditorId = item?.id || null;
-    dom.customEditorTitle.textContent = item ? "编辑英文内容" : "添加英文内容";
+    state.customAutoTranslation = !item;
+    state.customExampleAutoTranslation = !item;
+    dom.customEditorTitle.textContent = item ? "编辑英文内容" : "连续添加英文内容";
     dom.customEnglishInput.value = item?.text || "";
+    dom.customPhoneticInput.value = item?.phonetic || "";
     dom.customChineseInput.value = item?.translation || "";
+    dom.customExampleInput.value = item?.example || "";
+    dom.customExampleTranslationInput.value = item?.exampleTranslation || "";
     dom.customNoteInput.value = item?.note || "";
+    dom.customSaveStatus.textContent = item
+      ? "修改后点击保存。"
+      : "输入英文后会自动获取音标和中文翻译；保存后会清空输入框，可继续添加下一条。";
     dom.customEditor.hidden = false;
     dom.customEnglishInput.focus();
   }
@@ -2390,8 +2453,41 @@
     state.customEditorId = null;
     dom.customEditor.hidden = true;
     dom.customEnglishInput.value = "";
+    dom.customPhoneticInput.value = "";
     dom.customChineseInput.value = "";
+    dom.customExampleInput.value = "";
+    dom.customExampleTranslationInput.value = "";
     dom.customNoteInput.value = "";
+  }
+
+  function lookupPhonetic(text) {
+    const tokens = String(text || "")
+      .toLowerCase()
+      .match(/[a-z]+(?:['-][a-z]+)?/g) || [];
+    if (!tokens.length || tokens.length > 12 || !state.ipaMap.size) return "";
+    const found = [];
+    tokens.forEach((token) => {
+      const ipa = state.ipaMap.get(token);
+      if (ipa) found.push(`${token} ${ipa}`);
+    });
+    return found.join(" · ");
+  }
+
+  async function fetchTranslation(text) {
+    const params = new URLSearchParams({ text });
+    try {
+      const response = await fetch(`/api/translate?${params.toString()}`, { cache: "no-store" });
+      const payload = await response.json();
+      if (response.ok && payload.translation) return payload.translation;
+    } catch (error) {
+      console.debug("Local translation unavailable.", error);
+    }
+    const fallback = await fetch(
+      `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|zh-CN`,
+      { cache: "no-store" }
+    );
+    const payload = await fallback.json();
+    return payload?.responseData?.translatedText || "";
   }
 
   async function translateCustomText() {
@@ -2405,48 +2501,104 @@
     dom.translateCustomButton.disabled = true;
     dom.translateCustomButton.textContent = "翻译中";
     try {
-      const params = new URLSearchParams({ text });
-      const response = await fetch(`/api/translate?${params.toString()}`, { cache: "no-store" });
-      const payload = await response.json();
-      if (!response.ok) throw new Error(payload.error || "翻译失败");
-      dom.customChineseInput.value = payload.translation || "";
+      dom.customChineseInput.value = await fetchTranslation(text);
     } catch (error) {
-      console.warn(error);
-      try {
-        const fallback = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|zh-CN`, { cache: "no-store" });
-        const payload = await fallback.json();
-        const translated = payload?.responseData?.translatedText;
-        if (translated) dom.customChineseInput.value = translated;
-        else dom.customChineseInput.placeholder = "自动翻译失败，请手动填写";
-      } catch (fallbackError) {
-        dom.customChineseInput.placeholder = "自动翻译失败，请手动填写";
-      }
+      dom.customChineseInput.placeholder = "自动翻译失败，请手动填写";
     } finally {
       dom.translateCustomButton.disabled = false;
       dom.translateCustomButton.textContent = original;
     }
   }
 
-  function saveCustomItem() {
+  async function translateExampleText() {
+    const text = dom.customExampleInput.value.trim();
+    if (!text) {
+      dom.customExampleTranslationInput.placeholder = "请先填写例句";
+      dom.customExampleInput.focus();
+      return;
+    }
+    const original = dom.translateExampleButton.textContent;
+    dom.translateExampleButton.disabled = true;
+    dom.translateExampleButton.textContent = "翻译中";
+    try {
+      dom.customExampleTranslationInput.value = await fetchTranslation(text);
+    } catch (error) {
+      dom.customExampleTranslationInput.placeholder = "自动翻译失败，请手动填写";
+    } finally {
+      dom.translateExampleButton.disabled = false;
+      dom.translateExampleButton.textContent = original;
+    }
+  }
+
+  let customAutoTimer = null;
+  function scheduleCustomAutoFill() {
+    if (customAutoTimer) window.clearTimeout(customAutoTimer);
+    customAutoTimer = window.setTimeout(async () => {
+      const text = dom.customEnglishInput.value.trim();
+      if (!text) return;
+      if (state.ipaLoadPromise) await state.ipaLoadPromise;
+      if (!dom.customPhoneticInput.value.trim() || state.customAutoTranslation) {
+        dom.customPhoneticInput.value = lookupPhonetic(text);
+      }
+      if (state.customAutoTranslation) {
+        try {
+          const translated = await fetchTranslation(text);
+          if (translated) dom.customChineseInput.value = translated;
+        } catch (error) {
+          console.debug(error);
+        }
+      }
+      if (state.customExampleAutoTranslation && dom.customExampleInput.value.trim()) {
+        try {
+          const translated = await fetchTranslation(dom.customExampleInput.value.trim());
+          if (translated) dom.customExampleTranslationInput.value = translated;
+        } catch (error) {
+          console.debug(error);
+        }
+      }
+    }, 650);
+  }
+
+  async function saveCustomItem() {
     const text = dom.customEnglishInput.value.trim();
     if (!text) {
       dom.customEnglishInput.focus();
       return;
     }
+    if (state.ipaLoadPromise) await state.ipaLoadPromise;
+    if (!dom.customChineseInput.value.trim()) {
+      try {
+        dom.customChineseInput.value = await fetchTranslation(text);
+      } catch (error) {
+        console.debug(error);
+      }
+    }
+    if (!dom.customPhoneticInput.value.trim()) {
+      dom.customPhoneticInput.value = lookupPhonetic(text);
+    }
+    if (dom.customExampleInput.value.trim() && !dom.customExampleTranslationInput.value.trim()) {
+      try {
+        dom.customExampleTranslationInput.value = await fetchTranslation(dom.customExampleInput.value.trim());
+      } catch (error) {
+        console.debug(error);
+      }
+    }
     const entry = {
       text,
+      phonetic: dom.customPhoneticInput.value.trim() || lookupPhonetic(text),
       translation: dom.customChineseInput.value.trim(),
+      example: dom.customExampleInput.value.trim(),
+      exampleTranslation: dom.customExampleTranslationInput.value.trim(),
       note: dom.customNoteInput.value.trim(),
       updatedAt: Date.now()
     };
-    if (state.customEditorId) {
-      const index = state.customItems.findIndex((item) => item.id === state.customEditorId);
+    const editingId = state.customEditorId;
+    if (editingId) {
+      const index = state.customItems.findIndex((item) => item.id === editingId);
       if (index !== -1) {
         state.customItems[index] = { ...state.customItems[index], ...entry };
-        const wrong = state.hearingWrong.find((item) => item.id === state.customItems[index].id);
-        if (wrong) {
-          Object.assign(wrong, entry);
-        }
+        const wrong = state.hearingWrong.find((item) => item.id === editingId);
+        if (wrong) Object.assign(wrong, entry);
       }
     } else {
       state.customItems.unshift({
@@ -2457,10 +2609,24 @@
     }
     saveCustomItems();
     saveHearingWrong();
-    closeCustomEditor();
     renderCustom();
     renderHearingWrong();
     renderListening();
+    if (editingId) {
+      closeCustomEditor();
+    } else {
+      const savedText = text;
+      dom.customEnglishInput.value = "";
+      dom.customPhoneticInput.value = "";
+      dom.customChineseInput.value = "";
+      dom.customExampleInput.value = "";
+      dom.customExampleTranslationInput.value = "";
+      dom.customNoteInput.value = "";
+      state.customAutoTranslation = true;
+      state.customExampleAutoTranslation = true;
+      dom.customSaveStatus.textContent = `已保存“${savedText}”，可以继续输入下一条。`;
+      dom.customEnglishInput.focus();
+    }
   }
 
   function renderCustom() {
@@ -2484,9 +2650,17 @@
       const english = document.createElement("div");
       english.className = "custom-list-english";
       english.textContent = item.text;
+      const phonetic = document.createElement("div");
+      phonetic.className = "custom-list-phonetic";
+      phonetic.textContent = item.phonetic || lookupPhonetic(item.text) || "暂无英式音标";
       const chinese = document.createElement("div");
       chinese.className = "custom-list-chinese";
       chinese.textContent = item.translation || "暂无中文翻译";
+      const example = document.createElement("div");
+      example.className = "custom-list-example";
+      example.textContent = item.example
+        ? `${item.example}${item.exampleTranslation ? ` — ${item.exampleTranslation}` : ""}`
+        : "";
       const note = document.createElement("div");
       note.className = "custom-list-note";
       note.textContent = item.note || "";
@@ -2508,7 +2682,7 @@
       remove.dataset.id = item.id;
       remove.textContent = "删除";
       actions.append(play, edit, remove);
-      card.append(english, chinese, note, actions);
+      card.append(english, phonetic, chinese, example, note, actions);
       dom.customList.appendChild(card);
     });
   }
@@ -2660,7 +2834,10 @@
     dom.customResultMark.textContent = correct ? "正确" : "需要再练";
     dom.customResultNote.textContent = correct ? "拼写正确" : "已自动加入听力错词本";
     dom.customCorrectAnswer.textContent = item.text;
+    dom.customCorrectPhonetic.textContent = item.phonetic || lookupPhonetic(item.text) || "暂无英式音标";
     dom.customCorrectTranslation.textContent = item.translation || "未填写";
+    dom.customCorrectExample.textContent = item.example || "未添加例句";
+    dom.customCorrectExampleTranslation.textContent = item.exampleTranslation || "未添加例句翻译";
     dom.customCorrectNote.textContent = item.note || "未填写";
     dom.customUserAnswer.textContent = answer;
     dom.customUserAnswerRow.hidden = correct;
@@ -2699,7 +2876,10 @@
     if (existing) {
       Object.assign(existing, {
         text: item.text,
+        phonetic: item.phonetic || lookupPhonetic(item.text),
         translation: item.translation || "",
+        example: item.example || "",
+        exampleTranslation: item.exampleTranslation || "",
         note: item.note || "",
         stage: 0,
         nextReviewAt: now + EBBINGHAUS_INTERVALS[0],
@@ -2710,7 +2890,10 @@
       state.hearingWrong.unshift({
         id: item.id,
         text: item.text,
+        phonetic: item.phonetic || lookupPhonetic(item.text),
         translation: item.translation || "",
+        example: item.example || "",
+        exampleTranslation: item.exampleTranslation || "",
         note: item.note || "",
         stage: 0,
         nextReviewAt: now + EBBINGHAUS_INTERVALS[0],
@@ -2742,7 +2925,10 @@
     startCustomPractice(entries.map((entry) => ({
       id: entry.id,
       text: entry.text,
+      phonetic: entry.phonetic || "",
       translation: entry.translation,
+      example: entry.example || "",
+      exampleTranslation: entry.exampleTranslation || "",
       note: entry.note
     })), "hearing");
   }

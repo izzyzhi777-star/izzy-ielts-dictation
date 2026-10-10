@@ -2346,3 +2346,27 @@ footer {
 .sync-advanced .sync-actions {
   margin-top: 10px;
 }
+
+.custom-save-status {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.custom-list-example {
+  color: var(--ink-soft);
+  font-size: 10px;
+  line-height: 1.55;
+}
+
+.custom-list-phonetic {
+  color: var(--signal);
+  font-family: "Times New Roman", serif;
+  font-size: 12px;
+}
+
+@media (max-width: 760px) {
+  .custom-editor-actions {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

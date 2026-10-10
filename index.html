@@ -376,6 +376,7 @@
               <label><input type="checkbox" data-listening-category="ordinals" checked><span>日期序数 1–31</span></label>
               <label><input type="checkbox" data-listening-category="dates" checked><span>完整日期</span></label>
               <label><input type="checkbox" data-listening-category="custom"><span>我的词句</span></label>
+              <label><input type="checkbox" data-listening-category="examples"><span>我的例句</span></label>
               <label><input type="checkbox" data-listening-category="hearing"><span>听力错词</span></label>
               <label><input type="checkbox" data-listening-category="wrong"><span>数字日期错题</span></label>
             </div>
@@ -411,6 +412,10 @@
             <textarea id="customEnglishInput" rows="2" placeholder="例如：accommodation / public transport / The lecture begins at eight thirty."></textarea>
           </label>
           <label class="custom-field">
+            <span>英式音标</span>
+            <input id="customPhoneticInput" type="text" placeholder="自动查找英式 IPA，可手动修改">
+          </label>
+          <label class="custom-field">
             <span>中文翻译</span>
             <div class="custom-inline">
               <input id="customChineseInput" type="text" placeholder="点击自动翻译，或手动填写">
@@ -418,12 +423,24 @@
             </div>
           </label>
           <label class="custom-field">
+            <span>例句</span>
+            <textarea id="customExampleInput" rows="2" placeholder="例如：The price includes accommodation and breakfast."></textarea>
+          </label>
+          <label class="custom-field">
+            <span>例句中文翻译</span>
+            <div class="custom-inline">
+              <input id="customExampleTranslationInput" type="text" placeholder="自动翻译或手动填写">
+              <button class="secondary-button" id="translateExampleButton" type="button">翻译例句</button>
+            </div>
+          </label>
+          <label class="custom-field">
             <span>个人笔记</span>
             <textarea id="customNoteInput" rows="3" placeholder="记录易错点、搭配或记忆方法"></textarea>
           </label>
           <div class="custom-editor-actions">
-            <button class="primary-button" id="saveCustomButton" type="button">保存词句</button>
+            <button class="primary-button" id="saveCustomButton" type="button">保存并继续添加</button>
             <button class="text-button" id="cancelCustomEditButton" type="button">取消</button>
+            <span class="custom-save-status" id="customSaveStatus">保存后会自动清空输入框，可直接继续录入。</span>
           </div>
         </section>
 
@@ -488,7 +505,10 @@
               <section class="result" id="customResult" hidden>
                 <div class="result-head"><strong id="customResultMark">正确</strong><span id="customResultNote"></span></div>
                 <div class="result-line"><span>正确答案</span><p id="customCorrectAnswer"></p></div>
+                <div class="result-line"><span>英式音标</span><p id="customCorrectPhonetic"></p></div>
                 <div class="result-line"><span>中文翻译</span><p id="customCorrectTranslation"></p></div>
+                <div class="result-line"><span>例句</span><p id="customCorrectExample"></p></div>
+                <div class="result-line"><span>例句翻译</span><p id="customCorrectExampleTranslation"></p></div>
                 <div class="result-line"><span>笔记</span><p id="customCorrectNote"></p></div>
                 <div class="result-line wrong-line" id="customUserAnswerRow" hidden><span>你的答案</span><p id="customUserAnswer"></p></div>
               </section>
