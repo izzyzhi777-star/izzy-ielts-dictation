@@ -335,7 +335,7 @@
       if (state.sync.autoSync && state.sync.token && state.sync.gistId) syncCloudData(false);
     });
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("sw.js").catch((error) => console.debug("Service worker unavailable.", error));
+      navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).catch((error) => console.debug("Service worker unavailable.", error));
     }
   }
 
