@@ -1360,7 +1360,7 @@
             ? `从 ${rangeLabel(state.range)} 随机的 100 个数字`
             : (isShuffle ? "打乱 1 到 100，拼写阿拉伯数字" : "从 1 到 100，按顺序拼写阿拉伯数字");
       dom.startDescription.textContent = state.range === "phone"
-        ? "每次打开或重开都会重新生成 50 个电话号码。0 读作 oh，连续相同数字会读作 double 或 triple。"
+        ? "每次打开或重开都会重新生成 50 个电话号码。播报较慢并按组停顿；0 读作 oh，多数只出现 double，少量出现 triple。"
         : state.range === "years"
           ? "每次打开或重开都会重新生成 30 个年份。2000 年以前按 nineteen oh one、eighteen eighty-one 的形式播报。"
           : randomRange
@@ -1976,7 +1976,9 @@
 
   function generatePhoneNumbers(count = 50) {
     const values = new Set();
-    const patterns = ["00", "11", "22", "33", "44", "55", "66", "77", "88", "99", "000", "111", "222", "333", "444", "555", "666", "777", "888", "999"];
+    const doublePatterns = ["00", "11", "22", "33", "44", "55", "66", "77", "88", "99"];
+    const triplePatterns = ["000", "111", "222", "333", "444", "555", "666", "777", "888", "999"];
+    const tripleLimit = Math.max(4, Math.round(count * 0.12));
     let attempts = 0;
     while (values.size < count && attempts < count * 120) {
       attempts += 1;
@@ -1989,14 +1991,16 @@
         digits = String(randomInt(2, 9));
         while (digits.length < length) digits += String(randomInt(0, 9));
       }
-      const injections = Math.random() < 0.3 ? 2 : 1;
-      for (let index = 0; index < injections; index += 1) {
-        const pool = Math.random() < 0.22
-          ? patterns.slice(10)
-          : patterns.slice(0, 10);
-        const pattern = pool[Math.floor(Math.random() * pool.length)];
-        const start = randomInt(length === 8 ? 1 : 0, length - pattern.length);
-        digits = digits.slice(0, start) + pattern + digits.slice(start + pattern.length);
+
+      const patternPool = values.size < tripleLimit ? triplePatterns : doublePatterns;
+      const pattern = patternPool[Math.floor(Math.random() * patternPool.length)];
+      const start = randomInt(length === 8 ? 1 : 0, length - pattern.length);
+      digits = digits.slice(0, start) + pattern + digits.slice(start + pattern.length);
+
+      if (Math.random() < 0.18) {
+        const extra = doublePatterns[Math.floor(Math.random() * doublePatterns.length)];
+        const extraStart = randomInt(length === 8 ? 1 : 0, length - extra.length);
+        digits = digits.slice(0, extraStart) + extra + digits.slice(extraStart + extra.length);
       }
       values.add(digits);
     }
@@ -2040,7 +2044,11 @@
       }
       index += runLength;
     }
-    return parts.join(" ");
+    const groups = [];
+    for (let cursor = 0; cursor < parts.length; cursor += 4) {
+      groups.push(parts.slice(cursor, cursor + 4).join(" "));
+    }
+    return groups.join(", ");
   }
 
   function yearToEnglish(value) {
@@ -2089,6 +2097,12 @@
 
   function isDigitsRange(range) {
     return range === "phone" || range === "years";
+  }
+
+  function playbackRateForType(type) {
+    if (type === "phone") return 0.7;
+    if (type === "year") return 0.85;
+    return Number(settings.speed) || 1;
   }
 
   function currentValueType() {
@@ -2277,7 +2291,7 @@
 
     try {
       dom.playStatus.textContent = "正在生成流畅英式语音";
-      await playRepeatedSpeech(spokenTextForValue(number, currentValueType()), settings.repeat, token, { number });
+      await playRepeatedSpeech(spokenTextForValue(number, currentValueType()), settings.repeat, token, { number, type: currentValueType() });
       if (token === state.token) {
         setPlaying(false);
         dom.playStatus.textContent = "播放完成，请填写答案";
@@ -2382,7 +2396,12 @@
   }
 
   async function playNumberAudio(number, token, type = "number") {
-    await playSmartText(spokenTextForValue(number, type), token);
+    const text = spokenTextForValue(number, type);
+    if (type === "phone" || type === "year") {
+      await playRepeatedSpeech(text, 1, token, { number, type });
+      return;
+    }
+    await playSmartText(text, token);
   }
 
   async function playListeningSequentially(playlist, token, startIndex = 0) {
@@ -2596,10 +2615,10 @@
       || null;
   }
 
-  async function playAudioBlob(blob, token) {
+  async function playAudioBlob(blob, token, options = {}) {
     const url = URL.createObjectURL(blob);
     try {
-      await playAudio(url, token);
+      await playAudio(url, token, options);
     } finally {
       URL.revokeObjectURL(url);
     }
@@ -2634,7 +2653,7 @@
     }
   }
 
-  function playAudio(source, token) {
+  function playAudio(source, token, options = {}) {
     return new Promise((resolve, reject) => {
       if (token !== state.token) {
         resolve();
@@ -2652,7 +2671,7 @@
       };
       audio.onended = () => finish();
       audio.onerror = () => finish(new Error(`Cannot play ${source}`));
-      audio.playbackRate = settings.speed;
+      audio.playbackRate = Number(options.rate ?? settings.speed) || 1;
       audio.preservesPitch = true;
       audio.webkitPreservesPitch = true;
       const resolved = new URL(source, window.location.href).href;
@@ -3103,12 +3122,13 @@
   }
 
   async function playRepeatedSpeech(text, repeat, token, options = {}) {
+    const playbackRate = playbackRateForType(options.type || "number");
     const immediate = getSyncSpeechSource(text);
     if (immediate) {
       try {
         for (let index = 0; index < Math.max(1, repeat); index += 1) {
           if (token !== state.token) return;
-          await playAudio(immediate.source, token);
+          await playAudio(immediate.source, token, { rate: playbackRate });
           if (token !== state.token) return;
           if (index < repeat - 1) await wait(850);
         }
@@ -3122,11 +3142,11 @@
     for (let index = 0; index < Math.max(1, repeat); index += 1) {
       if (token !== state.token) return;
       try {
-        await speakBrowserText(text, settings.speed, token);
+        await speakBrowserText(text, playbackRate, token);
       } catch (error) {
         const blob = await warmup;
         if (!blob) throw error;
-        await playAudioBlob(blob, token);
+        await playAudioBlob(blob, token, { rate: playbackRate });
       }
       if (token !== state.token) return;
       if (index < repeat - 1) await wait(850);
