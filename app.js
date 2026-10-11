@@ -31,7 +31,9 @@
     basic: { min: 1, max: 100, count: 100, shuffled: false },
     hundreds: { min: 100, max: 1000, count: 100, shuffled: true },
     thousands: { min: 1000, max: 10000, count: 100, shuffled: true },
-    large: { min: 1, max: 90000000000, count: 100, shuffled: true }
+    large: { min: 1, max: 90000000000, count: 100, shuffled: true },
+    phone: { count: 50, shuffled: true },
+    years: { min: 1000, max: 1999, count: 30, shuffled: true }
   };
 
   const ONES = [
@@ -534,14 +536,20 @@
     try {
       const raw = localStorage.getItem(WRONG_KEY);
       const parsed = raw ? JSON.parse(raw) : {};
-      const numbers = Array.isArray(parsed)
-        ? parsed.map(Number)
+      const rawNumbers = Array.isArray(parsed)
+        ? parsed
         : Array.isArray(parsed.numbers)
-          ? parsed.numbers.map(Number)
+          ? parsed.numbers
           : [];
+      const numbers = rawNumbers.map((entry) => {
+        if (typeof entry === "string" && entry.startsWith("phone:") && /^\d{8,10}$/.test(entry.slice(6))) return entry;
+        if (typeof entry === "string" && entry.startsWith("year:") && Number(entry.slice(5)) >= 1000 && Number(entry.slice(5)) < 2000) return entry;
+        const value = Number(entry);
+        return Number.isFinite(value) && value >= 1 && value <= 90000000000 ? value : null;
+      }).filter((entry) => entry !== null);
       const dates = !Array.isArray(parsed) && Array.isArray(parsed.dates) ? parsed.dates : [];
       return {
-        numbers: Array.from(new Set(numbers.filter((number) => number >= 1 && number <= 90000000000))).sort((a, b) => a - b),
+        numbers: Array.from(new Set(numbers)).sort(compareWrongEntries),
         dates: dates.filter((entry) => entry && entry.day && entry.month)
       };
     } catch (error) {
@@ -795,7 +803,7 @@
       settings: newer ? { ...local.settings, ...remote.settings } : local.settings,
       customItems: mergeById(local.customItems, remote.customItems),
       hearingWrong: mergeById(local.hearingWrong, remote.hearingWrong, "lastReviewedAt"),
-      wrongNumbers: Array.from(new Set([...(local.wrongNumbers || []), ...(remote.wrongNumbers || [])])).sort((a, b) => a - b),
+      wrongNumbers: Array.from(new Set([...(local.wrongNumbers || []), ...(remote.wrongNumbers || [])])).sort(compareWrongEntries),
       wrongDates: mergeDateWrong(local.wrongDates, remote.wrongDates)
     };
   }
@@ -854,6 +862,8 @@
       complete: false,
       checked: false,
       source: "normal",
+      range: "basic",
+      types: [],
       numbers: [],
       index: 0,
       answered: 0,
@@ -1214,6 +1224,7 @@
     state.session = createEmptySession();
     stopPlayback();
     renderRangeButtons();
+    renderModeButtons();
     renderSessionCopy();
     renderSession();
   }
@@ -1227,12 +1238,15 @@
       basic: "1–100",
       hundreds: "100–1,000",
       thousands: "1,000–10,000",
-      large: "1–90 billion"
+      large: "1–90 billion",
+      phone: "Phone Number",
+      years: "1000–1999"
     }[range] || "1–100";
   }
 
   function selectMode(mode) {
     if (!["english", "digits"].includes(mode)) return;
+    if (isDigitsRange(state.range) && mode === "english") return;
     if (settings.mode === mode) return;
     settings.mode = mode;
     saveSettings();
@@ -1244,7 +1258,11 @@
   }
 
   function renderModeButtons() {
-    dom.modeButtons.forEach((button) => button.classList.toggle("is-active", button.dataset.mode === settings.mode));
+    const effectiveMode = isDigitsRange(state.range) ? "digits" : settings.mode;
+    dom.modeButtons.forEach((button) => {
+      button.classList.toggle("is-active", button.dataset.mode === effectiveMode);
+      button.disabled = isDigitsRange(state.range) && button.dataset.mode === "english";
+    });
   }
 
   function renderSettings() {
@@ -1273,7 +1291,8 @@
 
   function renderSessionCopy() {
     const isWrong = state.session.source === "wrong";
-    const answerMode = isWrong ? "digits" : settings.mode;
+    const specialDigits = isDigitsRange(state.session.range);
+    const answerMode = isWrong || specialDigits ? "digits" : settings.mode;
     const isEnglish = answerMode === "english";
     const range = RANGE_CONFIG[state.range] || RANGE_CONFIG.basic;
     const randomRange = state.range !== "basic";
@@ -1304,33 +1323,49 @@
     } else if (isEnglish) {
       dom.modeLabel.textContent = `${rangeLabel(state.range)} · 英文拼写`;
       dom.answerTag.textContent = "英文拼写";
-      dom.orderTag.textContent = randomRange ? "每次随机 100 题" : "顺序播报";
+      dom.orderTag.textContent = randomRange
+        ? (state.range === "phone" ? "每次随机 50 题" : state.range === "years" ? "每次随机 30 题" : "每次随机 100 题")
+        : "顺序播报";
       dom.listenTitle.textContent = "听音后填写英文";
       dom.listenHint.textContent = randomRange
         ? "英文读法不使用 and 连接词，hundred、thousand、million、billion 按英语数位分组。按 Tab 可重播。"
         : "例如听到 thirteen，请填写 thirteen。按 Tab 可重播。";
-      dom.answerInput.placeholder = "填写英文";
-      dom.answerInput.inputMode = "text";
       dom.startTitle.textContent = randomRange
         ? `从 ${rangeLabel(state.range)} 随机抽取 100 个数字拼英文`
         : "从 1 到 100，按顺序拼写英文";
+      dom.answerInput.placeholder = "填写英文";
+      dom.answerInput.inputMode = "text";
       dom.startDescription.textContent = randomRange
         ? "每次打开或重新开始都会重新抽取不同数字。重点训练 hundred、thousand、million 和 billion 的数位边界。"
         : "点击开始后使用英式语音播报。提交后光标会留在输入框，按 Enter 进入下一题。";
     } else {
       dom.modeLabel.textContent = `${rangeLabel(state.range)} · 阿拉伯数字`;
       dom.answerTag.textContent = "阿拉伯数字";
-      dom.orderTag.textContent = randomRange ? "每次随机 100 题" : (isShuffle ? "乱序播报" : "顺序播报");
+      dom.orderTag.textContent = randomRange
+        ? (state.range === "phone" ? "每次随机 50 题" : state.range === "years" ? "每次随机 30 题" : "每次随机 100 题")
+        : (isShuffle ? "乱序播报" : "顺序播报");
       dom.listenTitle.textContent = "听音后填写阿拉伯数字";
-      dom.listenHint.textContent = "只需要输入纯数字，逗号可以省略。按 Tab 可重播。";
+      dom.listenHint.textContent = state.range === "phone"
+        ? "0 读作 oh，22 读作 double two，333 读作 triple three。只填写阿拉伯数字，保留开头的 0。"
+        : state.range === "years"
+          ? "1901 读作 nineteen oh one，1881 读作 eighteen eighty-one。只填写阿拉伯数字。"
+          : "只需要输入纯数字，逗号可以省略。按 Tab 可重播。";
       dom.answerInput.placeholder = "填写数字";
       dom.answerInput.inputMode = "numeric";
-      dom.startTitle.textContent = randomRange
-        ? `从 ${rangeLabel(state.range)} 随机的 100 个数字`
-        : (isShuffle ? "打乱 1 到 100，拼写阿拉伯数字" : "从 1 到 100，按顺序拼写阿拉伯数字");
-      dom.startDescription.textContent = randomRange
-        ? "每次打开或重新开始都会重新抽取不同数字。这一范围不按顺序播报。"
-        : "顺序可以在右上角设置中切换。提交后光标会留在输入框，下一题仍由你手动进入。";
+      dom.startTitle.textContent = state.range === "phone"
+        ? "每次随机 50 个雅思机考高频电话号码"
+        : state.range === "years"
+          ? "每次随机 30 个 1000–1999 年历史年份"
+          : randomRange
+            ? `从 ${rangeLabel(state.range)} 随机的 100 个数字`
+            : (isShuffle ? "打乱 1 到 100，拼写阿拉伯数字" : "从 1 到 100，按顺序拼写阿拉伯数字");
+      dom.startDescription.textContent = state.range === "phone"
+        ? "每次打开或重开都会重新生成 50 个电话号码。0 读作 oh，连续相同数字会读作 double 或 triple。"
+        : state.range === "years"
+          ? "每次打开或重开都会重新生成 30 个年份。2000 年以前按 nineteen oh one、eighteen eighty-one 的形式播报。"
+          : randomRange
+            ? "每次打开或重新开始都会重新抽取不同数字。这一范围不按顺序播报。"
+            : "顺序可以在右上角设置中切换。提交后光标会留在输入框，下一题仍由你手动进入。";
     }
     dom.asideVoice.textContent = voiceName;
   }
@@ -1358,7 +1393,7 @@
       dom.startScreen.hidden = false;
       dom.questionScreen.hidden = true;
       dom.completeScreen.hidden = true;
-      dom.sessionLabel.textContent = "本轮 0 / 100";
+      dom.sessionLabel.textContent = `本轮 0 / ${RANGE_CONFIG[state.range]?.count || 100}`;
       return;
     }
 
@@ -1777,18 +1812,31 @@
     stopPlayback();
     const wrongRetry = source === "wrong" || (Array.isArray(customNumbers) && customNumbers.length > 0);
     let numbers;
+    let types;
     if (wrongRetry) {
-      numbers = Array.from(new Set(customNumbers.map(Number).filter((number) => number >= 1 && number <= 90000000000))).sort((a, b) => a - b);
+      const decoded = customNumbers.map(decodeWrongValue);
+      numbers = decoded.map((entry) => entry.value);
+      types = decoded.map((entry) => entry.type);
     } else {
       numbers = generateRangeNumbers(state.range);
+      const type = typeForRange(state.range);
+      types = numbers.map(() => type);
     }
+
+    const uniqueTypes = Array.from(new Set(types));
+    const sessionRange = wrongRetry
+      ? (uniqueTypes.length === 1
+          ? (uniqueTypes[0] === "phone" ? "phone" : uniqueTypes[0] === "year" ? "years" : "wrong")
+          : "mixed")
+      : state.range;
 
     state.session = {
       started: numbers.length > 0,
       complete: false,
       checked: false,
       source: wrongRetry ? "wrong" : "normal",
-      range: wrongRetry ? "wrong" : state.range,
+      range: sessionRange,
+      types,
       numbers,
       index: 0,
       answered: 0,
@@ -1811,6 +1859,8 @@
     }
     if (range === "hundreds") return pickHundreds();
     if (range === "thousands") return pickThousands();
+    if (range === "phone") return generatePhoneNumbers(config.count || 50);
+    if (range === "years") return generateYears(config.count || 30);
     return pickLargeNumbers();
   }
 
@@ -1924,6 +1974,138 @@
     return Math.floor(Math.random() * (maximum - minimum + 1)) + minimum;
   }
 
+  function generatePhoneNumbers(count = 50) {
+    const values = new Set();
+    const patterns = ["00", "11", "22", "33", "44", "55", "66", "77", "88", "99", "000", "111", "222", "333", "444", "555", "666", "777", "888", "999"];
+    let attempts = 0;
+    while (values.size < count && attempts < count * 120) {
+      attempts += 1;
+      const length = values.size % 2 === 0 ? 10 : 8;
+      let digits = "";
+      if (length === 8) {
+        digits = `0${randomInt(1, 9)}`;
+        while (digits.length < length) digits += String(randomInt(0, 9));
+      } else {
+        digits = String(randomInt(2, 9));
+        while (digits.length < length) digits += String(randomInt(0, 9));
+      }
+      const injections = Math.random() < 0.3 ? 2 : 1;
+      for (let index = 0; index < injections; index += 1) {
+        const pool = Math.random() < 0.22
+          ? patterns.slice(10)
+          : patterns.slice(0, 10);
+        const pattern = pool[Math.floor(Math.random() * pool.length)];
+        const start = randomInt(length === 8 ? 1 : 0, length - pattern.length);
+        digits = digits.slice(0, start) + pattern + digits.slice(start + pattern.length);
+      }
+      values.add(digits);
+    }
+    return shuffle(Array.from(values)).slice(0, count);
+  }
+
+  function generateYears(count = 30) {
+    const known = [1001, 1066, 1215, 1348, 1450, 1492, 1588, 1603, 1666, 1776, 1815, 1840, 1865, 1881, 1901, 1912, 1918, 1929, 1939, 1945, 1957, 1969, 1972, 1984, 1991, 1998];
+    const values = new Set(known);
+    while (values.size < count) {
+      const year = randomInt(1000, 1999);
+      const ending = year % 100;
+      if (ending === 0 && Math.random() < 0.8) continue;
+      values.add(year);
+    }
+    return shuffle(Array.from(values)).slice(0, count);
+  }
+
+  function phoneToEnglish(value) {
+    const digits = String(value || "").replace(/\D/g, "");
+    const digitWords = ["oh", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
+    const parts = [];
+    let index = 0;
+    while (index < digits.length) {
+      let runLength = 1;
+      while (index + runLength < digits.length && digits[index + runLength] === digits[index]) {
+        runLength += 1;
+      }
+      let remaining = runLength;
+      while (remaining > 0) {
+        if (remaining >= 3) {
+          parts.push(`triple ${digitWords[Number(digits[index])]}`);
+          remaining -= 3;
+        } else if (remaining === 2) {
+          parts.push(`double ${digitWords[Number(digits[index])]}`);
+          remaining -= 2;
+        } else {
+          parts.push(digitWords[Number(digits[index])]);
+          remaining -= 1;
+        }
+      }
+      index += runLength;
+    }
+    return parts.join(" ");
+  }
+
+  function yearToEnglish(value) {
+    const year = Number(value);
+    if (!Number.isFinite(year) || year < 1000 || year >= 2000) return String(value);
+    if (year === 1000) return "one thousand";
+    const century = Math.floor(year / 100);
+    const ending = year % 100;
+    const centuryText = numberToEnglish(century);
+    if (ending === 0) return `${centuryText} hundred`;
+    if (ending < 10) return `${centuryText} oh ${numberToEnglish(ending)}`;
+    return `${centuryText} ${numberToEnglish(ending)}`;
+  }
+
+  function compareWrongEntries(a, b) {
+    const typeOrder = { number: 0, year: 1, phone: 2 };
+    const left = decodeWrongValue(a);
+    const right = decodeWrongValue(b);
+    const typeDifference = (typeOrder[left.type] || 0) - (typeOrder[right.type] || 0);
+    if (typeDifference) return typeDifference;
+    if (left.type === "number") return Number(left.value) - Number(right.value);
+    return String(left.value).localeCompare(String(right.value));
+  }
+
+  function encodeWrongValue(value, type = currentValueType()) {
+    if (type === "phone") return `phone:${String(value)}`;
+    if (type === "year") return `year:${String(value)}`;
+    return Number(value);
+  }
+
+  function decodeWrongValue(entry) {
+    if (typeof entry === "string" && entry.startsWith("phone:")) {
+      return { value: entry.slice(6), type: "phone" };
+    }
+    if (typeof entry === "string" && entry.startsWith("year:")) {
+      return { value: Number(entry.slice(5)), type: "year" };
+    }
+    return { value: Number(entry), type: "number" };
+  }
+
+  function typeForRange(range) {
+    if (range === "phone") return "phone";
+    if (range === "years") return "year";
+    return "number";
+  }
+
+  function isDigitsRange(range) {
+    return range === "phone" || range === "years";
+  }
+
+  function currentValueType() {
+    return state.session.types?.[state.session.index] || typeForRange(state.session.range);
+  }
+
+  function spokenTextForValue(value, type = "number") {
+    if (type === "phone") return phoneToEnglish(value);
+    if (type === "year") return yearToEnglish(value);
+    return numberToEnglish(Number(value));
+  }
+
+  function answerTextForValue(value, type = "number") {
+    if (type === "phone" || type === "year") return String(value);
+    return formatNumber(Number(value));
+  }
+
   function startWrongRound() {
     if (!state.wrongNumbers.length) return;
     switchTab("dictation");
@@ -1961,14 +2143,15 @@
     const number = currentNumber();
     if (number === null) return false;
     if (answerMode() === "english") {
-      return normalizeEnglish(answer) === normalizeEnglish(numberToEnglish(number));
+      return normalizeEnglish(answer) === normalizeEnglish(spokenTextForValue(number, currentValueType()));
     }
     const digits = answer.replace(/[\s,，]/g, "");
-    return /^\d+$/.test(digits) && String(Number(digits)) === String(number);
+    return /^\d+$/.test(digits) && digits === String(number);
   }
 
   function answerMode() {
-    return state.session.source === "wrong" ? "digits" : settings.mode;
+    if (state.session.source === "wrong") return "digits";
+    return isDigitsRange(state.session.range) ? "digits" : settings.mode;
   }
 
   function submitAnswer(automatic) {
@@ -1992,14 +2175,16 @@
       state.session.correct += 1;
       removeWrongNumber(number);
     } else {
-      addWrongNumber(number);
+      addWrongNumber(number, currentValueType());
     }
 
     dom.result.hidden = false;
     dom.result.classList.toggle("is-wrong", !result.correct);
     dom.resultMark.textContent = result.correct ? "正确" : "需要再练";
     dom.resultNote.textContent = result.note;
-    dom.correctAnswer.textContent = answerMode() === "english" ? numberToEnglish(number) : formatNumber(number);
+    dom.correctAnswer.textContent = answerMode() === "english"
+      ? spokenTextForValue(number, currentValueType())
+      : answerTextForValue(number, currentValueType());
     dom.userAnswer.textContent = answer;
     dom.userAnswerRow.hidden = result.correct;
     renderSession();
@@ -2008,8 +2193,9 @@
   }
 
   function compareAnswer(answer, number) {
+    const type = currentValueType();
     if (answerMode() === "english") {
-      const expected = numberToEnglish(number);
+      const expected = spokenTextForValue(number, type);
       const normalized = normalizeEnglish(answer);
       const correct = normalized === normalizeEnglish(expected)
         || (number === 100 && ["onehundred", "ahundred", "hundred"].includes(normalized));
@@ -2019,10 +2205,10 @@
       };
     }
     const digits = answer.replace(/[\s,，]/g, "");
-    const correct = /^\d+$/.test(digits) && String(Number(digits)) === String(number);
+    const correct = /^\d+$/.test(digits) && digits === String(number);
     return {
       correct,
-      note: correct ? "阿拉伯数字正确" : `正确数字是 ${formatNumber(number)}`
+      note: correct ? "阿拉伯数字正确" : `正确数字是 ${answerTextForValue(number, type)}`
     };
   }
 
@@ -2068,12 +2254,14 @@
   }
 
   function getAudioSource(number) {
-    const value = Number(number);
-    const voiceEntry = state.voicePackIndex[numberToEnglish(value)];
+    const type = currentValueType();
+    const spoken = spokenTextForValue(number, type);
+    if (type !== "number") return "";
+    const voiceEntry = state.voicePackIndex[spoken];
     if (voiceEntry?.file) return `audio/voice-pack/${voiceEntry.file}`;
     if (!["localhost", "127.0.0.1"].includes(window.location.hostname)) return "";
     const params = new URLSearchParams({
-      number: String(value),
+      number: String(number),
       voice: settings.voice
     });
     return `/api/speech?${params.toString()}`;
@@ -2089,7 +2277,7 @@
 
     try {
       dom.playStatus.textContent = "正在生成流畅英式语音";
-      await playRepeatedSpeech(numberToEnglish(number), settings.repeat, token, { number });
+      await playRepeatedSpeech(spokenTextForValue(number, currentValueType()), settings.repeat, token, { number });
       if (token === state.token) {
         setPlaying(false);
         dom.playStatus.textContent = "播放完成，请填写答案";
@@ -2193,8 +2381,8 @@
     return [`${numberToEnglish(hundreds)} hundred`, numberToEnglish(remainder)];
   }
 
-  async function playNumberAudio(number, token) {
-    await playSmartText(numberToEnglish(number), token);
+  async function playNumberAudio(number, token, type = "number") {
+    await playSmartText(spokenTextForValue(number, type), token);
   }
 
   async function playListeningSequentially(playlist, token, startIndex = 0) {
@@ -2629,8 +2817,17 @@
       });
     }
     if (selected.has("wrong")) {
-      state.wrongNumbers.forEach((number) => {
-        entries.push({ kind: "number", number, english: numberToEnglish(number), chinese: formatNumber(number), key: `wrong-number:${number}` });
+      state.wrongNumbers.forEach((entry) => {
+        const decoded = decodeWrongValue(entry);
+        const english = spokenTextForValue(decoded.value, decoded.type);
+        entries.push({
+          kind: decoded.type === "number" ? "number" : "text",
+          number: decoded.type === "number" ? decoded.value : undefined,
+          english,
+          chinese: answerTextForValue(decoded.value, decoded.type),
+          audioText: english,
+          key: `wrong-number:${String(entry)}`
+        });
       });
       state.wrongDates.forEach((entry) => {
         entries.push({
@@ -3747,14 +3944,19 @@
       return;
     }
 
-    state.wrongNumbers.forEach((number, index) => {
+    state.wrongNumbers.forEach((entry, index) => {
+      const decoded = decodeWrongValue(entry);
       dom.wrongBookList.appendChild(createWrongBookItem({
         type: "number",
         index,
-        value: formatNumber(number),
-        word: numberToEnglish(number),
-        note: "数字错题 · 重练时填写阿拉伯数字",
-        key: `number:${number}`
+        value: answerTextForValue(decoded.value, decoded.type),
+        word: spokenTextForValue(decoded.value, decoded.type),
+        note: decoded.type === "phone"
+          ? "电话号码错题 · 重练时填写阿拉伯数字"
+          : decoded.type === "year"
+            ? "年份错题 · 重练时填写阿拉伯数字"
+            : "数字错题 · 重练时填写阿拉伯数字",
+        key: `number:${String(entry)}`
       }));
     });
 
@@ -3815,8 +4017,10 @@
   }
 
   async function playWrongBookEntry(type, index) {
+    const rawNumber = type === "number" ? state.wrongNumbers[index] : null;
+    const decodedNumber = type === "number" ? decodeWrongValue(rawNumber) : null;
     const entry = type === "number"
-      ? { key: `number:${state.wrongNumbers[index]}`, number: state.wrongNumbers[index] }
+      ? { key: `number:${String(rawNumber)}`, number: decodedNumber.value, valueType: decodedNumber.type }
       : state.wrongDates[index];
     if (!entry) return;
     if (state.playingWord === entry.key && state.playing) {
@@ -3830,7 +4034,7 @@
     renderWrongBook();
     try {
       if (type === "number") {
-        await playNumberAudio(entry.number, token);
+        await playNumberAudio(entry.number, token, entry.valueType);
       } else {
         await playSmartText(entry.data.audioText, token);
       }
@@ -3896,18 +4100,18 @@
     renderWrongBook();
   }
 
-  function addWrongNumber(number) {
-    const value = Number(number);
-    if (!state.wrongNumbers.includes(value)) {
+  function addWrongNumber(number, type = currentValueType()) {
+    const value = encodeWrongValue(number, type);
+    if (!state.wrongNumbers.some((entry) => String(entry) === String(value))) {
       state.wrongNumbers.push(value);
-      state.wrongNumbers.sort((a, b) => a - b);
+      state.wrongNumbers.sort(compareWrongEntries);
       saveWrongData();
     }
   }
 
-  function removeWrongNumber(number) {
-    const value = Number(number);
-    state.wrongNumbers = state.wrongNumbers.filter((entry) => entry !== value);
+  function removeWrongNumber(number, type = currentValueType()) {
+    const value = encodeWrongValue(number, type);
+    state.wrongNumbers = state.wrongNumbers.filter((entry) => String(entry) !== String(value));
     saveWrongData();
   }
 

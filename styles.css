@@ -1397,7 +1397,7 @@ footer {
 
 .range-switch {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   border: 1px solid var(--line);
 }
 
@@ -1455,7 +1455,7 @@ footer {
   }
 
   .range-switch {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 
@@ -1464,17 +1464,16 @@ footer {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .range-button:nth-child(2) {
+  .range-button:nth-child(2n) {
     border-right: 0;
   }
 
-  .range-button:nth-child(3),
-  .range-button:nth-child(4) {
+  .range-button:nth-child(n + 3) {
     border-top: 1px solid var(--line);
   }
 
-  .range-button:nth-child(4) {
-    border-right: 0;
+  .range-button:nth-child(3n) {
+    border-right: 1px solid var(--line);
   }
 }
 
