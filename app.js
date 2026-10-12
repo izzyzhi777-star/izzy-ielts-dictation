@@ -323,6 +323,7 @@
     bindEvents();
     applySyncHash();
     state.voicePackPromise = loadVoicePackIndex();
+    loadBundledVocabulary();
     setupListeningAudio();
     setupMediaSession();
     state.ipaLoadPromise = loadIpaDictionary();
@@ -3340,6 +3341,39 @@
       : "输入英文后会自动获取音标和中文翻译；保存后会清空输入框，可继续添加下一条。";
     dom.customEditor.hidden = false;
     dom.customEnglishInput.focus();
+  }
+
+  async function loadBundledVocabulary() {
+    try {
+      const response = await fetch("data/izzy-vocabulary-918.json", { cache: "force-cache" });
+      if (!response.ok) return;
+      const payload = await response.json();
+      const bundledCustom = Array.isArray(payload.customItems) ? payload.customItems : [];
+      const bundledHearing = Array.isArray(payload.hearingWrong) ? payload.hearingWrong : [];
+      const customMap = new Map(state.customItems.map((item) => [item.id, item]));
+      const hearingMap = new Map(state.hearingWrong.map((item) => [item.id, item]));
+      bundledCustom.forEach((item) => {
+        if (item?.id && !customMap.has(item.id)) customMap.set(item.id, item);
+      });
+      bundledHearing.forEach((item) => {
+        if (item?.id && !hearingMap.has(item.id)) hearingMap.set(item.id, item);
+      });
+      const nextCustom = Array.from(customMap.values()).sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0));
+      const nextHearing = Array.from(hearingMap.values());
+      const changed = nextCustom.length !== state.customItems.length || nextHearing.length !== state.hearingWrong.length;
+      state.customItems = nextCustom;
+      state.hearingWrong = nextHearing;
+      if (changed) {
+        saveCustomItems();
+        saveHearingWrong();
+        renderCustom();
+        renderHearingWrong();
+        renderListening();
+        renderWrongBook();
+      }
+    } catch (error) {
+      console.debug("Bundled vocabulary unavailable.", error);
+    }
   }
 
   function warmCustomItemAudio(item) {
