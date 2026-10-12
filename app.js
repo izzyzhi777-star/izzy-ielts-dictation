@@ -240,6 +240,8 @@
     connectFromClipboardButton: $("connectFromClipboardButton"),
     copyVocabularyButton: $("copyVocabularyButton"),
     importVocabularyButton: $("importVocabularyButton"),
+    exportVocabularyButton: $("exportVocabularyButton"),
+    createSyncLinkButton: $("createSyncLinkButton"),
     syncAutoToggle: $("syncAutoToggle"),
     syncStatus: $("syncStatus")
   };
@@ -319,6 +321,7 @@
     state.listening.audio.setAttribute("webkit-playsinline", "");
     state.listening.audio.volume = 1;
     bindEvents();
+    applySyncHash();
     state.voicePackPromise = loadVoicePackIndex();
     setupListeningAudio();
     setupMediaSession();
@@ -480,6 +483,23 @@
     audio.currentTime = target;
     state.listening.lastTime = target;
     updateListeningProgress();
+  }
+
+  function applySyncHash() {
+    try {
+      const match = location.hash.match(/^#sync=([^&]+)$/);
+      if (!match) return;
+      const payload = JSON.parse(atob(match[1]));
+      if (!payload?.t || !payload?.g) return;
+      state.sync.token = payload.t;
+      state.sync.gistId = payload.g;
+      state.sync.autoSync = true;
+      saveSyncConfig();
+      history.replaceState(null, "", `${location.pathname}${location.search}`);
+      window.setTimeout(() => syncCloudData(false), 900);
+    } catch (error) {
+      console.warn("Could not apply automatic sync link.", error);
+    }
   }
 
   async function loadIpaDictionary() {
@@ -1097,6 +1117,37 @@
         updateSyncStatus("全部词库已复制。请在 Safari 设置中点击“从剪贴板导入词库”。");
       } catch (error) {
         updateSyncStatus(`复制词库失败：${String(error.message || error).slice(0, 100)}`, true);
+      }
+    });
+    dom.exportVocabularyButton.addEventListener("click", () => {
+      try {
+        const payload = JSON.stringify(buildSyncSnapshot(), null, 2);
+        const blob = new Blob([payload], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement("a");
+        anchor.href = url;
+        anchor.download = `izzy-vocabulary-${state.customItems.length}.json`;
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+        window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+        updateSyncStatus(`已导出 ${state.customItems.length} 条词汇及错词数据。`);
+      } catch (error) {
+        updateSyncStatus(`导出失败：${String(error.message || error).slice(0, 100)}`, true);
+      }
+    });
+    dom.createSyncLinkButton.addEventListener("click", async () => {
+      if (!state.sync.token || !state.sync.gistId) {
+        updateSyncStatus("请先在已有词汇的设备点击一键同步，再生成自动同步链接。", true);
+        return;
+      }
+      try {
+        const payload = btoa(JSON.stringify({ t: state.sync.token, g: state.sync.gistId }));
+        const link = `${location.origin}${location.pathname}?v=autosync#sync=${payload}`;
+        await navigator.clipboard.writeText(link);
+        updateSyncStatus("自动同步链接已复制。在另一台设备打开一次，以后就会自动同步。");
+      } catch (error) {
+        updateSyncStatus(`生成失败：${String(error.message || error).slice(0, 100)}`, true);
       }
     });
     dom.importVocabularyButton.addEventListener("click", async () => {
@@ -3291,6 +3342,14 @@
     dom.customEnglishInput.focus();
   }
 
+  function warmCustomItemAudio(item) {
+    if (!item) return;
+    [item.text, item.example].filter(Boolean).forEach((text) => {
+      if (state.voicePackIndex[text]) return;
+      warmNeuralSpeech(text);
+    });
+  }
+
   function closeCustomEditor() {
     state.customEditorId = null;
     dom.customEditor.hidden = true;
@@ -3451,6 +3510,7 @@
     }
     saveCustomItems();
     saveHearingWrong();
+    warmCustomItemAudio(entry);
     renderCustom();
     renderHearingWrong();
     renderListening();
