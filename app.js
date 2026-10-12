@@ -521,7 +521,7 @@
 
   async function loadVoicePackIndex() {
     try {
-      const response = await fetch("audio/voice-pack/index.json", { cache: "force-cache" });
+      const response = await fetch("audio/voice-pack/index.json?v=20261013", { cache: "no-cache" });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       state.voicePackIndex = await response.json();
       state.voicePackLoaded = true;
@@ -2504,7 +2504,13 @@
     const immediate = getSyncSpeechSource(text);
     if (immediate) {
       try {
-        await playListeningAudio(immediate.source, token);
+        try {
+          await playListeningAudio(immediate.source, token);
+        } catch (error) {
+          if (!immediate.external) throw error;
+          console.debug("External listening audio unavailable; using browser speech.", error);
+          await speakBrowserText(text, Number(dom.listeningSpeed.value) || 1, token, "listening");
+        }
       } finally {
         if (immediate.revoke) URL.revokeObjectURL(immediate.source);
       }
@@ -2619,7 +2625,13 @@
     const immediate = getSyncSpeechSource(text);
     if (immediate) {
       try {
-        await playAudio(immediate.source, token);
+        try {
+          await playAudio(immediate.source, token);
+        } catch (error) {
+          if (!immediate.external) throw error;
+          console.debug("External audio unavailable; using browser speech.", error);
+          await speakBrowserText(text, settings.speed, token);
+        }
       } finally {
         if (immediate.revoke) URL.revokeObjectURL(immediate.source);
       }
@@ -3185,7 +3197,13 @@
       try {
         for (let index = 0; index < Math.max(1, repeat); index += 1) {
           if (token !== state.token) return;
-          await playAudio(immediate.source, token, { rate: playbackRate });
+          try {
+            await playAudio(immediate.source, token, { rate: playbackRate });
+          } catch (error) {
+            if (!immediate.external) throw error;
+            console.debug("External audio unavailable; using browser speech.", error);
+            await speakBrowserText(text, playbackRate, token);
+          }
           if (token !== state.token) return;
           if (index < repeat - 1) await wait(850);
         }
@@ -3350,7 +3368,7 @@
 
   async function loadBundledVocabulary() {
     try {
-      const response = await fetch("data/izzy-vocabulary-918.json", { cache: "force-cache" });
+      const response = await fetch("data/izzy-vocabulary-918.json?v=20261013", { cache: "no-cache" });
       if (!response.ok) return;
       const payload = await response.json();
       const bundledCustom = Array.isArray(payload.customItems) ? payload.customItems : [];
