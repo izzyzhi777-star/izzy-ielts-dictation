@@ -2409,14 +2409,14 @@
     const params = new URLSearchParams({
       lan: language,
       text,
-      spd: "3",
+      spd: "2",
       source: "web"
     });
     return `https://fanyi.baidu.com/gettts?${params.toString()}`;
   }
 
   function getYoudaoAudioUrl(text) {
-    const params = new URLSearchParams({ audio: text, type: "2" });
+    const params = new URLSearchParams({ audio: text, type: "1" });
     return `https://dict.youdao.com/dictvoice?${params.toString()}`;
   }
 
@@ -2567,7 +2567,12 @@
     if (blob?.size) {
       return { source: URL.createObjectURL(blob), revoke: true };
     }
-    return null;
+    const wordCount = normalized.split(/\s+/).filter(Boolean).length;
+    return {
+      source: wordCount <= 2 ? getYoudaoAudioUrl(normalized) : getBaiduTtsUrl(normalized, "en"),
+      revoke: false,
+      external: true
+    };
   }
 
   async function getImmediateSpeechBlob(text, options = {}) {
