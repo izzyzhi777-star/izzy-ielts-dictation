@@ -197,6 +197,7 @@
     customReplayButton: $("customReplayButton"),
     customSubmitHint: $("customSubmitHint"),
     customAnswerInput: $("customAnswerInput"),
+    customAnswerLabel: $("customAnswerLabel"),
     submitCustomButton: $("submitCustomButton"),
     nextCustomButton: $("nextCustomButton"),
     customResult: $("customResult"),
@@ -4224,7 +4225,11 @@
       : session.source === "prediction"
         ? "数字预测拼写"
         : "我的词句拼写";
-    dom.customAnswerInput.placeholder = session.source === "prediction" ? "填写原始数字、金额或日期" : "填写完整英文";
+    dom.customAnswerLabel.textContent = session.source === "prediction" ? "填写“数字或日期内容”一栏" : "英文拼写";
+    dom.customAnswerInput.placeholder = session.source === "prediction" ? "例如 07749132760 / £25.50 / March 15" : "填写完整英文";
+    dom.customListenHint.textContent = session.source === "prediction"
+      ? "听标准英文读法，填写你最初录入的“数字或日期内容”，不是填写英文读法。"
+      : "按 Tab 可重播当前内容";
     dom.customSubmitHint.textContent = settings.submitMode === "auto" ? "自动提交" : "手动提交";
     dom.restartCustomButton.disabled = !session.started;
     dom.stopCustomButton.disabled = !state.playing;
