@@ -312,6 +312,7 @@
     audioBlobCache: new Map(),
     continuousManifest: null,
     continuousManifestPromise: null,
+    continuousAudioPrefetched: false,
     listeningStartOptionsKey: "",
     neuralCooldownUntil: 0,
     ipaMap: new Map(),
@@ -553,6 +554,15 @@
     } catch (error) {
       console.warn("Could not load IPA dictionary.", error);
     }
+  }
+
+  function prefetchContinuousAudio() {
+    if (state.continuousAudioPrefetched) return;
+    state.continuousAudioPrefetched = true;
+    fetch("audio/continuous/custom-uk-us.mp3", { cache: "force-cache" }).catch((error) => {
+      state.continuousAudioPrefetched = false;
+      console.debug("Continuous audio preload skipped.", error);
+    });
   }
 
   async function loadContinuousManifest() {
@@ -1388,7 +1398,10 @@
     state.activeTab = tab;
     renderTabs();
     if (tab === "dates") renderDateSession();
-    if (tab === "listening") renderListening();
+    if (tab === "listening") {
+      renderListening();
+      prefetchContinuousAudio();
+    }
     if (tab === "custom") renderCustom();
     if (tab === "prediction") renderPrediction();
     if (tab === "words") renderWordDirectory();
