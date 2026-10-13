@@ -2446,7 +2446,11 @@
 
     try {
       dom.playStatus.textContent = "正在生成流畅英式语音";
-      await playRepeatedSpeech(spokenTextForValue(number, currentValueType()), settings.repeat, token, { number, type: currentValueType() });
+      await playRepeatedSpeech(spokenTextForValue(number, currentValueType()), settings.repeat, token, {
+        number,
+        type: currentValueType(),
+        preferImmediate: true
+      });
       if (token === state.token) {
         setPlaying(false);
         dom.playStatus.textContent = "播放完成，请填写答案";
@@ -2552,11 +2556,7 @@
 
   async function playNumberAudio(number, token, type = "number") {
     const text = spokenTextForValue(number, type);
-    if (type === "phone" || type === "year") {
-      await playRepeatedSpeech(text, 1, token, { number, type });
-      return;
-    }
-    await playSmartText(text, token);
+    await playRepeatedSpeech(text, 1, token, { number, type, preferImmediate: true });
   }
 
   async function playListeningSequentially(playlist, token, startIndex = 0) {
@@ -3370,6 +3370,15 @@
   async function playRepeatedSpeech(text, repeat, token, options = {}) {
     const playbackRate = playbackRateForType(options.type || "number");
     const immediate = getSyncSpeechSources(text, options.type || "number");
+    if (options.preferImmediate && (!immediate || immediate.external)) {
+      for (let index = 0; index < Math.max(1, repeat); index += 1) {
+        if (token !== state.token) return;
+        await speakBrowserText(text, playbackRate, token);
+        if (token !== state.token) return;
+        if (index < repeat - 1) await wait(850);
+      }
+      return;
+    }
     if (immediate) {
       try {
         for (let index = 0; index < Math.max(1, repeat); index += 1) {
@@ -3796,6 +3805,18 @@
     return groups.length ? groups : [normalized];
   }
 
+  function playPredictionBrowserText(text, rate, token) {
+    const groups = predictionSpeechGroups(text);
+    return (async () => {
+      for (const group of groups) {
+        if (token !== state.token) return;
+        await speakBrowserText(group, rate, token);
+        if (token !== state.token) return;
+        await wait(280);
+      }
+    })();
+  }
+
   async function playPredictionItem(item) {
     const key = `prediction:${item.id}`;
     if (state.playingWord === key && state.playing) {
@@ -3809,32 +3830,13 @@
     setPlaying(true);
     renderPrediction();
     const markedText = String(item.spokenText || predictionSpokenText(item.value, item.type) || "").trim();
-    const groups = predictionSpeechGroups(markedText);
     const rate = item.type === "phone" ? 0.72 : item.type === "year" ? 0.85 : 0.82;
     const repeat = Math.max(1, Number(settings.repeat) || 1);
     try {
       for (let count = 0; count < repeat; count += 1) {
-        for (const group of groups) {
-          if (token !== state.token) return;
-          const language = neuralVoice.containsChinese(group) ? "zh" : "en";
-          const sources = language === "zh"
-            ? [getBaiduTtsUrl(group, "zh")]
-            : [getYoudaoAudioUrl(group, "1"), getBaiduTtsUrl(group, "en")];
-          let played = false;
-          for (const source of sources) {
-            if (token !== state.token) return;
-            try {
-              await playAudio(source, token, { rate });
-              played = true;
-              break;
-            } catch (error) {
-              console.debug("Prediction audio segment unavailable.", error);
-            }
-          }
-          if (!played) await speakBrowserText(group, rate, token);
-          if (token !== state.token) return;
-          await wait(320);
-        }
+        if (token !== state.token) return;
+        await playPredictionBrowserText(markedText, rate, token);
+        if (token !== state.token) return;
         if (count < repeat - 1) await wait(900);
       }
     } catch (error) {
