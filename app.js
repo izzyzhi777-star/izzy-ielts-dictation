@@ -305,7 +305,8 @@
       sleepAudioDeadline: 0,
       sleepTimer: null,
       mediaHandlersReady: false,
-      directFallback: false
+      directFallback: false,
+      continuous: false
     },
     autoSubmitTimer: null,
     preloaded: ""
@@ -2504,18 +2505,23 @@
   }
 
   async function playSmartListeningText(text, token) {
-    const immediate = getSyncSpeechSource(text);
+    const immediate = getSyncSpeechSources(text);
     if (immediate) {
       try {
-        try {
-          await playListeningAudio(immediate.source, token);
-        } catch (error) {
-          if (!immediate.external) throw error;
-          console.debug("External listening audio unavailable; using browser speech.", error);
-          await speakBrowserText(text, Number(dom.listeningSpeed.value) || 1, token, "listening");
+        for (const source of immediate.sources) {
+          if (token !== state.listening.token) return;
+          try {
+            await playListeningAudio(source, token);
+          } catch (error) {
+            if (!immediate.external) throw error;
+            console.debug("External listening audio unavailable; using browser speech.", error);
+            await speakBrowserText(text, Number(dom.listeningSpeed.value) || 1, token, "listening");
+            return;
+          }
+          if (immediate.sources.length > 1) await wait(260);
         }
       } finally {
-        if (immediate.revoke) URL.revokeObjectURL(immediate.source);
+        if (immediate.revoke) immediate.sources.forEach((source) => URL.revokeObjectURL(source));
       }
       return;
     }
@@ -2565,20 +2571,22 @@
     }
   }
 
-  function getSyncSpeechSource(text) {
+  function getSyncSpeechSources(text) {
     const normalized = neuralVoice.normalizeText(text);
     if (!normalized) return null;
     const voiceEntry = state.voicePackIndex[normalized];
     if (voiceEntry?.file) {
-      return { source: `audio/voice-pack/${voiceEntry.file}`, revoke: false };
+      const sources = [`audio/voice-pack/${voiceEntry.file}`];
+      if (voiceEntry.usFile) sources.push(`audio/voice-pack/${voiceEntry.usFile}`);
+      return { sources, revoke: false, external: false };
     }
     const blob = state.audioBlobCache.get(`text:${normalized}`);
     if (blob?.size) {
-      return { source: URL.createObjectURL(blob), revoke: true };
+      return { sources: [URL.createObjectURL(blob)], revoke: true, external: false };
     }
     const wordCount = normalized.split(/\s+/).filter(Boolean).length;
     return {
-      source: wordCount <= 2 ? getYoudaoAudioUrl(normalized) : getBaiduTtsUrl(normalized, "en"),
+      sources: [wordCount <= 2 ? getYoudaoAudioUrl(normalized) : getBaiduTtsUrl(normalized, "en")],
       revoke: false,
       external: true
     };
@@ -2625,18 +2633,23 @@
   }
 
   async function playSmartText(text, token) {
-    const immediate = getSyncSpeechSource(text);
+    const immediate = getSyncSpeechSources(text);
     if (immediate) {
       try {
-        try {
-          await playAudio(immediate.source, token);
-        } catch (error) {
-          if (!immediate.external) throw error;
-          console.debug("External audio unavailable; using browser speech.", error);
-          await speakBrowserText(text, settings.speed, token);
+        for (const source of immediate.sources) {
+          if (token !== state.token) return;
+          try {
+            await playAudio(source, token);
+          } catch (error) {
+            if (!immediate.external) throw error;
+            console.debug("External audio unavailable; using browser speech.", error);
+            await speakBrowserText(text, settings.speed, token);
+            return;
+          }
+          if (immediate.sources.length > 1) await wait(260);
         }
       } finally {
-        if (immediate.revoke) URL.revokeObjectURL(immediate.source);
+        if (immediate.revoke) immediate.sources.forEach((source) => URL.revokeObjectURL(source));
       }
       return;
     }
@@ -2962,18 +2975,50 @@
     state.listening.audio.volume = 1;
     configureSleepTimer();
     renderListening();
+    const selected = new Set(
+      Array.from(dom.listeningCategories.querySelectorAll("input:checked")).map((input) => input.dataset.listeningCategory)
+    );
+    if (selected.size === 1 && selected.has("custom") && dom.listeningMode.value === "english" && state.customItems.length >= 900) {
+      startContinuousVocabulary(token);
+      return;
+    }
     playListeningSequentially(playlist, token, 0).catch((error) => {
       if (token !== state.listening.token) return;
       state.listening.playing = false;
       console.error(error);
       dom.listeningEnglish.textContent = "随身听暂时不可用";
-      dom.listeningChinese.textContent = "请重新点击开始；已缓存的 Sonia 语音不会丢失。";
+      dom.listeningChinese.textContent = "请重新点击开始；已经缓存的语音不会丢失。";
       renderListening();
     });
     preloadVoicePackForPlaylist(playlist, token, (completed, total) => {
       if (token !== state.listening.token || !total) return;
       dom.listeningProgress.textContent = `缓存 ${completed} / ${total}`;
     }).catch((error) => console.debug("Voice preload stopped.", error));
+  }
+
+  function startContinuousVocabulary(token) {
+    const audio = state.listening.audio;
+    state.listening.continuous = true;
+    state.listening.playing = true;
+    state.listening.currentTrack = -1;
+    audio.loop = true;
+    audio.volume = 1;
+    audio.playbackRate = Number(dom.listeningSpeed.value) || 1;
+    audio.preservesPitch = true;
+    audio.webkitPreservesPitch = true;
+    audio.src = "audio/continuous/custom-uk-us.mp3";
+    audio.load();
+    dom.listeningEnglish.textContent = "完整词库 · 英式 + 美式";
+    dom.listeningChinese.textContent = "连续播放 918 个单词 · 不会因切到后台而停止";
+    dom.listeningProgress.textContent = "LISTENING";
+    dom.listeningProgressBar.style.width = "100%";
+    updateMediaSessionMetadata({ english: "完整词库 · 英式 + 美式", chinese: "918 个单词连续随身听" }, 0);
+    audio.play().catch((error) => {
+      if (token !== state.listening.token) return;
+      state.listening.playing = false;
+      console.error(error);
+      renderListening();
+    });
   }
 
   function toggleListeningPlayback() {
@@ -3195,23 +3240,28 @@
 
   async function playRepeatedSpeech(text, repeat, token, options = {}) {
     const playbackRate = playbackRateForType(options.type || "number");
-    const immediate = getSyncSpeechSource(text);
+    const immediate = getSyncSpeechSources(text);
     if (immediate) {
       try {
         for (let index = 0; index < Math.max(1, repeat); index += 1) {
           if (token !== state.token) return;
-          try {
-            await playAudio(immediate.source, token, { rate: playbackRate });
-          } catch (error) {
-            if (!immediate.external) throw error;
-            console.debug("External audio unavailable; using browser speech.", error);
-            await speakBrowserText(text, playbackRate, token);
+          for (const source of immediate.sources) {
+            if (token !== state.token) return;
+            try {
+              await playAudio(source, token, { rate: playbackRate });
+            } catch (error) {
+              if (!immediate.external) throw error;
+              console.debug("External audio unavailable; using browser speech.", error);
+              await speakBrowserText(text, playbackRate, token);
+              break;
+            }
+            if (immediate.sources.length > 1) await wait(260);
           }
           if (token !== state.token) return;
           if (index < repeat - 1) await wait(850);
         }
       } finally {
-        if (immediate.revoke) URL.revokeObjectURL(immediate.source);
+        if (immediate.revoke) immediate.sources.forEach((source) => URL.revokeObjectURL(source));
       }
       return;
     }
@@ -3295,6 +3345,7 @@
     state.listening.sleepDeadline = 0;
     state.listening.sleepAudioDeadline = 0;
     state.listening.directFallback = false;
+    state.listening.continuous = false;
     updateMediaSessionState("none");
     renderListening();
   }
