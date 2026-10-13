@@ -5,6 +5,7 @@
   const WRONG_KEY = "number-dictation-wrong-v2";
   const CUSTOM_KEY = "number-dictation-custom-v1";
   const PREDICTION_KEY = "number-prediction-items-v1";
+  const DELETED_CUSTOM_KEY = "number-dictation-deleted-custom-v1";
   const HEARING_WRONG_KEY = "number-dictation-hearing-wrong-v1";
   const SYNC_KEY = "izzy-ielts-sync-v1";
   const EBBINGHAUS_INTERVALS = [
@@ -265,7 +266,8 @@
 
   const settings = loadSettings();
   const loadedWrongData = loadWrongData();
-  const loadedCustomItems = loadCustomItems();
+  const loadedDeletedCustomIds = loadDeletedCustomIds();
+  const loadedCustomItems = loadCustomItems().filter((item) => !loadedDeletedCustomIds.includes(item.id));
   const loadedHearingWrong = loadHearingWrong();
   const loadedSyncConfig = loadSyncConfig();
   const state = {
@@ -274,6 +276,7 @@
     wrongNumbers: loadedWrongData.numbers,
     wrongDates: loadedWrongData.dates,
     customItems: loadedCustomItems,
+    deletedCustomIds: loadedDeletedCustomIds,
     predictionItems: loadPredictionItems(),
     predictionEditorId: null,
     customEditorId: null,
@@ -622,6 +625,25 @@
     }
   }
 
+  function loadDeletedCustomIds() {
+    try {
+      const raw = localStorage.getItem(DELETED_CUSTOM_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed.filter(Boolean) : [];
+    } catch (error) {
+      return [];
+    }
+  }
+
+  function saveDeletedCustomIds() {
+    try {
+      localStorage.setItem(DELETED_CUSTOM_KEY, JSON.stringify(state.deletedCustomIds));
+    } catch (error) {
+      console.warn("Could not save deleted vocabulary ids.", error);
+    }
+    scheduleCloudSync();
+  }
+
   function loadPredictionItems() {
     try {
       const raw = localStorage.getItem(PREDICTION_KEY);
@@ -721,6 +743,7 @@
       updatedAt: Date.now(),
       settings: { ...settings },
       customItems: state.customItems,
+      deletedCustomIds: state.deletedCustomIds,
       predictionItems: state.predictionItems,
       wrongNumbers: state.wrongNumbers,
       wrongDates: state.wrongDates,
@@ -863,7 +886,9 @@
       version: 1,
       updatedAt: Date.now(),
       settings: newer ? { ...local.settings, ...remote.settings } : local.settings,
-      customItems: mergeById(local.customItems, remote.customItems),
+      deletedCustomIds: Array.from(new Set([...(local.deletedCustomIds || []), ...(remote.deletedCustomIds || [])])),
+      customItems: mergeById(local.customItems, remote.customItems)
+        .filter((item) => !new Set([...(local.deletedCustomIds || []), ...(remote.deletedCustomIds || [])]).has(item.id)),
       predictionItems: mergeById(local.predictionItems, remote.predictionItems),
       hearingWrong: mergeById(local.hearingWrong, remote.hearingWrong, "lastReviewedAt"),
       wrongNumbers: Array.from(new Set([...(local.wrongNumbers || []), ...(remote.wrongNumbers || [])])).sort(compareWrongEntries),
@@ -876,7 +901,8 @@
     state.sync.applyingRemote = true;
     Object.assign(settings, snapshot.settings || {});
     settings.voice = "sonia";
-    state.customItems = snapshot.customItems || [];
+    state.deletedCustomIds = snapshot.deletedCustomIds || [];
+    state.customItems = (snapshot.customItems || []).filter((item) => !state.deletedCustomIds.includes(item.id));
     state.predictionItems = snapshot.predictionItems || [];
     state.hearingWrong = snapshot.hearingWrong || [];
     state.wrongNumbers = snapshot.wrongNumbers || [];
@@ -2530,7 +2556,7 @@
           if (token !== state.listening.token || !state.listening.started || sleepExpired()) return;
           const text = part.kind === "number" ? numberToEnglish(part.number) : (part.audioText || part.english);
           try {
-            await playSmartListeningText(text, token);
+            await playSmartListeningText(text, token, part.valueType || "number");
           } catch (error) {
             failedPart = true;
             console.warn("Listening segment failed.", text, error);
@@ -2551,8 +2577,8 @@
     }
   }
 
-  async function playSmartListeningText(text, token) {
-    const immediate = getSyncSpeechSources(text);
+  async function playSmartListeningText(text, token, type = "number") {
+    const immediate = getSyncSpeechSources(text, type);
     if (immediate) {
       try {
         for (const source of immediate.sources) {
@@ -2618,7 +2644,7 @@
     }
   }
 
-  function getSyncSpeechSources(text) {
+  function getSyncSpeechSources(text, type = "number") {
     const normalized = neuralVoice.normalizeText(text);
     if (!normalized) return null;
     const voiceEntry = state.voicePackIndex[normalized];
@@ -2637,6 +2663,14 @@
         revoke: false,
         external: true
       };
+    }
+    if (type === "phone") {
+      const groups = normalized.split(/,\s*/).map((group) => group.trim()).filter(Boolean);
+      const sources = groups.map((group) => {
+        const count = group.split(/\s+/).filter(Boolean).length;
+        return count <= 3 ? getYoudaoAudioUrl(group, "1") : getBaiduTtsUrl(group, "en");
+      });
+      return { sources: sources.length ? sources : [getBaiduTtsUrl(normalized, "en")], revoke: false, external: true };
     }
     const wordCount = normalized.split(/\s+/).filter(Boolean).length;
     const sources = wordCount <= 3
@@ -3304,23 +3338,25 @@
 
   async function playRepeatedSpeech(text, repeat, token, options = {}) {
     const playbackRate = playbackRateForType(options.type || "number");
-    const immediate = getSyncSpeechSources(text);
+    const immediate = getSyncSpeechSources(text, options.type || "number");
     if (immediate) {
       try {
         for (let index = 0; index < Math.max(1, repeat); index += 1) {
           if (token !== state.token) return;
+          let playedAny = false;
           for (const source of immediate.sources) {
             if (token !== state.token) return;
             try {
               await playAudio(source, token, { rate: playbackRate });
+              playedAny = true;
             } catch (error) {
               if (!immediate.external) throw error;
-              console.debug("External audio unavailable; using browser speech.", error);
-              await speakBrowserText(text, playbackRate, token);
-              break;
+              console.debug("External audio segment unavailable; trying next source.", error);
+              continue;
             }
             if (immediate.sources.length > 1) await wait(260);
           }
+          if (!playedAny) await speakBrowserText(text, playbackRate, token);
           if (token !== state.token) return;
           if (index < repeat - 1) await wait(850);
         }
@@ -3756,7 +3792,7 @@
       const customMap = new Map(state.customItems.map((item) => [item.id, item]));
       const hearingMap = new Map(state.hearingWrong.map((item) => [item.id, item]));
       bundledCustom.forEach((item) => {
-        if (item?.id && !customMap.has(item.id)) customMap.set(item.id, item);
+        if (item?.id && !customMap.has(item.id) && !state.deletedCustomIds.includes(item.id)) customMap.set(item.id, item);
       });
       bundledHearing.forEach((item) => {
         if (item?.id && !hearingMap.has(item.id)) hearingMap.set(item.id, item);
@@ -4357,8 +4393,13 @@
     if (button.dataset.action === "edit") openCustomEditor(item.id);
     if (button.dataset.action === "delete") {
       state.customItems = state.customItems.filter((entry) => entry.id !== item.id);
+      if (!state.deletedCustomIds.includes(item.id)) {
+        state.deletedCustomIds.push(item.id);
+        saveDeletedCustomIds();
+      }
       saveCustomItems();
       renderCustom();
+      renderListening();
     }
   }
 
