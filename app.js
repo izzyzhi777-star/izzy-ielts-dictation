@@ -2419,8 +2419,8 @@
     return `https://fanyi.baidu.com/gettts?${params.toString()}`;
   }
 
-  function getYoudaoAudioUrl(text) {
-    const params = new URLSearchParams({ audio: text, type: "1" });
+  function getYoudaoAudioUrl(text, accent = "1") {
+    const params = new URLSearchParams({ audio: text, type: accent });
     return `https://dict.youdao.com/dictvoice?${params.toString()}`;
   }
 
@@ -2584,12 +2584,18 @@
     if (blob?.size) {
       return { sources: [URL.createObjectURL(blob)], revoke: true, external: false };
     }
+    if (neuralVoice.containsChinese(normalized)) {
+      return {
+        sources: [getBaiduTtsUrl(normalized, "zh")],
+        revoke: false,
+        external: true
+      };
+    }
     const wordCount = normalized.split(/\s+/).filter(Boolean).length;
-    return {
-      sources: [wordCount <= 2 ? getYoudaoAudioUrl(normalized) : getBaiduTtsUrl(normalized, "en")],
-      revoke: false,
-      external: true
-    };
+    const sources = wordCount <= 3
+      ? [getYoudaoAudioUrl(normalized, "1"), getYoudaoAudioUrl(normalized, "2")]
+      : [getBaiduTtsUrl(normalized, "en")];
+    return { sources, revoke: false, external: true };
   }
 
   async function getImmediateSpeechBlob(text, options = {}) {
@@ -3455,9 +3461,24 @@
 
   function warmCustomItemAudio(item) {
     if (!item) return;
-    [item.text, item.example].filter(Boolean).forEach((text) => {
-      if (state.voicePackIndex[text]) return;
-      warmNeuralSpeech(text);
+    [item.text, item.example, item.note].filter(Boolean).forEach((text) => {
+      preloadExternalSpeech(text);
+    });
+  }
+
+  function preloadExternalSpeech(text) {
+    const normalized = neuralVoice.normalizeText(text);
+    if (!normalized || state.voicePackIndex[normalized]) return;
+    const sources = getSyncSpeechSources(normalized)?.sources || [];
+    sources.filter((source) => /^https?:/i.test(source)).forEach((source) => {
+      try {
+        const audio = new Audio();
+        audio.preload = "auto";
+        audio.src = source;
+        audio.load();
+      } catch (error) {
+        console.debug("Could not preload speech.", error);
+      }
     });
   }
 
