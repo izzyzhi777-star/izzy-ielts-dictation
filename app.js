@@ -247,6 +247,8 @@
     listeningPlayButton: $("listeningPlayButton"),
     listeningNextButton: $("listeningNextButton"),
     listeningProgressBar: $("listeningProgressBar"),
+    listeningStartSelect: $("listeningStartSelect"),
+    listeningStartFromButton: $("listeningStartFromButton"),
     listeningCategories: $("listeningCategories"),
     listeningMode: $("listeningMode"),
     listeningRepeat: $("listeningRepeat"),
@@ -308,6 +310,9 @@
     voicePackLoaded: false,
     voicePackPromise: null,
     audioBlobCache: new Map(),
+    continuousManifest: null,
+    continuousManifestPromise: null,
+    listeningStartOptionsKey: "",
     neuralCooldownUntil: 0,
     ipaMap: new Map(),
     ipaLoadPromise: null,
@@ -353,6 +358,7 @@
     bindEvents();
     applySyncHash();
     state.voicePackPromise = loadVoicePackIndex();
+    state.continuousManifestPromise = loadContinuousManifest();
     loadBundledVocabulary();
     setupListeningAudio();
     setupMediaSession();
@@ -546,6 +552,18 @@
       state.ipaMap = map;
     } catch (error) {
       console.warn("Could not load IPA dictionary.", error);
+    }
+  }
+
+  async function loadContinuousManifest() {
+    try {
+      const response = await fetch("audio/continuous/custom-uk-us.json?v=20261013", { cache: "no-cache" });
+      if (!response.ok) return null;
+      state.continuousManifest = await response.json();
+      return state.continuousManifest;
+    } catch (error) {
+      console.debug("Continuous manifest unavailable.", error);
+      return null;
     }
   }
 
@@ -1279,6 +1297,7 @@
     dom.listeningPlayButton.addEventListener("click", toggleListeningPlayback);
     dom.listeningPreviousButton.addEventListener("click", () => changeListeningIndex(-1));
     dom.listeningNextButton.addEventListener("click", () => changeListeningIndex(1));
+    dom.listeningStartFromButton.addEventListener("click", jumpToSelectedListening);
     dom.listeningSleep.addEventListener("change", configureSleepTimer);
     const restartListeningIfActive = () => {
       if (state.listening.started && !state.listening.preparing) startListening();
@@ -3118,7 +3137,7 @@
       Array.from(dom.listeningCategories.querySelectorAll("input:checked")).map((input) => input.dataset.listeningCategory)
     );
     if (selected.size === 1 && selected.has("custom") && dom.listeningMode.value === "english" && state.customItems.length >= 900) {
-      startContinuousVocabulary(token);
+      startContinuousVocabulary(token, playlist);
       return;
     }
     playListeningSequentially(playlist, token, 0).catch((error) => {
@@ -3135,11 +3154,28 @@
     }).catch((error) => console.debug("Voice preload stopped.", error));
   }
 
-  function startContinuousVocabulary(token) {
+  async function startContinuousVocabulary(token, playlist) {
+    const manifest = state.continuousManifest || await state.continuousManifestPromise;
+    if (token !== state.listening.token) return;
+    if (manifest?.entries?.length) {
+      const byText = new Map(playlist.map((entry) => [entry.english, entry]));
+      const ordered = manifest.entries.map((entry) => byText.get(entry.text)).filter(Boolean);
+      if (ordered.length === manifest.entries.length) {
+        state.listening.playlist = ordered;
+        state.listening.timeline = manifest.entries.map((entry, index) => ({
+          entryIndex: index,
+          start: entry.start,
+          end: entry.start + entry.duration,
+          duration: entry.duration
+        }));
+        state.listening.totalDuration = manifest.duration;
+      }
+    }
     const audio = state.listening.audio;
     state.listening.continuous = true;
     state.listening.playing = true;
     state.listening.currentTrack = -1;
+    state.listening.index = 0;
     audio.loop = true;
     audio.volume = 1;
     audio.playbackRate = Number(dom.listeningSpeed.value) || 1;
@@ -3147,10 +3183,8 @@
     audio.webkitPreservesPitch = true;
     audio.src = "audio/continuous/custom-uk-us.mp3";
     audio.load();
-    dom.listeningEnglish.textContent = "完整词库 · 英式 + 美式";
-    dom.listeningChinese.textContent = "连续播放 918 个单词 · 不会因切到后台而停止";
-    dom.listeningProgress.textContent = "LISTENING";
-    dom.listeningProgressBar.style.width = "100%";
+    setListeningTrack(0);
+    renderListening();
     updateMediaSessionMetadata({ english: "完整词库 · 英式 + 美式", chinese: "918 个单词连续随身听" }, 0);
     audio.play().catch((error) => {
       if (token !== state.listening.token) return;
@@ -3174,6 +3208,17 @@
     if (!state.listening.playlist.length) return;
     const total = state.listening.playlist.length;
     const next = (state.listening.index + offset + total) % total;
+    seekListeningToIndex(next);
+  }
+
+  function jumpToSelectedListening() {
+    const selected = Number(dom.listeningStartSelect.value);
+    if (!Number.isFinite(selected) || selected < 1) return;
+    seekListeningToIndex(Math.min(selected - 1, state.listening.playlist.length - 1));
+  }
+
+  function seekListeningToIndex(next) {
+    if (!state.listening.playlist.length) return;
     if (!state.listening.timeline.length) {
       const wasPlaying = state.listening.playing;
       stopListeningAudio();
@@ -3187,7 +3232,7 @@
     }
     const segment = state.listening.timeline[next];
     const audio = state.listening.audio;
-    if (segment && Number.isFinite(audio.duration) && audio.duration > 0) {
+    if (segment && Number.isFinite(audio.duration) && audio.duration > 0 && state.listening.totalDuration > 0) {
       const scaledStart = (segment.start / state.listening.totalDuration) * audio.duration;
       audio.currentTime = Math.min(Math.max(0, scaledStart + 0.005), Math.max(0, audio.duration - 0.05));
       state.listening.lastTime = audio.currentTime;
@@ -3196,35 +3241,26 @@
     if (state.listening.playing) resumeListeningAudio();
   }
 
-  async function preloadVoicePackForPlaylist(playlist, token, onProgress) {
-    await state.voicePackPromise;
-    const unique = new Map();
-    playlist.forEach((entry) => {
-      const parts = entry.kind === "group" ? entry.parts : [entry];
-      parts.forEach((part) => {
-        const text = part.kind === "number"
-          ? numberToEnglish(Number(part.number))
-          : (part.audioText || part.english || part.text || "");
-        const pack = state.voicePackIndex[text];
-        if (!pack?.file) return;
-        const cacheKey = `pack:${pack.file}`;
-        if (!state.audioBlobCache.has(cacheKey)) unique.set(cacheKey, text);
+  function renderListeningStartOptions() {
+    if (!dom.listeningStartSelect) return;
+    const playlist = state.listening.playlist;
+    const key = playlist.length
+      ? `${playlist.length}:${playlist[0]?.english || ""}:${playlist[playlist.length - 1]?.english || ""}`
+      : "empty";
+    if (state.listeningStartOptionsKey !== key) {
+      state.listeningStartOptionsKey = key;
+      dom.listeningStartSelect.replaceChildren();
+      playlist.forEach((entry, index) => {
+        const option = document.createElement("option");
+        option.value = String(index + 1);
+        option.textContent = `${index + 1}. ${entry.english || entry.audioText || "未命名"}`;
+        dom.listeningStartSelect.appendChild(option);
       });
-    });
-    const tasks = Array.from(unique.values());
-    if (!tasks.length) return;
-    let cursor = 0;
-    let completed = 0;
-    const worker = async () => {
-      while (cursor < tasks.length && token === state.listening.token) {
-        const index = cursor;
-        cursor += 1;
-        try { await getSpeechBlob(tasks[index]); } catch (error) { console.debug("Voice pack preload failed.", error); }
-        completed += 1;
-        onProgress?.(completed, tasks.length);
-      }
-    };
-    await Promise.all(Array.from({ length: Math.min(8, tasks.length) }, worker));
+    }
+    if (document.activeElement !== dom.listeningStartSelect && playlist.length) {
+      dom.listeningStartSelect.value = String(state.listening.index + 1);
+    }
+    dom.listeningStartFromButton.disabled = !playlist.length;
   }
 
   async function prepareListeningStream(playlist, token, onProgress) {
@@ -3554,6 +3590,7 @@
         : (state.listening.started ? "继续" : "播放");
     dom.listeningProgressBar.style.width = total ? `${(index / total) * 100}%` : "0%";
     if (!state.listening.sleepDeadline) dom.listeningSleepStatus.textContent = "睡眠模式关闭";
+    renderListeningStartOptions();
   }
 
   function predictionTypeLabel(type) {
