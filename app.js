@@ -203,6 +203,8 @@
     customResultMark: $("customResultMark"),
     customResultNote: $("customResultNote"),
     customCorrectAnswer: $("customCorrectAnswer"),
+    customCorrectAnswerLabel: $("customCorrectAnswerLabel"),
+    customCorrectPhoneticLabel: $("customCorrectPhoneticLabel"),
     customCorrectPhonetic: $("customCorrectPhonetic"),
     customCorrectTranslation: $("customCorrectTranslation"),
     customCorrectExample: $("customCorrectExample"),
@@ -3802,8 +3804,10 @@
     }
     const practiceItems = state.predictionItems.map((item) => ({
       id: `prediction-practice-${item.id}`,
-      text: item.spokenText || predictionSpokenText(item.value, item.type),
-      translation: `${item.value}${item.chinese ? ` · ${item.chinese}` : ""}`,
+      text: item.value,
+      audioText: item.spokenText || predictionSpokenText(item.value, item.type),
+      predictionType: item.type,
+      translation: item.chinese || "数字预测内容",
       note: item.note || "",
       phonetic: "",
       example: "",
@@ -4220,6 +4224,7 @@
       : session.source === "prediction"
         ? "数字预测拼写"
         : "我的词句拼写";
+    dom.customAnswerInput.placeholder = session.source === "prediction" ? "填写原始数字、金额或日期" : "填写完整英文";
     dom.customSubmitHint.textContent = settings.submitMode === "auto" ? "自动提交" : "手动提交";
     dom.restartCustomButton.disabled = !session.started;
     dom.stopCustomButton.disabled = !state.playing;
@@ -4312,7 +4317,7 @@
       if (state.customSession.source === "prediction") {
         for (let index = 0; index < Math.max(1, Number(settings.repeat) || 1); index += 1) {
           if (token !== state.token) return;
-          await playPredictionBrowserText(item.text, 0.82, token);
+          await playPredictionBrowserText(item.audioText || item.text, 0.82, token);
           if (token !== state.token) return;
           if (index < Math.max(1, Number(settings.repeat) || 1) - 1) await wait(900);
         }
@@ -4333,13 +4338,38 @@
     }
   }
 
+  function normalizePredictionAnswer(value) {
+    return String(value || "")
+      .trim()
+      .toLowerCase()
+      .replace(/，/g, ",")
+      .replace(/\s+/g, "")
+      .replace(/,/g, "");
+  }
+
+  function predictionAnswerMatches(answer, item) {
+    const actual = normalizePredictionAnswer(answer);
+    const expected = normalizePredictionAnswer(item.text);
+    if (actual === expected) return true;
+    if (item.predictionType === "money") {
+      return actual.replace(/[£$€]/g, "") === expected.replace(/[£$€]/g, "");
+    }
+    return false;
+  }
+
+  function customAnswerIsCorrect(answer, item) {
+    return state.customSession.source === "prediction"
+      ? predictionAnswerMatches(answer, item)
+      : normalizeEnglish(answer) === normalizeEnglish(item.text);
+  }
+
   function handleCustomInput() {
     clearAutoSubmit();
     if (state.customSession.checked || settings.submitMode !== "auto") return;
     const item = currentCustomItem();
     if (!item) return;
     const answer = dom.customAnswerInput.value.trim();
-    if (answer && normalizeEnglish(answer) === normalizeEnglish(item.text)) {
+    if (answer && customAnswerIsCorrect(answer, item)) {
       submitCustomAnswer(true);
       return;
     }
@@ -4354,7 +4384,7 @@
       if (!automatic) dom.customAnswerInput.focus();
       return;
     }
-    const correct = normalizeEnglish(answer) === normalizeEnglish(item.text);
+    const correct = customAnswerIsCorrect(answer, item);
     state.customSession.checked = true;
     state.customSession.answered += 1;
     if (correct) {
@@ -4367,8 +4397,13 @@
     dom.customResult.classList.toggle("is-wrong", !correct);
     dom.customResultMark.textContent = correct ? "正确" : "需要再练";
     dom.customResultNote.textContent = correct ? "拼写正确" : "已自动加入听力错词本";
+    const predictionMode = state.customSession.source === "prediction";
+    dom.customCorrectAnswerLabel.textContent = predictionMode ? "原始数字 / 日期" : "正确答案";
+    dom.customCorrectPhoneticLabel.textContent = predictionMode ? "标准英文读法" : "英式音标";
     dom.customCorrectAnswer.textContent = item.text;
-    dom.customCorrectPhonetic.textContent = item.phonetic || lookupPhonetic(item.text) || "暂无英式音标";
+    dom.customCorrectPhonetic.textContent = predictionMode
+      ? (item.audioText || predictionSpokenText(item.text, item.predictionType))
+      : (item.phonetic || lookupPhonetic(item.text) || "暂无英式音标");
     dom.customCorrectTranslation.textContent = item.translation || "未填写";
     dom.customCorrectExample.textContent = item.example || "未添加例句";
     dom.customCorrectExampleTranslation.textContent = item.exampleTranslation || "未添加例句翻译";
