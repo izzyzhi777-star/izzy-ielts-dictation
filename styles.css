@@ -2387,3 +2387,83 @@ footer {
     flex-direction: column;
   }
 }
+
+/* Number prediction vocabulary */
+.prediction-form-grid {
+  display: grid;
+  grid-template-columns: 1.3fr 0.7fr;
+}
+
+.prediction-form-grid .custom-field + .custom-field {
+  border-left: 1px solid var(--line);
+}
+
+.prediction-list-panel {
+  border: 1px solid var(--line);
+  background: var(--paper);
+}
+
+.prediction-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.prediction-card {
+  display: grid;
+  gap: 8px;
+  min-height: 150px;
+  padding: 18px;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.prediction-card:nth-child(2n) {
+  border-right: 0;
+}
+
+.prediction-card-value {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  overflow-wrap: anywhere;
+}
+
+.prediction-card-type,
+.prediction-card-spoken,
+.prediction-card-note {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.prediction-card-spoken {
+  color: var(--ink-soft);
+  font-weight: 650;
+}
+
+.prediction-card-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.prediction-empty {
+  grid-column: 1 / -1;
+  padding: 36px 24px;
+  color: var(--muted);
+  text-align: center;
+}
+
+@media (max-width: 760px) {
+  .prediction-form-grid,
+  .prediction-list {
+    grid-template-columns: 1fr;
+  }
+
+  .prediction-form-grid .custom-field + .custom-field {
+    border-left: 0;
+  }
+
+  .prediction-card {
+    border-right: 0;
+  }
+}

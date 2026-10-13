@@ -27,6 +27,7 @@
         <button class="nav-tab is-active" type="button" data-tab="dictation">数字日期</button>
         <button class="nav-tab" type="button" data-tab="listening">随身听</button>
         <button class="nav-tab" type="button" data-tab="custom">我的词句</button>
+        <button class="nav-tab" type="button" data-tab="prediction">数字预测篇</button>
         <button class="nav-tab" type="button" data-tab="words">词库</button>
         <button class="nav-tab" type="button" data-tab="wrong">
           数字错题
@@ -389,6 +390,7 @@
               <label><input type="checkbox" data-listening-category="custom"><span>我的词句</span></label>
               <label><input type="checkbox" data-listening-category="examples"><span>我的例句</span></label>
               <label><input type="checkbox" data-listening-category="notes"><span>我的笔记</span></label>
+              <label><input type="checkbox" data-listening-category="prediction"><span>数字预测篇</span></label>
               <label><input type="checkbox" data-listening-category="hearing"><span>听力错词</span></label>
               <label><input type="checkbox" data-listening-category="wrong"><span>数字日期错题</span></label>
             </div>
@@ -542,6 +544,70 @@
             </div>
             <div class="custom-list" id="customList"></div>
           </aside>
+        </div>
+      </section>
+
+      <section class="tab-panel" id="tab-prediction" data-panel="prediction">
+        <div class="section-intro">
+          <div>
+            <p class="section-kicker">NUMBER PREDICTION</p>
+            <h2>数字预测篇</h2>
+            <p>专门添加电话号码、金额、日期、年份、月份、时间、小数和其他易错数字。系统先转换成标准英文读法，再使用英式女声播报。</p>
+          </div>
+          <button class="primary-button" id="newPredictionButton" type="button">添加数字</button>
+        </div>
+
+        <section class="custom-editor" id="predictionEditor" hidden>
+          <div class="custom-editor-head">
+            <div>
+              <p class="section-kicker">ADD / EDIT</p>
+              <h3 id="predictionEditorTitle">添加数字预测内容</h3>
+            </div>
+            <button class="icon-button" id="closePredictionEditorButton" type="button" aria-label="关闭编辑">×</button>
+          </div>
+          <div class="prediction-form-grid">
+            <label class="custom-field">
+              <span>数字或日期内容</span>
+              <input id="predictionValueInput" type="text" autocomplete="off" placeholder="例如：0218856361 / £25.50 / March 15 / 1901 / 3.75">
+            </label>
+            <label class="custom-field">
+              <span>类型</span>
+              <select id="predictionTypeInput">
+                <option value="phone">电话号码</option>
+                <option value="money">金额</option>
+                <option value="date">日期 / 月份日期</option>
+                <option value="year">年份</option>
+                <option value="time">时间</option>
+                <option value="decimal">小数</option>
+                <option value="general">普通数字</option>
+              </select>
+            </label>
+          </div>
+          <label class="custom-field">
+            <span>标准英文读法</span>
+            <input id="predictionSpokenInput" type="text" placeholder="留空则自动转换，可手动校正">
+          </label>
+          <label class="custom-field">
+            <span>中文提示</span>
+            <input id="predictionChineseInput" type="text" placeholder="例如：英国电话号码 / 二十五英镑五十便士">
+          </label>
+          <label class="custom-field">
+            <span>笔记</span>
+            <textarea id="predictionNoteInput" rows="2" placeholder="记录连读、重音或容易听错的地方"></textarea>
+          </label>
+          <div class="custom-editor-actions">
+            <button class="primary-button" id="savePredictionButton" type="button">保存并继续添加</button>
+            <button class="text-button" id="cancelPredictionEditButton" type="button">取消</button>
+            <span class="custom-save-status" id="predictionSaveStatus">保存后会自动清空输入框，可继续录入下一条。</span>
+          </div>
+        </section>
+
+        <div class="prediction-list-panel">
+          <div class="aside-head">
+            <p class="section-kicker">SAVED NUMBER ITEMS</p>
+            <h3>已保存数字 <span id="predictionItemCount">0</span></h3>
+          </div>
+          <div class="prediction-list" id="predictionList"></div>
         </div>
       </section>
 

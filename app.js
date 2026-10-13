@@ -4,6 +4,7 @@
   const SETTINGS_KEY = "number-dictation-settings-v2";
   const WRONG_KEY = "number-dictation-wrong-v2";
   const CUSTOM_KEY = "number-dictation-custom-v1";
+  const PREDICTION_KEY = "number-prediction-items-v1";
   const HEARING_WRONG_KEY = "number-dictation-hearing-wrong-v1";
   const SYNC_KEY = "izzy-ielts-sync-v1";
   const EBBINGHAUS_INTERVALS = [
@@ -211,6 +212,20 @@
     customCompleteSummary: $("customCompleteSummary"),
     againCustomButton: $("againCustomButton"),
     customItemCount: $("customItemCount"),
+    newPredictionButton: $("newPredictionButton"),
+    predictionEditor: $("predictionEditor"),
+    predictionEditorTitle: $("predictionEditorTitle"),
+    predictionValueInput: $("predictionValueInput"),
+    predictionTypeInput: $("predictionTypeInput"),
+    predictionSpokenInput: $("predictionSpokenInput"),
+    predictionChineseInput: $("predictionChineseInput"),
+    predictionNoteInput: $("predictionNoteInput"),
+    savePredictionButton: $("savePredictionButton"),
+    cancelPredictionEditButton: $("cancelPredictionEditButton"),
+    closePredictionEditorButton: $("closePredictionEditorButton"),
+    predictionSaveStatus: $("predictionSaveStatus"),
+    predictionItemCount: $("predictionItemCount"),
+    predictionList: $("predictionList"),
     customList: $("customList"),
     navHearingWrongCount: $("navHearingWrongCount"),
     reviewDueWordsButton: $("reviewDueWordsButton"),
@@ -259,6 +274,8 @@
     wrongNumbers: loadedWrongData.numbers,
     wrongDates: loadedWrongData.dates,
     customItems: loadedCustomItems,
+    predictionItems: loadPredictionItems(),
+    predictionEditorId: null,
     customEditorId: null,
     customSession: createEmptyCustomSession(),
     hearingWrong: loadedHearingWrong,
@@ -605,6 +622,26 @@
     }
   }
 
+  function loadPredictionItems() {
+    try {
+      const raw = localStorage.getItem(PREDICTION_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed.filter((item) => item && item.value) : [];
+    } catch (error) {
+      console.warn("Could not load prediction items.", error);
+      return [];
+    }
+  }
+
+  function savePredictionItems() {
+    try {
+      localStorage.setItem(PREDICTION_KEY, JSON.stringify(state.predictionItems));
+    } catch (error) {
+      console.warn("Could not save prediction items.", error);
+    }
+    scheduleCloudSync();
+  }
+
   function loadHearingWrong() {
     try {
       const raw = localStorage.getItem(HEARING_WRONG_KEY);
@@ -684,6 +721,7 @@
       updatedAt: Date.now(),
       settings: { ...settings },
       customItems: state.customItems,
+      predictionItems: state.predictionItems,
       wrongNumbers: state.wrongNumbers,
       wrongDates: state.wrongDates,
       hearingWrong: state.hearingWrong
@@ -826,6 +864,7 @@
       updatedAt: Date.now(),
       settings: newer ? { ...local.settings, ...remote.settings } : local.settings,
       customItems: mergeById(local.customItems, remote.customItems),
+      predictionItems: mergeById(local.predictionItems, remote.predictionItems),
       hearingWrong: mergeById(local.hearingWrong, remote.hearingWrong, "lastReviewedAt"),
       wrongNumbers: Array.from(new Set([...(local.wrongNumbers || []), ...(remote.wrongNumbers || [])])).sort(compareWrongEntries),
       wrongDates: mergeDateWrong(local.wrongDates, remote.wrongDates)
@@ -838,6 +877,7 @@
     Object.assign(settings, snapshot.settings || {});
     settings.voice = "sonia";
     state.customItems = snapshot.customItems || [];
+    state.predictionItems = snapshot.predictionItems || [];
     state.hearingWrong = snapshot.hearingWrong || [];
     state.wrongNumbers = snapshot.wrongNumbers || [];
     state.wrongDates = snapshot.wrongDates || [];
@@ -1068,6 +1108,11 @@
     dom.reviewDueWordsButton.addEventListener("click", () => startHearingReview("due"));
     dom.reviewAllWordsButton.addEventListener("click", () => startHearingReview("all"));
     dom.customList.addEventListener("click", handleCustomListClick);
+    dom.newPredictionButton.addEventListener("click", () => openPredictionEditor());
+    dom.closePredictionEditorButton.addEventListener("click", closePredictionEditor);
+    dom.cancelPredictionEditButton.addEventListener("click", closePredictionEditor);
+    dom.savePredictionButton.addEventListener("click", savePredictionItem);
+    dom.predictionList.addEventListener("click", handlePredictionListClick);
     dom.hearingWrongList.addEventListener("click", handleHearingWrongClick);
 
     dom.createSyncSpaceButton.addEventListener("click", createSyncSpace);
@@ -1250,19 +1295,21 @@
     renderWeekdays();
     renderListening();
     renderCustom();
+    renderPrediction();
     renderWordDirectory();
     renderWrongBook();
     renderHearingWrong();
   }
 
   function switchTab(tab) {
-    if (!["dictation", "dates", "listening", "custom", "words", "wrong", "hearingwrong"].includes(tab)) return;
+    if (!["dictation", "dates", "listening", "custom", "prediction", "words", "wrong", "hearingwrong"].includes(tab)) return;
     if (["dictation", "dates"].includes(state.activeTab) && tab !== state.activeTab) stopPlayback();
     state.activeTab = tab;
     renderTabs();
     if (tab === "dates") renderDateSession();
     if (tab === "listening") renderListening();
     if (tab === "custom") renderCustom();
+    if (tab === "prediction") renderPrediction();
     if (tab === "words") renderWordDirectory();
     if (tab === "wrong") renderWrongBook();
     if (tab === "hearingwrong") renderHearingWrong();
@@ -2915,6 +2962,17 @@
         }
       });
     }
+    if (selected.has("prediction")) {
+      state.predictionItems.forEach((item) => {
+        entries.push({
+          kind: "text",
+          english: item.value,
+          chinese: item.chinese || predictionSpokenText(item.value, item.type),
+          audioText: item.spokenText || predictionSpokenText(item.value, item.type),
+          key: `prediction:${item.id}`
+        });
+      });
+    }
     if (selected.has("hearing")) {
       state.hearingWrong.forEach((item) => {
         entries.push({
@@ -3405,6 +3463,268 @@
         : (state.listening.started ? "继续" : "播放");
     dom.listeningProgressBar.style.width = total ? `${(index / total) * 100}%` : "0%";
     if (!state.listening.sleepDeadline) dom.listeningSleepStatus.textContent = "睡眠模式关闭";
+  }
+
+  function predictionTypeLabel(type) {
+    return {
+      phone: "电话号码",
+      money: "金额",
+      date: "日期 / 月份",
+      year: "年份",
+      time: "时间",
+      decimal: "小数",
+      general: "普通数字"
+    }[type] || "数字";
+  }
+
+  function predictionMoneyToEnglish(value) {
+    const source = String(value || "").trim();
+    const match = source.match(/([0-9][0-9,]*(?:\.[0-9]{1,2})?)/);
+    if (!match) return source;
+    const amount = match[1].replace(/,/g, "");
+    const [wholeText, decimalText = ""] = amount.split(".");
+    const whole = Number(wholeText) || 0;
+    const decimal = decimalText ? Number(decimalText.padEnd(2, "0")) : 0;
+    let main = "pounds";
+    let subunit = "pence";
+    if (/\$|usd|dollar/i.test(source)) {
+      main = "dollars"; subunit = "cents";
+    } else if (/€|eur|euro/i.test(source)) {
+      main = "euros"; subunit = "cents";
+    }
+    const parts = [];
+    if (whole > 0) parts.push(`${numberToEnglish(whole)} ${whole === 1 ? main.slice(0, -1) : main}`);
+    if (decimal > 0) parts.push(`${numberToEnglish(decimal)} ${decimal === 1 ? subunit.slice(0, -1) : subunit}`);
+    return parts.join(" ") || `${numberToEnglish(whole)} ${main}`;
+  }
+
+  function predictionDateToEnglish(value) {
+    const source = String(value || "").trim();
+    const lower = source.toLowerCase();
+    let day = null;
+    let monthIndex = null;
+    let year = null;
+    MONTHS.forEach((month, index) => {
+      if (lower.includes(month.toLowerCase())) monthIndex = index;
+    });
+    const numbers = Array.from(source.matchAll(/\d+/g)).map((item) => Number(item[0]));
+    if (monthIndex !== null) {
+      const dayValue = numbers.find((number) => number >= 1 && number <= 31);
+      const yearValue = numbers.find((number) => number >= 1000 && number <= 2999);
+      day = dayValue || null;
+      year = yearValue || null;
+    } else {
+      const numeric = source.match(/(\d{1,2})[\/\-.](\d{1,2})(?:[\/\-.](\d{2,4}))?/);
+      if (numeric) {
+        const first = Number(numeric[1]);
+        const second = Number(numeric[2]);
+        if (first <= 31 && second <= 12) {
+          day = first; monthIndex = second - 1;
+        } else if (first <= 12 && second <= 31) {
+          monthIndex = first - 1; day = second;
+        }
+        year = numeric[3] ? Number(numeric[3]) : null;
+      }
+    }
+    if (monthIndex === null || !MONTHS[monthIndex]) return source;
+    const month = MONTHS[monthIndex];
+    const dateText = day ? `the ${ordinalEnglish(day)} of ${month}` : month;
+    return year ? `${dateText} ${yearToEnglish(year)}` : dateText;
+  }
+
+  function predictionTimeToEnglish(value) {
+    const match = String(value || "").trim().match(/(\d{1,2})[:.](\d{2})/);
+    if (!match) return String(value || "").trim();
+    const hour = Number(match[1]);
+    const minute = Number(match[2]);
+    const hourText = hour === 0 ? "oh" : numberToEnglish(hour);
+    if (minute === 0) return `${hourText} o'clock`;
+    if (minute < 10) return `${hourText} oh ${numberToEnglish(minute)}`;
+    return `${hourText} ${numberToEnglish(minute)}`;
+  }
+
+  function predictionDecimalToEnglish(value) {
+    const source = String(value || "").trim().replace(/,/g, "");
+    const match = source.match(/^(-)?(\d+)(?:\.(\d+))?$/);
+    if (!match) return source;
+    const parts = [];
+    if (match[1]) parts.push("minus");
+    parts.push(numberToEnglish(Number(match[2])));
+    if (match[3]) {
+      parts.push("point");
+      match[3].split("").forEach((digit) => parts.push(ONES[Number(digit)]));
+    }
+    return parts.join(" ");
+  }
+
+  function predictionSpokenText(value, type) {
+    const source = String(value || "").trim();
+    if (!source) return "";
+    if (type === "phone") return phoneToEnglish(source);
+    if (type === "money") return predictionMoneyToEnglish(source);
+    if (type === "date") return predictionDateToEnglish(source);
+    if (type === "year") return yearToEnglish(Number(source.replace(/[^\d]/g, "")));
+    if (type === "time") return predictionTimeToEnglish(source);
+    if (type === "decimal") return predictionDecimalToEnglish(source);
+    return numberToEnglish(Number(source.replace(/[,\s]/g, ""))) || source;
+  }
+
+  function renderPrediction() {
+    if (!dom.predictionList) return;
+    dom.predictionItemCount.textContent = String(state.predictionItems.length);
+    dom.predictionList.replaceChildren();
+    if (!state.predictionItems.length) {
+      const empty = document.createElement("div");
+      empty.className = "prediction-empty";
+      empty.textContent = "还没有数字预测内容，点击右上角“添加数字”开始录入。";
+      dom.predictionList.appendChild(empty);
+      return;
+    }
+    state.predictionItems.forEach((item, index) => {
+      const card = document.createElement("article");
+      card.className = "prediction-card";
+      card.dataset.id = item.id;
+      const value = document.createElement("div");
+      value.className = "prediction-card-value";
+      value.textContent = item.value;
+      const type = document.createElement("div");
+      type.className = "prediction-card-type";
+      type.textContent = predictionTypeLabel(item.type);
+      const spoken = document.createElement("div");
+      spoken.className = "prediction-card-spoken";
+      spoken.textContent = item.spokenText || predictionSpokenText(item.value, item.type);
+      const chinese = document.createElement("div");
+      chinese.className = "prediction-card-type";
+      chinese.textContent = item.chinese || "未填写中文提示";
+      const note = document.createElement("div");
+      note.className = "prediction-card-note";
+      note.textContent = item.note || "";
+      const actions = document.createElement("div");
+      actions.className = "prediction-card-actions";
+      const play = document.createElement("button");
+      play.type = "button";
+      play.className = "secondary-button";
+      play.dataset.action = "play";
+      play.dataset.index = String(index);
+      play.dataset.id = item.id;
+      play.textContent = state.playingWord === `prediction:${item.id}` ? "停止" : "播放";
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "text-button";
+      remove.dataset.action = "delete";
+      remove.dataset.id = item.id;
+      remove.textContent = "删除";
+      actions.append(play, remove);
+      card.append(value, type, spoken, chinese, note, actions);
+      dom.predictionList.appendChild(card);
+    });
+  }
+
+  function openPredictionEditor(itemId = null) {
+    const item = state.predictionItems.find((entry) => entry.id === itemId);
+    state.predictionEditorId = item?.id || null;
+    dom.predictionEditorTitle.textContent = item ? "编辑数字预测内容" : "添加数字预测内容";
+    dom.predictionValueInput.value = item?.value || "";
+    dom.predictionTypeInput.value = item?.type || "phone";
+    dom.predictionSpokenInput.value = item?.spokenText || "";
+    dom.predictionChineseInput.value = item?.chinese || "";
+    dom.predictionNoteInput.value = item?.note || "";
+    dom.predictionSaveStatus.textContent = item ? "修改后点击保存。" : "保存后可以继续添加下一条。";
+    dom.predictionEditor.hidden = false;
+    dom.predictionValueInput.focus();
+  }
+
+  function closePredictionEditor() {
+    state.predictionEditorId = null;
+    dom.predictionEditor.hidden = true;
+    dom.predictionValueInput.value = "";
+    dom.predictionSpokenInput.value = "";
+    dom.predictionChineseInput.value = "";
+    dom.predictionNoteInput.value = "";
+  }
+
+  function savePredictionItem() {
+    const value = dom.predictionValueInput.value.trim();
+    const type = dom.predictionTypeInput.value;
+    if (!value) {
+      dom.predictionValueInput.focus();
+      return;
+    }
+    const spokenText = dom.predictionSpokenInput.value.trim() || predictionSpokenText(value, type);
+    if (!spokenText) {
+      dom.predictionSaveStatus.textContent = "无法自动转换，请手动填写标准英文读法。";
+      return;
+    }
+    const entry = {
+      value,
+      type,
+      spokenText,
+      chinese: dom.predictionChineseInput.value.trim(),
+      note: dom.predictionNoteInput.value.trim(),
+      updatedAt: Date.now()
+    };
+    if (state.predictionEditorId) {
+      const index = state.predictionItems.findIndex((item) => item.id === state.predictionEditorId);
+      if (index !== -1) state.predictionItems[index] = { ...state.predictionItems[index], ...entry };
+    } else {
+      state.predictionItems.unshift({
+        id: `prediction-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+        createdAt: Date.now(),
+        ...entry
+      });
+    }
+    savePredictionItems();
+    preloadExternalSpeech(spokenText);
+    renderPrediction();
+    const saved = value;
+    dom.predictionValueInput.value = "";
+    dom.predictionSpokenInput.value = "";
+    dom.predictionChineseInput.value = "";
+    dom.predictionNoteInput.value = "";
+    state.predictionEditorId = null;
+    dom.predictionSaveStatus.textContent = `已保存“${saved}”，可继续添加下一条。`;
+    dom.predictionValueInput.focus();
+  }
+
+  function handlePredictionListClick(event) {
+    const button = event.target.closest("[data-action]");
+    if (!button) return;
+    const item = state.predictionItems.find((entry) => entry.id === button.dataset.id);
+    if (!item) return;
+    if (button.dataset.action === "delete") {
+      state.predictionItems = state.predictionItems.filter((entry) => entry.id !== item.id);
+      savePredictionItems();
+      renderPrediction();
+      return;
+    }
+    if (button.dataset.action === "play") {
+      playPredictionItem(item);
+    }
+  }
+
+  async function playPredictionItem(item) {
+    const key = `prediction:${item.id}`;
+    if (state.playingWord === key && state.playing) {
+      stopPlayback();
+      return;
+    }
+    stopListening();
+    stopPlayback();
+    const token = ++state.token;
+    state.playingWord = key;
+    setPlaying(true);
+    renderPrediction();
+    try {
+      await playRepeatedSpeech(item.spokenText || predictionSpokenText(item.value, item.type), settings.repeat, token, { type: item.type });
+    } catch (error) {
+      console.error(error);
+    } finally {
+      if (token === state.token) {
+        setPlaying(false);
+        state.playingWord = null;
+        renderPrediction();
+      }
+    }
   }
 
   function openCustomEditor(itemId = null) {
