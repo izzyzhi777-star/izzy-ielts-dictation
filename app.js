@@ -6,6 +6,7 @@
   const CUSTOM_KEY = "number-dictation-custom-v1";
   const PREDICTION_KEY = "number-prediction-items-v1";
   const DELETED_CUSTOM_KEY = "number-dictation-deleted-custom-v1";
+  const DELETED_PREDICTION_KEY = "number-prediction-deleted-v1";
   const HEARING_WRONG_KEY = "number-dictation-hearing-wrong-v1";
   const SYNC_KEY = "izzy-ielts-sync-v1";
   const EBBINGHAUS_INTERVALS = [
@@ -267,6 +268,7 @@
   const settings = loadSettings();
   const loadedWrongData = loadWrongData();
   const loadedDeletedCustomIds = loadDeletedCustomIds();
+  const loadedDeletedPredictionIds = loadDeletedPredictionIds();
   const loadedCustomItems = loadCustomItems().filter((item) => !loadedDeletedCustomIds.includes(item.id));
   const loadedHearingWrong = loadHearingWrong();
   const loadedSyncConfig = loadSyncConfig();
@@ -277,7 +279,8 @@
     wrongDates: loadedWrongData.dates,
     customItems: loadedCustomItems,
     deletedCustomIds: loadedDeletedCustomIds,
-    predictionItems: loadPredictionItems(),
+    deletedPredictionIds: loadedDeletedPredictionIds,
+    predictionItems: loadPredictionItems().filter((item) => !loadedDeletedPredictionIds.includes(item.id)),
     predictionEditorId: null,
     customEditorId: null,
     customSession: createEmptyCustomSession(),
@@ -644,6 +647,25 @@
     scheduleCloudSync();
   }
 
+  function loadDeletedPredictionIds() {
+    try {
+      const raw = localStorage.getItem(DELETED_PREDICTION_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed.filter(Boolean) : [];
+    } catch (error) {
+      return [];
+    }
+  }
+
+  function saveDeletedPredictionIds() {
+    try {
+      localStorage.setItem(DELETED_PREDICTION_KEY, JSON.stringify(state.deletedPredictionIds));
+    } catch (error) {
+      console.warn("Could not save deleted prediction ids.", error);
+    }
+    scheduleCloudSync();
+  }
+
   function loadPredictionItems() {
     try {
       const raw = localStorage.getItem(PREDICTION_KEY);
@@ -744,6 +766,7 @@
       settings: { ...settings },
       customItems: state.customItems,
       deletedCustomIds: state.deletedCustomIds,
+      deletedPredictionIds: state.deletedPredictionIds,
       predictionItems: state.predictionItems,
       wrongNumbers: state.wrongNumbers,
       wrongDates: state.wrongDates,
@@ -887,9 +910,11 @@
       updatedAt: Date.now(),
       settings: newer ? { ...local.settings, ...remote.settings } : local.settings,
       deletedCustomIds: Array.from(new Set([...(local.deletedCustomIds || []), ...(remote.deletedCustomIds || [])])),
+      deletedPredictionIds: Array.from(new Set([...(local.deletedPredictionIds || []), ...(remote.deletedPredictionIds || [])])),
       customItems: mergeById(local.customItems, remote.customItems)
         .filter((item) => !new Set([...(local.deletedCustomIds || []), ...(remote.deletedCustomIds || [])]).has(item.id)),
-      predictionItems: mergeById(local.predictionItems, remote.predictionItems),
+      predictionItems: mergeById(local.predictionItems, remote.predictionItems)
+        .filter((item) => !new Set([...(local.deletedPredictionIds || []), ...(remote.deletedPredictionIds || [])]).has(item.id)),
       hearingWrong: mergeById(local.hearingWrong, remote.hearingWrong, "lastReviewedAt"),
       wrongNumbers: Array.from(new Set([...(local.wrongNumbers || []), ...(remote.wrongNumbers || [])])).sort(compareWrongEntries),
       wrongDates: mergeDateWrong(local.wrongDates, remote.wrongDates)
@@ -902,8 +927,9 @@
     Object.assign(settings, snapshot.settings || {});
     settings.voice = "sonia";
     state.deletedCustomIds = snapshot.deletedCustomIds || [];
+    state.deletedPredictionIds = snapshot.deletedPredictionIds || [];
     state.customItems = (snapshot.customItems || []).filter((item) => !state.deletedCustomIds.includes(item.id));
-    state.predictionItems = snapshot.predictionItems || [];
+    state.predictionItems = (snapshot.predictionItems || []).filter((item) => !state.deletedPredictionIds.includes(item.id));
     state.hearingWrong = snapshot.hearingWrong || [];
     state.wrongNumbers = snapshot.wrongNumbers || [];
     state.wrongDates = snapshot.wrongDates || [];
@@ -2833,16 +2859,21 @@
       }
       const audio = state.audio;
       let settled = false;
+      let loadTimer = null;
       const finish = (error = null) => {
         if (settled) return;
         settled = true;
+        window.clearTimeout(loadTimer);
         audio.onended = null;
         audio.onerror = null;
+        audio.onplaying = null;
         if (error) reject(error);
         else resolve();
       };
       audio.onended = () => finish();
       audio.onerror = () => finish(new Error(`Cannot play ${source}`));
+      audio.onplaying = () => window.clearTimeout(loadTimer);
+      loadTimer = window.setTimeout(() => finish(new Error("Audio start timed out")), 8000);
       audio.playbackRate = Number(options.rate ?? settings.speed) || 1;
       audio.preservesPitch = true;
       audio.webkitPreservesPitch = true;
@@ -3389,16 +3420,21 @@
       }
       const audio = state.listening.audio;
       let settled = false;
+      let loadTimer = null;
       const finish = (error = null) => {
         if (settled) return;
         settled = true;
+        window.clearTimeout(loadTimer);
         audio.onended = null;
         audio.onerror = null;
+        audio.onplaying = null;
         if (error) reject(error);
         else resolve();
       };
       audio.onended = () => finish();
       audio.onerror = () => finish(new Error("Listening audio failed"));
+      audio.onplaying = () => window.clearTimeout(loadTimer);
+      loadTimer = window.setTimeout(() => finish(new Error("Listening audio start timed out")), 8000);
       audio.playbackRate = Number(dom.listeningSpeed.value) || 1;
       audio.preservesPitch = true;
       audio.webkitPreservesPitch = true;
@@ -3729,6 +3765,10 @@
     if (!item) return;
     if (button.dataset.action === "delete") {
       state.predictionItems = state.predictionItems.filter((entry) => entry.id !== item.id);
+      if (!state.deletedPredictionIds.includes(item.id)) {
+        state.deletedPredictionIds.push(item.id);
+        saveDeletedPredictionIds();
+      }
       savePredictionItems();
       renderPrediction();
       return;
@@ -3736,6 +3776,24 @@
     if (button.dataset.action === "play") {
       playPredictionItem(item);
     }
+  }
+
+  function predictionSpeechGroups(text) {
+    const normalized = neuralVoice.normalizeText(text);
+    if (!normalized) return [];
+    const phrases = normalized.split(/[,;.!?，。；！？]+/).map((part) => part.trim()).filter(Boolean);
+    const groups = [];
+    phrases.forEach((phrase) => {
+      const words = phrase.split(/\s+/).filter(Boolean);
+      if (words.length <= 4) {
+        groups.push(phrase);
+        return;
+      }
+      for (let index = 0; index < words.length; index += 3) {
+        groups.push(words.slice(index, index + 3).join(" "));
+      }
+    });
+    return groups.length ? groups : [normalized];
   }
 
   async function playPredictionItem(item) {
@@ -3750,8 +3808,35 @@
     state.playingWord = key;
     setPlaying(true);
     renderPrediction();
+    const markedText = String(item.spokenText || predictionSpokenText(item.value, item.type) || "").trim();
+    const groups = predictionSpeechGroups(markedText);
+    const rate = item.type === "phone" ? 0.72 : item.type === "year" ? 0.85 : 0.82;
+    const repeat = Math.max(1, Number(settings.repeat) || 1);
     try {
-      await playRepeatedSpeech(item.spokenText || predictionSpokenText(item.value, item.type), settings.repeat, token, { type: item.type });
+      for (let count = 0; count < repeat; count += 1) {
+        for (const group of groups) {
+          if (token !== state.token) return;
+          const language = neuralVoice.containsChinese(group) ? "zh" : "en";
+          const sources = language === "zh"
+            ? [getBaiduTtsUrl(group, "zh")]
+            : [getYoudaoAudioUrl(group, "1"), getBaiduTtsUrl(group, "en")];
+          let played = false;
+          for (const source of sources) {
+            if (token !== state.token) return;
+            try {
+              await playAudio(source, token, { rate });
+              played = true;
+              break;
+            } catch (error) {
+              console.debug("Prediction audio segment unavailable.", error);
+            }
+          }
+          if (!played) await speakBrowserText(group, rate, token);
+          if (token !== state.token) return;
+          await wait(320);
+        }
+        if (count < repeat - 1) await wait(900);
+      }
     } catch (error) {
       console.error(error);
     } finally {
