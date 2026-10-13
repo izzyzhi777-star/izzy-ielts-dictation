@@ -3746,7 +3746,7 @@
       });
     }
     savePredictionItems();
-    preloadExternalSpeech(spokenText);
+    preloadPredictionSpeech(spokenText, type);
     renderPrediction();
     const saved = value;
     dom.predictionValueInput.value = "";
@@ -3904,6 +3904,27 @@
     if (!item) return;
     [item.text, item.example, item.note].filter(Boolean).forEach((text) => {
       preloadExternalSpeech(text);
+    });
+  }
+
+  function preloadPredictionSpeech(text, type) {
+    const groups = predictionSpeechGroups(text);
+    groups.forEach((group) => {
+      const language = neuralVoice.containsChinese(group) ? "zh" : "en";
+      const sources = language === "zh"
+        ? [getBaiduTtsUrl(group, "zh")]
+        : [getYoudaoAudioUrl(group, "1"), getBaiduTtsUrl(group, "en")];
+      sources.forEach((source) => {
+        try {
+          fetch(source, { mode: "no-cors", cache: "force-cache" }).catch(() => {});
+          const audio = new Audio();
+          audio.preload = "auto";
+          audio.src = source;
+          audio.load();
+        } catch (error) {
+          console.debug("Could not preload prediction speech.", error);
+        }
+      });
     });
   }
 
