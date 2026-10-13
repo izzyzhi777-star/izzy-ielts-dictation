@@ -2467,3 +2467,8 @@ footer {
     border-right: 0;
   }
 }
+.prediction-head-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}

@@ -10,7 +10,7 @@
   <title>IZZY IELTS-DICTATION</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=20261013h">
+  <link rel="stylesheet" href="styles.css?v=20261013i">
 </head>
 <body>
   <div class="app-shell">
@@ -554,7 +554,10 @@
             <h2>数字预测篇</h2>
             <p>专门添加电话号码、金额、日期、年份、月份、时间、小数和其他易错数字。系统先转换成标准英文读法，再使用英式女声播报。</p>
           </div>
-          <button class="primary-button" id="newPredictionButton" type="button">添加数字</button>
+          <div class="prediction-head-actions">
+            <button class="secondary-button" id="startPredictionPracticeButton" type="button">开始拼写练习</button>
+            <button class="primary-button" id="newPredictionButton" type="button">添加数字</button>
+          </div>
         </div>
 
         <section class="custom-editor" id="predictionEditor" hidden>
@@ -796,7 +799,7 @@
     </aside>
   </div>
 
-  <script src="neural-voice.js?v=20261013h"></script>
-  <script src="app.js?v=20261013h"></script>
+  <script src="neural-voice.js?v=20261013i"></script>
+  <script src="app.js?v=20261013i"></script>
 </body>
 </html>

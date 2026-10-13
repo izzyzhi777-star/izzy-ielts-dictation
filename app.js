@@ -215,6 +215,7 @@
     againCustomButton: $("againCustomButton"),
     customItemCount: $("customItemCount"),
     newPredictionButton: $("newPredictionButton"),
+    startPredictionPracticeButton: $("startPredictionPracticeButton"),
     predictionEditor: $("predictionEditor"),
     predictionEditorTitle: $("predictionEditorTitle"),
     predictionValueInput: $("predictionValueInput"),
@@ -1161,6 +1162,7 @@
     dom.reviewAllWordsButton.addEventListener("click", () => startHearingReview("all"));
     dom.customList.addEventListener("click", handleCustomListClick);
     dom.newPredictionButton.addEventListener("click", () => openPredictionEditor());
+    dom.startPredictionPracticeButton.addEventListener("click", startPredictionPractice);
     dom.closePredictionEditorButton.addEventListener("click", closePredictionEditor);
     dom.cancelPredictionEditButton.addEventListener("click", closePredictionEditor);
     dom.savePredictionButton.addEventListener("click", savePredictionItem);
@@ -1316,6 +1318,11 @@
         if (state.activeTab === "dates" && state.dateSession.started && !state.dateSession.complete) {
           event.preventDefault();
           playCurrentDate();
+          return;
+        }
+        if (state.activeTab === "custom" && state.customSession.started && !state.customSession.complete) {
+          event.preventDefault();
+          playCurrentCustom();
         }
       }
     });
@@ -3652,6 +3659,7 @@
 
   function renderPrediction() {
     if (!dom.predictionList) return;
+    dom.startPredictionPracticeButton.disabled = state.predictionItems.length === 0;
     dom.predictionItemCount.textContent = String(state.predictionItems.length);
     dom.predictionList.replaceChildren();
     if (!state.predictionItems.length) {
@@ -3785,6 +3793,23 @@
     if (button.dataset.action === "play") {
       playPredictionItem(item);
     }
+  }
+
+  function startPredictionPractice() {
+    if (!state.predictionItems.length) {
+      dom.predictionSaveStatus.textContent = "请先添加数字预测内容。";
+      return;
+    }
+    const practiceItems = state.predictionItems.map((item) => ({
+      id: `prediction-practice-${item.id}`,
+      text: item.spokenText || predictionSpokenText(item.value, item.type),
+      translation: `${item.value}${item.chinese ? ` · ${item.chinese}` : ""}`,
+      note: item.note || "",
+      phonetic: "",
+      example: "",
+      exampleTranslation: ""
+    }));
+    startCustomPractice(practiceItems, "prediction");
   }
 
   function predictionSpeechGroups(text) {
@@ -4190,7 +4215,11 @@
     const total = session.items.length;
     const current = currentCustomItem();
     dom.customProgressLabel.textContent = `我的词句 ${Math.min(session.index + 1, total)} / ${total}`;
-    dom.customModeLabel.textContent = session.source === "hearing" ? "听力错词复习" : "我的词句拼写";
+    dom.customModeLabel.textContent = session.source === "hearing"
+      ? "听力错词复习"
+      : session.source === "prediction"
+        ? "数字预测拼写"
+        : "我的词句拼写";
     dom.customSubmitHint.textContent = settings.submitMode === "auto" ? "自动提交" : "手动提交";
     dom.restartCustomButton.disabled = !session.started;
     dom.stopCustomButton.disabled = !state.playing;
@@ -4202,10 +4231,15 @@
       dom.customStartScreen.hidden = false;
       dom.customQuestionScreen.hidden = true;
       dom.customCompleteScreen.hidden = true;
-      dom.customStartTitle.textContent = state.customItems.length ? "准备练习你的词句" : "先添加你要拼写的英文";
-      dom.customStartDescription.textContent = state.customItems.length
-        ? "听英文，填写完整拼写；提交后显示中文翻译和个人笔记。"
-        : "保存词句后，可以听英文、填写拼写，并查看中文翻译和笔记。";
+      const predictionMode = session.source === "prediction";
+      dom.customStartTitle.textContent = predictionMode
+        ? "准备练习数字预测拼写"
+        : (state.customItems.length ? "准备练习你的词句" : "先添加你要拼写的英文");
+      dom.customStartDescription.textContent = predictionMode
+        ? "听标准英文读法，填写完整英文；提交后显示对应数字、中文提示和笔记。"
+        : (state.customItems.length
+          ? "听英文，填写完整拼写；提交后显示中文翻译和个人笔记。"
+          : "保存词句后，可以听英文、填写拼写，并查看中文翻译和笔记。");
       return;
     }
 
@@ -4274,8 +4308,17 @@
     const token = ++state.token;
     setPlaying(true);
     try {
-      dom.customPlayStatus.textContent = "正在播放即时英式女声，Sonia 语音会在后台缓存";
-      await playRepeatedSpeech(item.text, settings.repeat, token);
+      dom.customPlayStatus.textContent = "正在播放标准英文读法";
+      if (state.customSession.source === "prediction") {
+        for (let index = 0; index < Math.max(1, Number(settings.repeat) || 1); index += 1) {
+          if (token !== state.token) return;
+          await playPredictionBrowserText(item.text, 0.82, token);
+          if (token !== state.token) return;
+          if (index < Math.max(1, Number(settings.repeat) || 1) - 1) await wait(900);
+        }
+      } else {
+        await playRepeatedSpeech(item.text, settings.repeat, token);
+      }
       if (token === state.token) {
         setPlaying(false);
         dom.customPlayStatus.textContent = "播放完成，请填写答案";
