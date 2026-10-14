@@ -9,6 +9,7 @@
   const DELETED_PREDICTION_KEY = "number-prediction-deleted-v1";
   const HEARING_WRONG_KEY = "number-dictation-hearing-wrong-v1";
   const SYNC_KEY = "izzy-ielts-sync-v1";
+  const LISTENING_PROGRESS_KEY = "number-dictation-listening-progress-v1";
   const EBBINGHAUS_INTERVALS = [
     5 * 60 * 1000,
     30 * 60 * 1000,
@@ -503,6 +504,7 @@
     if (state.listening.currentTrack === index) return;
     state.listening.currentTrack = index;
     state.listening.index = index;
+    saveListeningProgress(index);
     const current = state.listening.playlist[index];
     updateMediaSessionMetadata(current, index);
     renderListening();
@@ -610,6 +612,23 @@
       state.voicePackLoaded = false;
     }
     return state.voicePackIndex;
+  }
+
+  function loadListeningProgress() {
+    try {
+      const value = Number(localStorage.getItem(LISTENING_PROGRESS_KEY));
+      return Number.isFinite(value) && value >= 0 ? Math.floor(value) : 0;
+    } catch (error) {
+      return 0;
+    }
+  }
+
+  function saveListeningProgress(index) {
+    try {
+      localStorage.setItem(LISTENING_PROGRESS_KEY, String(Math.max(0, Math.floor(Number(index) || 0))));
+    } catch (error) {
+      // Private browsing may block storage; playback still works without it.
+    }
   }
 
   function loadSettings() {
@@ -1341,6 +1360,16 @@
     dom.listeningPreviousButton.addEventListener("click", () => changeListeningIndex(-1));
     dom.listeningNextButton.addEventListener("click", () => changeListeningIndex(1));
     dom.listeningStartFromButton.addEventListener("click", jumpToSelectedListening);
+    dom.listeningStartSelect.addEventListener("change", () => {
+      const selected = Number(dom.listeningStartSelect.value);
+      if (!Number.isFinite(selected) || selected < 1 || !state.listening.playlist.length) return;
+      const nextIndex = Math.min(selected - 1, state.listening.playlist.length - 1);
+      state.listening.pendingStartIndex = nextIndex;
+      if (state.listening.started) {
+        seekListeningToIndex(nextIndex);
+        state.listening.pendingStartIndex = null;
+      }
+    });
     dom.listeningNowPanel.addEventListener("click", () => {
       if (!state.listening.playlist.length) return;
       seekListeningToIndex(state.listening.index);
@@ -3229,7 +3258,7 @@
     if (state.listening.preparing) return;
     const pendingStart = Number.isInteger(state.listening.pendingStartIndex)
       ? state.listening.pendingStartIndex
-      : 0;
+      : loadListeningProgress();
     const playlist = state.listening.previewPlaylist.length
       ? state.listening.previewPlaylist
       : buildListeningPlaylist();
@@ -3293,9 +3322,19 @@
       || (bilingual ? state.singleBilingualManifest : (single ? state.singleWordManifest : state.continuousManifest));
     if (token !== state.listening.token) return;
     if (manifest?.entries?.length) {
-      const byText = new Map(playlist.map((entry) => [entry.english, entry]));
-      const ordered = manifest.entries.map((entry) => byText.get(entry.text)).filter(Boolean);
-      if (ordered.length === manifest.entries.length) {
+      const indicesByText = new Map();
+      playlist.forEach((entry, index) => {
+        const key = String(entry.english || "");
+        if (!indicesByText.has(key)) indicesByText.set(key, []);
+        indicesByText.get(key).push(index);
+      });
+      const ordered = [];
+      manifest.entries.forEach((entry) => {
+        const matches = indicesByText.get(String(entry.text || ""));
+        const nextIndex = matches?.shift();
+        if (Number.isInteger(nextIndex)) ordered.push(playlist[nextIndex]);
+      });
+      if (ordered.length === manifest.entries.length && ordered.length === playlist.length) {
         state.listening.playlist = ordered;
         state.listening.timeline = manifest.entries.map((entry, index) => ({
           entryIndex: index,
@@ -3307,6 +3346,23 @@
         const requestedIndex = ordered.findIndex((entry) => entry.english === requestedText);
         if (requestedIndex >= 0) startIndex = requestedIndex;
       }
+    }
+    if (!state.listening.timeline.length) {
+      state.listening.pendingStartIndex = null;
+      state.listening.continuous = false;
+      state.listening.index = Math.min(Math.max(0, startIndex), Math.max(0, playlist.length - 1));
+      renderListening();
+      try {
+        await playListeningSequentially(playlist, token, startIndex);
+      } catch (error) {
+        if (token !== state.listening.token) return;
+        state.listening.playing = false;
+        console.error(error);
+        dom.listeningEnglish.textContent = "随身听暂时不可用";
+        dom.listeningChinese.textContent = "请重新点击开始；已经缓存的语音不会丢失。";
+        renderListening();
+      }
+      return;
     }
     const audio = state.listening.audio;
     state.listening.continuous = true;
