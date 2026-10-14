@@ -2782,10 +2782,19 @@
       return { sources: sources.length ? sources : [getBaiduTtsUrl(normalized, "en")], revoke: false, external: true };
     }
     const wordCount = normalized.split(/\s+/).filter(Boolean).length;
-    const sources = wordCount <= 3
-      ? [getYoudaoAudioUrl(normalized, "1"), getYoudaoAudioUrl(normalized, "2")]
-      : [getBaiduTtsUrl(normalized, "en")];
-    return { sources, revoke: false, external: true };
+    if (wordCount <= 3) {
+      return {
+        sources: [getYoudaoAudioUrl(normalized, "1"), getYoudaoAudioUrl(normalized, "2")],
+        revoke: false,
+        external: true
+      };
+    }
+    const groups = predictionSpeechGroups(normalized);
+    return {
+      sources: groups.map((group) => getYoudaoAudioUrl(group, "1")),
+      revoke: false,
+      external: true
+    };
   }
 
   async function getImmediateSpeechBlob(text, options = {}) {
@@ -4023,15 +4032,9 @@
     setPlaying(true);
     renderPrediction();
     const markedText = String(item.spokenText || predictionSpokenText(item.value, item.type) || "").trim();
-    const rate = item.type === "phone" ? 0.72 : item.type === "year" ? 0.85 : 0.82;
     const repeat = Math.max(1, Number(settings.repeat) || 1);
     try {
-      for (let count = 0; count < repeat; count += 1) {
-        if (token !== state.token) return;
-        await playPredictionBrowserText(markedText, rate, token);
-        if (token !== state.token) return;
-        if (count < repeat - 1) await wait(900);
-      }
+      await playRepeatedSpeech(markedText, repeat, token, { type: item.type });
     } catch (error) {
       console.error(error);
     } finally {
@@ -4481,24 +4484,13 @@
     const token = ++state.token;
     setPlaying(true);
     try {
-      dom.customPlayStatus.textContent = "正在播放标准英文读法";
-      if (state.customSession.source === "prediction") {
-        for (let index = 0; index < Math.max(1, Number(settings.repeat) || 1); index += 1) {
-          if (token !== state.token) return;
-          await playPredictionBrowserText(item.audioText || item.text, 0.82, token);
-          if (token !== state.token) return;
-          if (index < Math.max(1, Number(settings.repeat) || 1) - 1) await wait(900);
-        }
-      } else if (state.voicePackIndex[item.text]?.file || item.text.trim().split(/\s+/).filter(Boolean).length <= 3) {
-        await playRepeatedSpeech(item.text, settings.repeat, token);
-      } else {
-        for (let index = 0; index < Math.max(1, Number(settings.repeat) || 1); index += 1) {
-          if (token !== state.token) return;
-          await speakBrowserText(item.text, 0.82, token);
-          if (token !== state.token) return;
-          if (index < Math.max(1, Number(settings.repeat) || 1) - 1) await wait(900);
-        }
-      }
+      dom.customPlayStatus.textContent = "正在播放有道标准发音";
+      const audioText = state.customSession.source === "prediction"
+        ? (item.audioText || item.text)
+        : item.text;
+      await playRepeatedSpeech(audioText, settings.repeat, token, {
+        type: item.predictionType || "number"
+      });
       if (token === state.token) {
         setPlaying(false);
         dom.customPlayStatus.textContent = "播放完成，请填写答案";
@@ -4511,26 +4503,6 @@
         dom.customPlayStatus.textContent = "播放完成，请填写答案";
       }
     }
-  }
-
-  function hidePracticeReminder() {
-    if (dom.practiceReminder) dom.practiceReminder.hidden = true;
-  }
-
-  function togglePracticeReminder() {
-    if (!dom.practiceReminder || !state.customSession.started || state.customSession.complete) return;
-    const item = currentCustomItem();
-    if (!item) return;
-    if (!dom.practiceReminder.hidden) {
-      hidePracticeReminder();
-      return;
-    }
-    if (state.customSession.source === "prediction") {
-      dom.practiceReminder.innerHTML = `<strong>原始数字：</strong>${item.text}<br><strong>标准英文读法：</strong>${item.audioText || predictionSpokenText(item.text, item.predictionType)}`;
-    } else {
-      dom.practiceReminder.innerHTML = `<strong>词汇提醒：</strong>${item.text}<br>${item.phonetic ? `<strong>音标：</strong>${item.phonetic}<br>` : ""}${item.translation ? `<strong>中文：</strong>${item.translation}` : ""}`;
-    }
-    dom.practiceReminder.hidden = false;
   }
 
   function normalizePredictionAnswer(value) {
