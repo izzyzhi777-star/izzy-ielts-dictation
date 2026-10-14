@@ -195,6 +195,7 @@
     customPlayButton: $("customPlayButton"),
     customPlayStatus: $("customPlayStatus"),
     customReplayButton: $("customReplayButton"),
+    customReminderButton: $("customReminderButton"),
     customSubmitHint: $("customSubmitHint"),
     customAnswerInput: $("customAnswerInput"),
     customAnswerLabel: $("customAnswerLabel"),
@@ -1197,6 +1198,7 @@
       else playCurrentCustom();
     });
     dom.customReplayButton.addEventListener("click", playCurrentCustom);
+    dom.customReminderButton.addEventListener("click", togglePracticeReminder);
     document.querySelector("#customQuestionScreen .listen-panel")?.addEventListener("click", (event) => {
       if (event.target.closest("button")) return;
       playCurrentCustom();
@@ -1205,12 +1207,18 @@
     dom.submitCustomButton.addEventListener("click", () => submitCustomAnswer(false));
     dom.nextCustomButton.addEventListener("click", () => goNextCustom(true));
     dom.customAnswerInput.addEventListener("input", handleCustomInput);
-    dom.customAnswerInput.addEventListener("keydown", (event) => {
-      if (event.key !== "Enter") return;
+    let lastCustomEnterHandled = 0;
+    const handleCustomEnter = (event) => {
+      if (event.isComposing || (event.key !== "Enter" && event.keyCode !== 13)) return;
+      const now = Date.now();
+      if (now - lastCustomEnterHandled < 180) return;
+      lastCustomEnterHandled = now;
       event.preventDefault();
       if (state.customSession.checked) goNextCustom(true);
       else submitCustomAnswer(false);
-    });
+    };
+    dom.customAnswerInput.addEventListener("keydown", handleCustomEnter);
+    dom.customAnswerInput.addEventListener("keyup", handleCustomEnter);
     dom.customEnglishInput.addEventListener("input", () => {
       if (dom.customChineseInput.value.trim()) return;
     });
@@ -1388,17 +1396,23 @@
         return;
       }
       if (
-        event.key === "3"
+        (event.key === "3" || event.keyCode === 51)
         && dom.settingsDrawer.hidden
         && state.activeTab === "custom"
-        && state.customSession.source !== "prediction"
+        && state.customSession.started
+        && !state.customSession.complete
         && !event.metaKey
         && !event.ctrlKey
         && !event.altKey
       ) {
-        event.preventDefault();
-        togglePracticeReminder();
-        return;
+        const predictionHasAnswer = state.customSession.source === "prediction"
+          && Boolean(dom.customAnswerInput.value.trim())
+          && dom.practiceReminder.hidden;
+        if (!predictionHasAnswer) {
+          event.preventDefault();
+          togglePracticeReminder();
+          return;
+        }
       }
       if (
         event.key === "Tab"
