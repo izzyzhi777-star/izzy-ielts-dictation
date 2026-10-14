@@ -313,9 +313,11 @@
     audioBlobCache: new Map(),
     continuousManifest: null,
     singleWordManifest: null,
+    singleBilingualManifest: null,
     continuousManifestPromise: null,
     continuousAudioPrefetched: false,
     singleWordAudioPrefetched: false,
+    singleBilingualAudioPrefetched: false,
     previewPlaylist: [],
     previewKey: "",
     pendingStartIndex: null,
@@ -563,28 +565,32 @@
   }
 
   function prefetchContinuousAudio(mode = "all") {
-    const single = mode === "single";
-    if (single ? state.singleWordAudioPrefetched : state.continuousAudioPrefetched) return;
-    if (single) state.singleWordAudioPrefetched = true;
-    else state.continuousAudioPrefetched = true;
-    const source = single
-      ? "audio/continuous/custom-single-words-uk-us.mp3"
-      : "audio/continuous/custom-uk-us.mp3";
+    const sources = {
+      all: ["continuousAudioPrefetched", "audio/continuous/custom-uk-us.mp3"],
+      single: ["singleWordAudioPrefetched", "audio/continuous/custom-single-words-uk-us.mp3"],
+      "single-bilingual": ["singleBilingualAudioPrefetched", "audio/continuous/custom-single-words-uk-us-cn-note.mp3"]
+    };
+    const selected = sources[mode] || sources.all;
+    const flag = selected[0];
+    const source = selected[1];
+    if (state[flag]) return;
+    state[flag] = true;
     fetch(source, { cache: "force-cache" }).catch((error) => {
-      if (single) state.singleWordAudioPrefetched = false;
-      else state.continuousAudioPrefetched = false;
+      state[flag] = false;
       console.debug("Continuous audio preload skipped.", error);
     });
   }
 
   async function loadContinuousManifest() {
     try {
-      const [allResponse, singleResponse] = await Promise.all([
+      const responses = await Promise.all([
         fetch("audio/continuous/custom-uk-us.json?v=20261013", { cache: "no-cache" }),
-        fetch("audio/continuous/custom-single-words-uk-us.json?v=20261013", { cache: "no-cache" })
+        fetch("audio/continuous/custom-single-words-uk-us.json?v=20261013", { cache: "no-cache" }),
+        fetch("audio/continuous/custom-single-words-uk-us-cn-note.json?v=20261013", { cache: "no-cache" })
       ]);
-      state.continuousManifest = allResponse.ok ? await allResponse.json() : null;
-      state.singleWordManifest = singleResponse.ok ? await singleResponse.json() : null;
+      state.continuousManifest = responses[0].ok ? await responses[0].json() : null;
+      state.singleWordManifest = responses[1].ok ? await responses[1].json() : null;
+      state.singleBilingualManifest = responses[2].ok ? await responses[2].json() : null;
     } catch (error) {
       console.debug("Continuous manifest unavailable.", error);
     }
@@ -1435,6 +1441,7 @@
       renderListening();
       prefetchContinuousAudio("all");
       prefetchContinuousAudio("single");
+      prefetchContinuousAudio("single-bilingual");
     }
     if (tab === "custom") renderCustom();
     if (tab === "prediction") renderPrediction();
@@ -3066,6 +3073,7 @@
             kind: "text",
             english: item.text,
             chinese: item.translation || item.text,
+            note: item.note || "",
             audioText: item.text,
             partType: "word"
           });
@@ -3202,8 +3210,9 @@
     const selected = new Set(
       Array.from(dom.listeningCategories.querySelectorAll("input:checked")).map((input) => input.dataset.listeningCategory)
     );
-    if (selected.size === 1 && dom.listeningMode.value === "english" && (selected.has("custom") || selected.has("singlewords"))) {
-      const mode = selected.has("singlewords") ? "single" : "all";
+    if (selected.size === 1 && (selected.has("custom") || selected.has("singlewords"))) {
+      let mode = "all";
+      if (selected.has("singlewords")) mode = dom.listeningMode.value === "bilingual" ? "single-bilingual" : "single";
       startContinuousVocabulary(token, playlist, mode, pendingStart);
       return;
     }
@@ -3223,11 +3232,15 @@
   }
 
   async function startContinuousVocabulary(token, playlist, mode = "all", startIndex = 0) {
-    const single = mode === "single";
+    const bilingual = mode === "single-bilingual";
+    const single = mode === "single" || bilingual;
     const requestedText = playlist[startIndex]?.english || "";
-    const manifest = (single ? state.singleWordManifest : state.continuousManifest)
+    const selectedManifest = bilingual
+      ? state.singleBilingualManifest
+      : (single ? state.singleWordManifest : state.continuousManifest);
+    const manifest = selectedManifest
       || await state.continuousManifestPromise
-      || (single ? state.singleWordManifest : state.continuousManifest);
+      || (bilingual ? state.singleBilingualManifest : (single ? state.singleWordManifest : state.continuousManifest));
     if (token !== state.listening.token) return;
     if (manifest?.entries?.length) {
       const byText = new Map(playlist.map((entry) => [entry.english, entry]));
@@ -3255,9 +3268,11 @@
     audio.playbackRate = Number(dom.listeningSpeed.value) || 1;
     audio.preservesPitch = true;
     audio.webkitPreservesPitch = true;
-    audio.src = single
-      ? "audio/continuous/custom-single-words-uk-us.mp3"
-      : "audio/continuous/custom-uk-us.mp3";
+    audio.src = bilingual
+      ? "audio/continuous/custom-single-words-uk-us-cn-note.mp3"
+      : (single
+        ? "audio/continuous/custom-single-words-uk-us.mp3"
+        : "audio/continuous/custom-uk-us.mp3");
     audio.load();
     const pending = state.listening.index;
     state.listening.pendingStartIndex = null;
@@ -3267,7 +3282,9 @@
     setListeningTrack(pending);
     renderListening();
     updateMediaSessionMetadata({
-      english: single ? "我的单词 · 英式 + 美式" : "完整词库 · 英式 + 美式",
+      english: bilingual
+        ? "我的单词 · 英式 + 美式 + 中文 + 笔记"
+        : (single ? "我的单词 · 英式 + 美式" : "完整词库 · 英式 + 美式"),
       chinese: `${state.listening.playlist.length} 个单词连续随身听`
     }, 0);
     audio.play().catch((error) => {
@@ -3689,7 +3706,9 @@
     const current = state.listening.playlist[state.listening.index];
     dom.listeningProgress.textContent = `${index} / ${total}`;
     dom.listeningEnglish.textContent = current?.english || "准备开始";
-    dom.listeningChinese.textContent = current?.chinese || "选择内容后点击开始";
+    dom.listeningChinese.textContent = current
+      ? `${current.chinese || ""}${current.note ? ` · ${current.note}` : ""}`
+      : "选择内容后点击开始";
     dom.listeningPlayButton.textContent = state.listening.preparing
       ? "准备中"
       : state.listening.playing
