@@ -350,7 +350,9 @@
       continuous: false
     },
     autoSubmitTimer: null,
-    preloaded: ""
+    preloaded: "",
+    topShortcutBuffer: "",
+    topShortcutLastAt: 0
   };
 
   init();
@@ -1358,6 +1360,27 @@
     document.addEventListener("keydown", (event) => {
       if (event.key === "Escape" && !dom.settingsDrawer.hidden) {
         closeSettings();
+        return;
+      }
+      if (
+        state.activeTab === "custom"
+        && state.customSession.source === "prediction"
+        && state.customSession.started
+        && !state.customSession.complete
+        && /^[topTOP]$/.test(event.key)
+        && !event.metaKey
+        && !event.ctrlKey
+        && !event.altKey
+      ) {
+        const now = Date.now();
+        if (now - state.topShortcutLastAt > 900) state.topShortcutBuffer = "";
+        state.topShortcutLastAt = now;
+        state.topShortcutBuffer = (state.topShortcutBuffer + event.key.toLowerCase()).slice(-3);
+        event.preventDefault();
+        if (state.topShortcutBuffer === "top") {
+          state.topShortcutBuffer = "";
+          playCurrentCustom();
+        }
         return;
       }
       if (
@@ -4412,7 +4435,7 @@
     dom.customAnswerLabel.textContent = session.source === "prediction" ? "填写“数字或日期内容”一栏" : "英文拼写";
     dom.customAnswerInput.placeholder = session.source === "prediction" ? "例如 07749132760 / £25.50 / March 15" : "填写完整英文";
     dom.customListenHint.textContent = session.source === "prediction"
-      ? "听标准英文读法，填写你最初录入的“数字或日期内容”，不是填写英文读法。"
+      ? "听标准英文读法，填写你最初录入的“数字或日期内容”。快捷键：T-O-P 重播、Enter 提交/下一题。"
       : "按 Tab 可重播当前内容";
     dom.customSubmitHint.textContent = settings.submitMode === "auto" ? "自动提交" : "手动提交";
     dom.restartCustomButton.disabled = !session.started;
