@@ -311,8 +311,10 @@
     voicePackPromise: null,
     audioBlobCache: new Map(),
     continuousManifest: null,
+    singleWordManifest: null,
     continuousManifestPromise: null,
     continuousAudioPrefetched: false,
+    singleWordAudioPrefetched: false,
     listeningStartOptionsKey: "",
     neuralCooldownUntil: 0,
     ipaMap: new Map(),
@@ -556,25 +558,33 @@
     }
   }
 
-  function prefetchContinuousAudio() {
-    if (state.continuousAudioPrefetched) return;
-    state.continuousAudioPrefetched = true;
-    fetch("audio/continuous/custom-uk-us.mp3", { cache: "force-cache" }).catch((error) => {
-      state.continuousAudioPrefetched = false;
+  function prefetchContinuousAudio(mode = "all") {
+    const single = mode === "single";
+    if (single ? state.singleWordAudioPrefetched : state.continuousAudioPrefetched) return;
+    if (single) state.singleWordAudioPrefetched = true;
+    else state.continuousAudioPrefetched = true;
+    const source = single
+      ? "audio/continuous/custom-single-words-uk-us.mp3"
+      : "audio/continuous/custom-uk-us.mp3";
+    fetch(source, { cache: "force-cache" }).catch((error) => {
+      if (single) state.singleWordAudioPrefetched = false;
+      else state.continuousAudioPrefetched = false;
       console.debug("Continuous audio preload skipped.", error);
     });
   }
 
   async function loadContinuousManifest() {
     try {
-      const response = await fetch("audio/continuous/custom-uk-us.json?v=20261013", { cache: "no-cache" });
-      if (!response.ok) return null;
-      state.continuousManifest = await response.json();
-      return state.continuousManifest;
+      const [allResponse, singleResponse] = await Promise.all([
+        fetch("audio/continuous/custom-uk-us.json?v=20261013", { cache: "no-cache" }),
+        fetch("audio/continuous/custom-single-words-uk-us.json?v=20261013", { cache: "no-cache" })
+      ]);
+      state.continuousManifest = allResponse.ok ? await allResponse.json() : null;
+      state.singleWordManifest = singleResponse.ok ? await singleResponse.json() : null;
     } catch (error) {
       console.debug("Continuous manifest unavailable.", error);
-      return null;
     }
+    return state.continuousManifest;
   }
 
   async function loadVoicePackIndex() {
@@ -1400,7 +1410,8 @@
     if (tab === "dates") renderDateSession();
     if (tab === "listening") {
       renderListening();
-      prefetchContinuousAudio();
+      prefetchContinuousAudio("all");
+      prefetchContinuousAudio("single");
     }
     if (tab === "custom") renderCustom();
     if (tab === "prediction") renderPrediction();
@@ -3069,6 +3080,19 @@
         }
       });
     }
+    if (selected.has("singlewords")) {
+      state.customItems
+        .filter((item) => /^[A-Za-z]+(?:[-'][A-Za-z]+)*$/.test(String(item.text || "").trim()))
+        .forEach((item) => {
+          entries.push({
+            kind: "text",
+            english: item.text,
+            chinese: item.translation || item.text,
+            audioText: item.text,
+            key: `singleword:${item.id}`
+          });
+        });
+    }
     if (selected.has("prediction")) {
       state.predictionItems.forEach((item) => {
         entries.push({
@@ -3149,8 +3173,9 @@
     const selected = new Set(
       Array.from(dom.listeningCategories.querySelectorAll("input:checked")).map((input) => input.dataset.listeningCategory)
     );
-    if (selected.size === 1 && selected.has("custom") && dom.listeningMode.value === "english" && state.customItems.length >= 900) {
-      startContinuousVocabulary(token, playlist);
+    if (selected.size === 1 && dom.listeningMode.value === "english" && (selected.has("custom") || selected.has("singlewords"))) {
+      const mode = selected.has("singlewords") ? "single" : "all";
+      startContinuousVocabulary(token, playlist, mode);
       return;
     }
     playListeningSequentially(playlist, token, 0).catch((error) => {
@@ -3167,8 +3192,11 @@
     }).catch((error) => console.debug("Voice preload stopped.", error));
   }
 
-  async function startContinuousVocabulary(token, playlist) {
-    const manifest = state.continuousManifest || await state.continuousManifestPromise;
+  async function startContinuousVocabulary(token, playlist, mode = "all") {
+    const single = mode === "single";
+    const manifest = (single ? state.singleWordManifest : state.continuousManifest)
+      || await state.continuousManifestPromise
+      || (single ? state.singleWordManifest : state.continuousManifest);
     if (token !== state.listening.token) return;
     if (manifest?.entries?.length) {
       const byText = new Map(playlist.map((entry) => [entry.english, entry]));
@@ -3194,11 +3222,16 @@
     audio.playbackRate = Number(dom.listeningSpeed.value) || 1;
     audio.preservesPitch = true;
     audio.webkitPreservesPitch = true;
-    audio.src = "audio/continuous/custom-uk-us.mp3";
+    audio.src = single
+      ? "audio/continuous/custom-single-words-uk-us.mp3"
+      : "audio/continuous/custom-uk-us.mp3";
     audio.load();
     setListeningTrack(0);
     renderListening();
-    updateMediaSessionMetadata({ english: "完整词库 · 英式 + 美式", chinese: "918 个单词连续随身听" }, 0);
+    updateMediaSessionMetadata({
+      english: single ? "我的单词 · 英式 + 美式" : "完整词库 · 英式 + 美式",
+      chinese: `${state.listening.playlist.length} 个单词连续随身听`
+    }, 0);
     audio.play().catch((error) => {
       if (token !== state.listening.token) return;
       state.listening.playing = false;
@@ -4444,14 +4477,14 @@
     state.customSession.answered += 1;
     if (correct) {
       state.customSession.correct += 1;
-      advanceHearingWrong(item);
+      removeHearingWrong(item.id);
     } else {
       addOrResetHearingWrong(item);
     }
     dom.customResult.hidden = false;
     dom.customResult.classList.toggle("is-wrong", !correct);
     dom.customResultMark.textContent = correct ? "正确" : "需要再练";
-    dom.customResultNote.textContent = correct ? "拼写正确" : "已自动加入听力错词本";
+    dom.customResultNote.textContent = correct ? "拼写正确，已移出听力错词本" : "已自动加入听力错词本";
     const predictionMode = state.customSession.source === "prediction";
     dom.customCorrectAnswerLabel.textContent = predictionMode ? "原始数字 / 日期" : "正确答案";
     dom.customCorrectPhoneticLabel.textContent = predictionMode ? "标准英文读法" : "英式音标";
@@ -4527,6 +4560,15 @@
       });
     }
     saveHearingWrong();
+  }
+
+  function removeHearingWrong(id) {
+    const next = state.hearingWrong.filter((entry) => entry.id !== id);
+    if (next.length !== state.hearingWrong.length) {
+      state.hearingWrong = next;
+      saveHearingWrong();
+      renderHearingWrong();
+    }
   }
 
   function advanceHearingWrong(item) {
@@ -4605,7 +4647,14 @@
       retry.dataset.action = "retry";
       retry.dataset.id = item.id;
       retry.innerHTML = '<svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 4v6h-6"/></svg>';
-      actions.append(play, retry);
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "small-action";
+      remove.dataset.action = "remove";
+      remove.dataset.id = item.id;
+      remove.textContent = "×";
+      remove.setAttribute("aria-label", "移出错词本");
+      actions.append(play, retry, remove);
       card.append(main, actions);
       dom.hearingWrongList.appendChild(card);
     });
@@ -4657,6 +4706,9 @@
     }
     if (button.dataset.action === "retry") {
       startCustomPractice([{ id: item.id, text: item.text, translation: item.translation, note: item.note }], "hearing");
+    }
+    if (button.dataset.action === "remove") {
+      removeHearingWrong(item.id);
     }
   }
 

@@ -1,0 +1,2552 @@
+{
+  "version": 1,
+  "count": 509,
+  "duration": 1822.222947845804,
+  "entries": [
+    {
+      "text": "eye",
+      "start": 0.0,
+      "duration": 3.165895691609977
+    },
+    {
+      "text": "external",
+      "start": 3.165895691609977,
+      "duration": 3.5507482993197277
+    },
+    {
+      "text": "experience",
+      "start": 6.716643990929705,
+      "duration": 4.191972789115646
+    },
+    {
+      "text": "exposure",
+      "start": 10.908616780045351,
+      "duration": 3.6334240362811805
+    },
+    {
+      "text": "exercise",
+      "start": 14.542040816326532,
+      "duration": 4.023990929705215
+    },
+    {
+      "text": "exclusive",
+      "start": 18.566031746031747,
+      "duration": 3.8080272108843545
+    },
+    {
+      "text": "evidence",
+      "start": 22.3740589569161,
+      "duration": 3.375963718820863
+    },
+    {
+      "text": "evaporation",
+      "start": 25.750022675736965,
+      "duration": 4.216009070294785
+    },
+    {
+      "text": "Europe",
+      "start": 29.96603174603175,
+      "duration": 3.420725623582765
+    },
+    {
+      "text": "estimate",
+      "start": 33.386757369614514,
+      "duration": 3.4720181405895687
+    },
+    {
+      "text": "essays",
+      "start": 36.85877551020408,
+      "duration": 3.470430839002269
+    },
+    {
+      "text": "erosion",
+      "start": 40.32920634920635,
+      "duration": 3.7839909297052188
+    },
+    {
+      "text": "equal",
+      "start": 44.11319727891157,
+      "duration": 3.1199999999999974
+    },
+    {
+      "text": "entertainment",
+      "start": 47.23319727891157,
+      "duration": 3.8193650793650846
+    },
+    {
+      "text": "enlargements",
+      "start": 51.05256235827665,
+      "duration": 2.9200000000000017
+    },
+    {
+      "text": "engineers",
+      "start": 53.972562358276654,
+      "duration": 3.6400453514739226
+    },
+    {
+      "text": "engineering",
+      "start": 57.61260770975058,
+      "duration": 4.263990929705216
+    },
+    {
+      "text": "energy",
+      "start": 61.87659863945579,
+      "duration": 3.5440362811791317
+    },
+    {
+      "text": "employers",
+      "start": 65.42063492063492,
+      "duration": 3.587528344671199
+    },
+    {
+      "text": "emperor",
+      "start": 69.00816326530612,
+      "duration": 3.143990929705211
+    },
+    {
+      "text": "elephants",
+      "start": 72.15215419501133,
+      "duration": 4.28857142857143
+    },
+    {
+      "text": "electronics",
+      "start": 76.44072562358276,
+      "duration": 4.792063492063491
+    },
+    {
+      "text": "eletrical",
+      "start": 81.23278911564626,
+      "duration": 2.5600453514739314
+    },
+    {
+      "text": "efficient",
+      "start": 83.79283446712019,
+      "duration": 3.376009070294785
+    },
+    {
+      "text": "economy",
+      "start": 87.16884353741497,
+      "duration": 3.5680272108843525
+    },
+    {
+      "text": "ecology",
+      "start": 90.73687074829932,
+      "duration": 3.712018140589578
+    },
+    {
+      "text": "eclipse",
+      "start": 94.4488888888889,
+      "duration": 3.4000000000000057
+    },
+    {
+      "text": "drying",
+      "start": 97.84888888888891,
+      "duration": 4.096009070294784
+    },
+    {
+      "text": "drugs",
+      "start": 101.94489795918369,
+      "duration": 4.0480272108843565
+    },
+    {
+      "text": "drought",
+      "start": 105.99292517006805,
+      "duration": 3.2026303854875238
+    },
+    {
+      "text": "dried",
+      "start": 109.19555555555557,
+      "duration": 3.856009070294789
+    },
+    {
+      "text": "drawer",
+      "start": 113.05156462585036,
+      "duration": 3.207981859410438
+    },
+    {
+      "text": "doubles",
+      "start": 116.2595464852608,
+      "duration": 3.232018140589574
+    },
+    {
+      "text": "donkey",
+      "start": 119.49156462585037,
+      "duration": 3.2560090702947804
+    },
+    {
+      "text": "documentation",
+      "start": 122.74757369614515,
+      "duration": 4.481043083900232
+    },
+    {
+      "text": "divorce",
+      "start": 127.22861678004539,
+      "duration": 3.519999999999996
+    },
+    {
+      "text": "dive",
+      "start": 130.74861678004538,
+      "duration": 3.1503854875283537
+    },
+    {
+      "text": "dismiss",
+      "start": 133.89900226757374,
+      "duration": 2.9296598639455738
+    },
+    {
+      "text": "dishwasher",
+      "start": 136.8286621315193,
+      "duration": 3.7120181405895494
+    },
+    {
+      "text": "digestive",
+      "start": 140.54068027210886,
+      "duration": 3.8675736961451435
+    },
+    {
+      "text": "digestion",
+      "start": 144.408253968254,
+      "duration": 4.667074829931948
+    },
+    {
+      "text": "digest",
+      "start": 149.07532879818595,
+      "duration": 3.6233560090703065
+    },
+    {
+      "text": "diet",
+      "start": 152.69868480725626,
+      "duration": 3.143990929705211
+    },
+    {
+      "text": "diagram",
+      "start": 155.84267573696147,
+      "duration": 3.207210884353742
+    },
+    {
+      "text": "depth",
+      "start": 159.0498866213152,
+      "duration": 2.614512471655331
+    },
+    {
+      "text": "depression",
+      "start": 161.66439909297054,
+      "duration": 3.806712018140587
+    },
+    {
+      "text": "democratic",
+      "start": 165.47111111111113,
+      "duration": 2.9920181405895505
+    },
+    {
+      "text": "density",
+      "start": 168.46312925170068,
+      "duration": 3.447981859410419
+    },
+    {
+      "text": "demand",
+      "start": 171.9111111111111,
+      "duration": 3.453242630385489
+    },
+    {
+      "text": "defenses",
+      "start": 175.3643537414966,
+      "duration": 3.3588208616780264
+    },
+    {
+      "text": "decorations",
+      "start": 178.7231746031746,
+      "duration": 4.038820861678005
+    },
+    {
+      "text": "decline",
+      "start": 182.76199546485262,
+      "duration": 3.936870748299299
+    },
+    {
+      "text": "deck",
+      "start": 186.69886621315192,
+      "duration": 2.8720181405895744
+    },
+    {
+      "text": "dates",
+      "start": 189.5708843537415,
+      "duration": 3.9040362811791454
+    },
+    {
+      "text": "curtain",
+      "start": 193.47492063492064,
+      "duration": 3.351972789115649
+    },
+    {
+      "text": "current",
+      "start": 196.82689342403629,
+      "duration": 3.1599999999999966
+    },
+    {
+      "text": "crops",
+      "start": 199.98689342403628,
+      "duration": 3.928027210884352
+    },
+    {
+      "text": "critical",
+      "start": 203.91492063492063,
+      "duration": 3.2560090702947946
+    },
+    {
+      "text": "crime",
+      "start": 207.17092970521543,
+      "duration": 3.2320181405895596
+    },
+    {
+      "text": "Creative",
+      "start": 210.402947845805,
+      "duration": 3.640000000000015
+    },
+    {
+      "text": "cracks",
+      "start": 214.042947845805,
+      "duration": 4.144036281179126
+    },
+    {
+      "text": "coursework",
+      "start": 218.18698412698413,
+      "duration": 4.360045351473929
+    },
+    {
+      "text": "cotton",
+      "start": 222.54702947845806,
+      "duration": 4.006575963718831
+    },
+    {
+      "text": "costume",
+      "start": 226.5536054421769,
+      "duration": 4.42984126984129
+    },
+    {
+      "text": "cosmetics",
+      "start": 230.98344671201818,
+      "duration": 4.1200000000000045
+    },
+    {
+      "text": "corn",
+      "start": 235.10344671201818,
+      "duration": 3.873333333333335
+    },
+    {
+      "text": "cooperation",
+      "start": 238.97678004535152,
+      "duration": 4.288027210884337
+    },
+    {
+      "text": "cooler",
+      "start": 243.26480725623585,
+      "duration": 3.856054421768704
+    },
+    {
+      "text": "contrast",
+      "start": 247.12086167800456,
+      "duration": 3.687981859410428
+    },
+    {
+      "text": "connected",
+      "start": 250.808843537415,
+      "duration": 3.448979591836718
+    },
+    {
+      "text": "confusion",
+      "start": 254.2578231292517,
+      "duration": 4.613605442176862
+    },
+    {
+      "text": "concentration",
+      "start": 258.87142857142857,
+      "duration": 4.216009070294774
+    },
+    {
+      "text": "concentrated",
+      "start": 263.08743764172334,
+      "duration": 4.864036281179153
+    },
+    {
+      "text": "compulsory",
+      "start": 267.9514739229025,
+      "duration": 3.9039909297052304
+    },
+    {
+      "text": "composer",
+      "start": 271.8554648526077,
+      "duration": 3.5946938775510375
+    },
+    {
+      "text": "competition",
+      "start": 275.45015873015876,
+      "duration": 3.8560090702948173
+    },
+    {
+      "text": "companions",
+      "start": 279.3061678004536,
+      "duration": 4.528027210884375
+    },
+    {
+      "text": "community",
+      "start": 283.83419501133795,
+      "duration": 3.7360090702948128
+    },
+    {
+      "text": "communication",
+      "start": 287.57020408163277,
+      "duration": 4.719863945578254
+    },
+    {
+      "text": "common",
+      "start": 292.290068027211,
+      "duration": 3.8320181405895823
+    },
+    {
+      "text": "combined",
+      "start": 296.1220861678006,
+      "duration": 4.384036281179135
+    },
+    {
+      "text": "colours",
+      "start": 300.50612244897974,
+      "duration": 2.1994104308390092
+    },
+    {
+      "text": "coins",
+      "start": 302.70553287981875,
+      "duration": 4.0000453514738865
+    },
+    {
+      "text": "coin",
+      "start": 306.70557823129263,
+      "duration": 3.2560090702947946
+    },
+    {
+      "text": "cognitive",
+      "start": 309.96158730158743,
+      "duration": 3.9039909297052304
+    },
+    {
+      "text": "coconut",
+      "start": 313.86557823129266,
+      "duration": 1.8560090702947605
+    },
+    {
+      "text": "coating",
+      "start": 315.7215873015874,
+      "duration": 4.168027210884361
+    },
+    {
+      "text": "clothing",
+      "start": 319.8896145124718,
+      "duration": 3.8799999999999955
+    },
+    {
+      "text": "clothes",
+      "start": 323.7696145124718,
+      "duration": 4.251972789115598
+    },
+    {
+      "text": "cleaning",
+      "start": 328.0215873015874,
+      "duration": 4.09600907029477
+    },
+    {
+      "text": "clean",
+      "start": 332.11759637188214,
+      "duration": 3.207981859410438
+    },
+    {
+      "text": "clay",
+      "start": 335.3255782312926,
+      "duration": 3.1119727891156685
+    },
+    {
+      "text": "claws",
+      "start": 338.43755102040825,
+      "duration": 3.9520634920634734
+    },
+    {
+      "text": "classification",
+      "start": 342.3896145124717,
+      "duration": 4.383990929705249
+    },
+    {
+      "text": "classical",
+      "start": 346.773605442177,
+      "duration": 3.4720181405895687
+    },
+    {
+      "text": "cities",
+      "start": 350.24562358276654,
+      "duration": 3.6080272108843587
+    },
+    {
+      "text": "circle",
+      "start": 353.8536507936509,
+      "duration": 3.4720181405895687
+    },
+    {
+      "text": "cigar",
+      "start": 357.32566893424047,
+      "duration": 3.543990929705217
+    },
+    {
+      "text": "chemist",
+      "start": 360.8696598639457,
+      "duration": 3.183990929705203
+    },
+    {
+      "text": "cheaper",
+      "start": 364.0536507936509,
+      "duration": 4.0000453514738865
+    },
+    {
+      "text": "chart",
+      "start": 368.0536961451248,
+      "duration": 3.160000000000025
+    },
+    {
+      "text": "charity",
+      "start": 371.2136961451248,
+      "duration": 3.4480272108843906
+    },
+    {
+      "text": "Change",
+      "start": 374.6617233560092,
+      "duration": 3.4239909297052122
+    },
+    {
+      "text": "challenge",
+      "start": 378.0857142857144,
+      "duration": 3.4479818594103904
+    },
+    {
+      "text": "central",
+      "start": 381.5336961451248,
+      "duration": 3.568979591836751
+    },
+    {
+      "text": "caves",
+      "start": 385.10267573696154,
+      "duration": 3.175600907029491
+    },
+    {
+      "text": "catch",
+      "start": 388.27827664399103,
+      "duration": 1.7839909297052259
+    },
+    {
+      "text": "castle",
+      "start": 390.06226757369626,
+      "duration": 3.224036281179167
+    },
+    {
+      "text": "Carpets",
+      "start": 393.2863038548754,
+      "duration": 3.4720181405895687
+    },
+    {
+      "text": "cargo",
+      "start": 396.758321995465,
+      "duration": 3.365306122448999
+    },
+    {
+      "text": "carbon",
+      "start": 400.123628117914,
+      "duration": 3.43002267573695
+    },
+    {
+      "text": "candles",
+      "start": 403.55365079365095,
+      "duration": 3.391156462585002
+    },
+    {
+      "text": "cameras",
+      "start": 406.94480725623595,
+      "duration": 3.2926530612245415
+    },
+    {
+      "text": "camels",
+      "start": 410.2374603174605,
+      "duration": 3.3150566893423843
+    },
+    {
+      "text": "camel",
+      "start": 413.5525170068029,
+      "duration": 3.2799999999999727
+    },
+    {
+      "text": "calendar",
+      "start": 416.83251700680285,
+      "duration": 3.6639909297052213
+    },
+    {
+      "text": "calculation",
+      "start": 420.49650793650807,
+      "duration": 4.1200000000000045
+    },
+    {
+      "text": "cake",
+      "start": 424.61650793650807,
+      "duration": 3.1119727891156685
+    },
+    {
+      "text": "cabin",
+      "start": 427.72848072562374,
+      "duration": 4.004217687074799
+    },
+    {
+      "text": "businesses",
+      "start": 431.73269841269854,
+      "duration": 3.7897505668934173
+    },
+    {
+      "text": "buried",
+      "start": 435.52244897959196,
+      "duration": 3.27950113378688
+    },
+    {
+      "text": "budget",
+      "start": 438.80195011337884,
+      "duration": 3.3039909297052077
+    },
+    {
+      "text": "buckets",
+      "start": 442.10594104308404,
+      "duration": 3.141405895691605
+    },
+    {
+      "text": "bridges",
+      "start": 445.24734693877565,
+      "duration": 4.072018140589591
+    },
+    {
+      "text": "bridge",
+      "start": 449.31936507936524,
+      "duration": 1.5216326530612037
+    },
+    {
+      "text": "breed",
+      "start": 450.84099773242644,
+      "duration": 3.194104308390024
+    },
+    {
+      "text": "breathing",
+      "start": 454.03510204081647,
+      "duration": 3.4720181405895687
+    },
+    {
+      "text": "bread",
+      "start": 457.50712018140604,
+      "duration": 3.0176417233560073
+    },
+    {
+      "text": "brain",
+      "start": 460.52476190476204,
+      "duration": 2.476643990929688
+    },
+    {
+      "text": "bowls",
+      "start": 463.00140589569173,
+      "duration": 3.7840362811791124
+    },
+    {
+      "text": "booklet",
+      "start": 466.78544217687084,
+      "duration": 3.1877551020407964
+    },
+    {
+      "text": "bonus",
+      "start": 469.97319727891164,
+      "duration": 3.268253968253987
+    },
+    {
+      "text": "bones",
+      "start": 473.2414512471656,
+      "duration": 3.95201814058953
+    },
+    {
+      "text": "boiler",
+      "start": 477.19346938775516,
+      "duration": 3.8320181405895823
+    },
+    {
+      "text": "boats",
+      "start": 481.02548752834474,
+      "duration": 2.913061224489809
+    },
+    {
+      "text": "boat",
+      "start": 483.93854875283455,
+      "duration": 2.91528344671201
+    },
+    {
+      "text": "biscuits",
+      "start": 486.85383219954656,
+      "duration": 3.4644897959183822
+    },
+    {
+      "text": "birth",
+      "start": 490.31832199546494,
+      "duration": 3.117868480725633
+    },
+    {
+      "text": "benefits",
+      "start": 493.4361904761906,
+      "duration": 3.5365079365079737
+    },
+    {
+      "text": "belt",
+      "start": 496.97269841269855,
+      "duration": 2.9195011337868664
+    },
+    {
+      "text": "bells",
+      "start": 499.8921995464854,
+      "duration": 3.7840362811791692
+    },
+    {
+      "text": "behaviour",
+      "start": 503.6762358276646,
+      "duration": 3.5591383219954764
+    },
+    {
+      "text": "bees",
+      "start": 507.23537414966006,
+      "duration": 3.2080272108843815
+    },
+    {
+      "text": "beer",
+      "start": 510.44340136054444,
+      "duration": 2.896009070294838
+    },
+    {
+      "text": "bear",
+      "start": 513.3394104308393,
+      "duration": 2.939274376417302
+    },
+    {
+      "text": "beach",
+      "start": 516.2786848072566,
+      "duration": 3.09174603174597
+    },
+    {
+      "text": "bay",
+      "start": 519.3704308390026,
+      "duration": 3.0416326530612423
+    },
+    {
+      "text": "battery",
+      "start": 522.4120634920638,
+      "duration": 3.376009070294799
+    },
+    {
+      "text": "batteries",
+      "start": 525.7880725623586,
+      "duration": 3.188934240362869
+    },
+    {
+      "text": "Basement",
+      "start": 528.9770068027215,
+      "duration": 3.2463492063492367
+    },
+    {
+      "text": "baseball",
+      "start": 532.2233560090707,
+      "duration": 3.4906122448979886
+    },
+    {
+      "text": "banks",
+      "start": 535.7139682539687,
+      "duration": 3.904036281179174
+    },
+    {
+      "text": "ban",
+      "start": 539.6180045351479,
+      "duration": 3.0880272108844338
+    },
+    {
+      "text": "balls",
+      "start": 542.7060317460323,
+      "duration": 3.7840362811791692
+    },
+    {
+      "text": "bag",
+      "start": 546.4900680272115,
+      "duration": 2.656009070294772
+    },
+    {
+      "text": "bacteria",
+      "start": 549.1460770975062,
+      "duration": 3.9039909297052873
+    },
+    {
+      "text": "aware",
+      "start": 553.0500680272115,
+      "duration": 3.2560090702947946
+    },
+    {
+      "text": "audiences",
+      "start": 556.3060770975063,
+      "duration": 3.6422222222222445
+    },
+    {
+      "text": "audience",
+      "start": 559.9482993197286,
+      "duration": 3.4720181405896255
+    },
+    {
+      "text": "attitude",
+      "start": 563.4203174603182,
+      "duration": 3.519999999999982
+    },
+    {
+      "text": "Asia",
+      "start": 566.9403174603182,
+      "duration": 2.690612244898034
+    },
+    {
+      "text": "arrows",
+      "start": 569.6309297052162,
+      "duration": 2.3440362811792284
+    },
+    {
+      "text": "army",
+      "start": 571.9749659863954,
+      "duration": 3.2560090702947946
+    },
+    {
+      "text": "Argentina",
+      "start": 575.2309750566902,
+      "duration": 4.603764172335559
+    },
+    {
+      "text": "apartment",
+      "start": 579.8347392290258,
+      "duration": 3.928027210884352
+    },
+    {
+      "text": "anything",
+      "start": 583.7627664399101,
+      "duration": 3.875646258503366
+    },
+    {
+      "text": "antibiotic",
+      "start": 587.6384126984135,
+      "duration": 4.044081632653047
+    },
+    {
+      "text": "anti-freeze",
+      "start": 591.6824943310666,
+      "duration": 4.528027210884375
+    },
+    {
+      "text": "animals",
+      "start": 596.2105215419509,
+      "duration": 3.440952380952467
+    },
+    {
+      "text": "ancestors",
+      "start": 599.6514739229034,
+      "duration": 4.355691609977384
+    },
+    {
+      "text": "analysis",
+      "start": 604.0071655328808,
+      "duration": 3.9520181405896437
+    },
+    {
+      "text": "America",
+      "start": 607.9591836734704,
+      "duration": 3.6409977324262854
+    },
+    {
+      "text": "airlines",
+      "start": 611.6001814058967,
+      "duration": 2.68004535147395
+    },
+    {
+      "text": "air",
+      "start": 614.2802267573707,
+      "duration": 2.103990929705219
+    },
+    {
+      "text": "agriculture",
+      "start": 616.3842176870759,
+      "duration": 3.8372335600907945
+    },
+    {
+      "text": "aging",
+      "start": 620.2214512471667,
+      "duration": 4.096009070294826
+    },
+    {
+      "text": "advisors",
+      "start": 624.3174603174615,
+      "duration": 3.891746031746038
+    },
+    {
+      "text": "advertisements",
+      "start": 628.2092063492075,
+      "duration": 4.200952380952344
+    },
+    {
+      "text": "advertise",
+      "start": 632.4101587301599,
+      "duration": 3.6430839002267703
+    },
+    {
+      "text": "adventure",
+      "start": 636.0532426303866,
+      "duration": 3.90403628117906
+    },
+    {
+      "text": "adults",
+      "start": 639.9572789115657,
+      "duration": 4.0
+    },
+    {
+      "text": "additional",
+      "start": 643.9572789115657,
+      "duration": 3.807981859410461
+    },
+    {
+      "text": "actors",
+      "start": 647.7652607709762,
+      "duration": 3.7600453514738774
+    },
+    {
+      "text": "action",
+      "start": 651.52530612245,
+      "duration": 3.2319727891156163
+    },
+    {
+      "text": "acid",
+      "start": 654.7572789115657,
+      "duration": 3.0679818594104518
+    },
+    {
+      "text": "accidents",
+      "start": 657.8252607709761,
+      "duration": 3.7114739229025417
+    },
+    {
+      "text": "accept",
+      "start": 661.5367346938787,
+      "duration": 3.161088435374154
+    },
+    {
+      "text": "accent",
+      "start": 664.6978231292528,
+      "duration": 3.2181405895690887
+    },
+    {
+      "text": "resemble",
+      "start": 667.9159637188219,
+      "duration": 4.168027210884361
+    },
+    {
+      "text": "towers",
+      "start": 672.0839909297063,
+      "duration": 3.95201814058953
+    },
+    {
+      "text": "shadow",
+      "start": 676.0360090702958,
+      "duration": 3.49600907029469
+    },
+    {
+      "text": "Industrial",
+      "start": 679.5320181405905,
+      "duration": 3.8799999999999955
+    },
+    {
+      "text": "layout",
+      "start": 683.4120181405905,
+      "duration": 3.49600907029469
+    },
+    {
+      "text": "garage",
+      "start": 686.9080272108852,
+      "duration": 3.4960090702948037
+    },
+    {
+      "text": "stone",
+      "start": 690.40403628118,
+      "duration": 3.472018140589512
+    },
+    {
+      "text": "brutalism",
+      "start": 693.8760544217695,
+      "duration": 4.552063492063553
+    },
+    {
+      "text": "cost",
+      "start": 698.428117913833,
+      "duration": 3.0479818594103563
+    },
+    {
+      "text": "construction",
+      "start": 701.4760997732434,
+      "duration": 4.806893424036275
+    },
+    {
+      "text": "building",
+      "start": 706.2829931972797,
+      "duration": 3.303990929705151
+    },
+    {
+      "text": "concrete",
+      "start": 709.5869841269848,
+      "duration": 3.4960090702948037
+    },
+    {
+      "text": "transition",
+      "start": 713.0829931972796,
+      "duration": 4.0
+    },
+    {
+      "text": "square",
+      "start": 717.0829931972796,
+      "duration": 3.9039909297051736
+    },
+    {
+      "text": "wood",
+      "start": 720.9869841269848,
+      "duration": 2.993650793650886
+    },
+    {
+      "text": "concern",
+      "start": 723.9806349206357,
+      "duration": 4.072018140589535
+    },
+    {
+      "text": "consideration",
+      "start": 728.0526530612252,
+      "duration": 4.240000000000009
+    },
+    {
+      "text": "changes",
+      "start": 732.2926530612252,
+      "duration": 4.336054421768722
+    },
+    {
+      "text": "roof",
+      "start": 736.628707482994,
+      "duration": 3.0399999999999636
+    },
+    {
+      "text": "climate",
+      "start": 739.6687074829939,
+      "duration": 3.256009070294681
+    },
+    {
+      "text": "migration",
+      "start": 742.9247165532886,
+      "duration": 4.159682539682535
+    },
+    {
+      "text": "navigate",
+      "start": 747.0843990929711,
+      "duration": 3.441360544217673
+    },
+    {
+      "text": "direct",
+      "start": 750.5257596371888,
+      "duration": 3.256009070294681
+    },
+    {
+      "text": "relocate",
+      "start": 753.7817687074835,
+      "duration": 4.1200000000000045
+    },
+    {
+      "text": "transmitters",
+      "start": 757.9017687074835,
+      "duration": 3.683628117913827
+    },
+    {
+      "text": "head",
+      "start": 761.5853968253973,
+      "duration": 2.896009070294781
+    },
+    {
+      "text": "humans",
+      "start": 764.4814058956921,
+      "duration": 4.235736961451266
+    },
+    {
+      "text": "signals",
+      "start": 768.7171428571434,
+      "duration": 3.5505668934240475
+    },
+    {
+      "text": "radio",
+      "start": 772.2677097505674,
+      "duration": 2.7786848072562407
+    },
+    {
+      "text": "conducted",
+      "start": 775.0463945578236,
+      "duration": 4.528027210884375
+    },
+    {
+      "text": "previously",
+      "start": 779.574421768708,
+      "duration": 3.8320181405895255
+    },
+    {
+      "text": "studies",
+      "start": 783.4064399092975,
+      "duration": 3.5230839002267658
+    },
+    {
+      "text": "satellite",
+      "start": 786.9295238095243,
+      "duration": 3.712018140589521
+    },
+    {
+      "text": "vacation",
+      "start": 790.6415419501138,
+      "duration": 4.288027210884366
+    },
+    {
+      "text": "business",
+      "start": 794.9295691609982,
+      "duration": 3.447981859410447
+    },
+    {
+      "text": "Egypt",
+      "start": 798.3775510204086,
+      "duration": 1.9839909297052145
+    },
+    {
+      "text": "last",
+      "start": 800.3615419501139,
+      "duration": 3.3040362811790374
+    },
+    {
+      "text": "passenger",
+      "start": 803.6655782312929,
+      "duration": 3.59197278911563
+    },
+    {
+      "text": "India",
+      "start": 807.2575510204085,
+      "duration": 3.2661224489795586
+    },
+    {
+      "text": "ill",
+      "start": 810.5236734693881,
+      "duration": 3.0160090702947855
+    },
+    {
+      "text": "wedding",
+      "start": 813.5396825396829,
+      "duration": 3.3009977324262536
+    },
+    {
+      "text": "October",
+      "start": 816.8406802721091,
+      "duration": 3.5439909297052736
+    },
+    {
+      "text": "November",
+      "start": 820.3846712018144,
+      "duration": 3.3999999999999773
+    },
+    {
+      "text": "presents",
+      "start": 823.7846712018144,
+      "duration": 3.447981859410447
+    },
+    {
+      "text": "stress",
+      "start": 827.2326530612248,
+      "duration": 3.328027210884329
+    },
+    {
+      "text": "transport",
+      "start": 830.5606802721092,
+      "duration": 3.5892970521541656
+    },
+    {
+      "text": "invitations",
+      "start": 834.1499773242633,
+      "duration": 2.919999999999959
+    },
+    {
+      "text": "deposit",
+      "start": 837.0699773242633,
+      "duration": 3.4207256235827117
+    },
+    {
+      "text": "ramps",
+      "start": 840.490702947846,
+      "duration": 4.000045351474
+    },
+    {
+      "text": "cliff",
+      "start": 844.49074829932,
+      "duration": 3.0160090702947855
+    },
+    {
+      "text": "bay",
+      "start": 847.5067573696148,
+      "duration": 3.0416326530612423
+    },
+    {
+      "text": "directions",
+      "start": 850.548390022676,
+      "duration": 3.759999999999991
+    },
+    {
+      "text": "professional",
+      "start": 854.308390022676,
+      "duration": 3.59201814058963
+    },
+    {
+      "text": "photographer",
+      "start": 857.9004081632656,
+      "duration": 3.928027210884352
+    },
+    {
+      "text": "camera",
+      "start": 861.82843537415,
+      "duration": 3.5679818594104518
+    },
+    {
+      "text": "whether",
+      "start": 865.3964172335604,
+      "duration": 3.2560090702947946
+    },
+    {
+      "text": "late",
+      "start": 868.6524263038552,
+      "duration": 2.943990929705251
+    },
+    {
+      "text": "last",
+      "start": 871.5964172335605,
+      "duration": 3.3040362811790374
+    },
+    {
+      "text": "commercial",
+      "start": 874.9004535147395,
+      "duration": 3.457414965986345
+    },
+    {
+      "text": "automobiles",
+      "start": 878.3578684807259,
+      "duration": 3.904036281179174
+    },
+    {
+      "text": "prohibited",
+      "start": 882.261904761905,
+      "duration": 3.6160090702946945
+    },
+    {
+      "text": "observe",
+      "start": 885.8779138321997,
+      "duration": 3.4719727891156253
+    },
+    {
+      "text": "manufacturers",
+      "start": 889.3498866213154,
+      "duration": 5.086213151927495
+    },
+    {
+      "text": "manufactures",
+      "start": 894.4360997732429,
+      "duration": 5.056009070294749
+    },
+    {
+      "text": "showcased",
+      "start": 899.4921088435376,
+      "duration": 4.421360544217691
+    },
+    {
+      "text": "length",
+      "start": 903.9134693877553,
+      "duration": 2.784988662131582
+    },
+    {
+      "text": "feedback",
+      "start": 906.6984580498869,
+      "duration": 3.5920181405895164
+    },
+    {
+      "text": "events",
+      "start": 910.2904761904764,
+      "duration": 3.3642630385487564
+    },
+    {
+      "text": "parking",
+      "start": 913.6547392290252,
+      "duration": 3.8560090702948173
+    },
+    {
+      "text": "previously",
+      "start": 917.51074829932,
+      "duration": 3.8320181405895255
+    },
+    {
+      "text": "plate",
+      "start": 921.3427664399095,
+      "duration": 2.896009070294781
+    },
+    {
+      "text": "ingredients",
+      "start": 924.2387755102043,
+      "duration": 4.068072562358225
+    },
+    {
+      "text": "cooking",
+      "start": 928.3068480725625,
+      "duration": 3.6160090702948082
+    },
+    {
+      "text": "waiting",
+      "start": 931.9228571428573,
+      "duration": 4.0
+    },
+    {
+      "text": "guide",
+      "start": 935.9228571428573,
+      "duration": 3.01473922902494
+    },
+    {
+      "text": "correct",
+      "start": 938.9375963718823,
+      "duration": 3.154693877550926
+    },
+    {
+      "text": "comments",
+      "start": 942.0922902494332,
+      "duration": 3.4426303854875187
+    },
+    {
+      "text": "concert",
+      "start": 945.5349206349207,
+      "duration": 2.824036281179133
+    },
+    {
+      "text": "threat",
+      "start": 948.3589569160998,
+      "duration": 3.13600907029479
+    },
+    {
+      "text": "Theater",
+      "start": 951.4949659863946,
+      "duration": 3.2320181405896165
+    },
+    {
+      "text": "band",
+      "start": 954.7269841269842,
+      "duration": 2.9920181405896074
+    },
+    {
+      "text": "flute",
+      "start": 957.7190022675738,
+      "duration": 2.9920181405894937
+    },
+    {
+      "text": "chess",
+      "start": 960.7110204081633,
+      "duration": 3.160000000000082
+    },
+    {
+      "text": "latest",
+      "start": 963.8710204081634,
+      "duration": 3.352018140589621
+    },
+    {
+      "text": "report",
+      "start": 967.223038548753,
+      "duration": 3.472018140589512
+    },
+    {
+      "text": "private",
+      "start": 970.6950566893426,
+      "duration": 3.2320181405895028
+    },
+    {
+      "text": "repeats",
+      "start": 973.927074829932,
+      "duration": 3.6400453514739866
+    },
+    {
+      "text": "preferably",
+      "start": 977.567120181406,
+      "duration": 3.664036281179051
+    },
+    {
+      "text": "furniture",
+      "start": 981.2311564625851,
+      "duration": 3.5679818594104518
+    },
+    {
+      "text": "initially",
+      "start": 984.7991383219955,
+      "duration": 4.168027210884361
+    },
+    {
+      "text": "house",
+      "start": 988.9671655328799,
+      "duration": 3.159999999999968
+    },
+    {
+      "text": "apartment",
+      "start": 992.1271655328799,
+      "duration": 3.928027210884352
+    },
+    {
+      "text": "required",
+      "start": 996.0551927437642,
+      "duration": 4.192018140589539
+    },
+    {
+      "text": "cultural",
+      "start": 1000.2472108843538,
+      "duration": 3.472018140589512
+    },
+    {
+      "text": "culture",
+      "start": 1003.7192290249433,
+      "duration": 3.2320181405895028
+    },
+    {
+      "text": "centre",
+      "start": 1006.9512471655328,
+      "duration": 3.3760090702946854
+    },
+    {
+      "text": "central",
+      "start": 1010.3272562358275,
+      "duration": 3.568979591836751
+    },
+    {
+      "text": "Relocation",
+      "start": 1013.8962358276642,
+      "duration": 3.04004535147385
+    },
+    {
+      "text": "stars",
+      "start": 1016.9362811791381,
+      "duration": 4.262857142857229
+    },
+    {
+      "text": "fauna",
+      "start": 1021.1991383219953,
+      "duration": 3.376009070294799
+    },
+    {
+      "text": "flora",
+      "start": 1024.57514739229,
+      "duration": 3.3520181405897347
+    },
+    {
+      "text": "camels",
+      "start": 1027.9271655328798,
+      "duration": 3.3150566893423274
+    },
+    {
+      "text": "kangaroo",
+      "start": 1031.2422222222222,
+      "duration": 3.7360090702948128
+    },
+    {
+      "text": "sheep",
+      "start": 1034.978231292517,
+      "duration": 3.5920181405895164
+    },
+    {
+      "text": "locker",
+      "start": 1038.5702494331065,
+      "duration": 3.160000000000082
+    },
+    {
+      "text": "plus",
+      "start": 1041.7302494331066,
+      "duration": 3.112018140589498
+    },
+    {
+      "text": "surname",
+      "start": 1044.842267573696,
+      "duration": 3.6160090702946945
+    },
+    {
+      "text": "John",
+      "start": 1048.4582766439908,
+      "duration": 2.60344671201824
+    },
+    {
+      "text": "husband",
+      "start": 1051.061723356009,
+      "duration": 3.376009070294913
+    },
+    {
+      "text": "neither",
+      "start": 1054.437732426304,
+      "duration": 3.327981859410329
+    },
+    {
+      "text": "beneath",
+      "start": 1057.7657142857142,
+      "duration": 1.6522448979592355
+    },
+    {
+      "text": "Dreamtime",
+      "start": 1059.4179591836735,
+      "duration": 1.4480272108844474
+    },
+    {
+      "text": "carvings",
+      "start": 1060.865986394558,
+      "duration": 3.4570521541950257
+    },
+    {
+      "text": "cheapest",
+      "start": 1064.323038548753,
+      "duration": 4.192063492063426
+    },
+    {
+      "text": "criteria",
+      "start": 1068.5151020408164,
+      "duration": 3.759999999999991
+    },
+    {
+      "text": "Sydney",
+      "start": 1072.2751020408164,
+      "duration": 3.7629024943310014
+    },
+    {
+      "text": "arrange",
+      "start": 1076.0380045351474,
+      "duration": 3.54403628117916
+    },
+    {
+      "text": "flights",
+      "start": 1079.5820408163265,
+      "duration": 3.0504308390022743
+    },
+    {
+      "text": "flights",
+      "start": 1082.6324716553288,
+      "duration": 3.0504308390022743
+    },
+    {
+      "text": "forty",
+      "start": 1085.682902494331,
+      "duration": 2.99201814058938
+    },
+    {
+      "text": "five",
+      "start": 1088.6749206349205,
+      "duration": 2.9440362811790237
+    },
+    {
+      "text": "thirteen",
+      "start": 1091.6189569160995,
+      "duration": 3.3760090702946854
+    },
+    {
+      "text": "workshops",
+      "start": 1094.9949659863942,
+      "duration": 4.131882086167934
+    },
+    {
+      "text": "artworks",
+      "start": 1099.126848072562,
+      "duration": 3.856371882086023
+    },
+    {
+      "text": "event",
+      "start": 1102.9832199546481,
+      "duration": 3.127981859410511
+    },
+    {
+      "text": "twelve",
+      "start": 1106.1112018140586,
+      "duration": 3.063990929705369
+    },
+    {
+      "text": "cancellation",
+      "start": 1109.175192743764,
+      "duration": 4.023990929705178
+    },
+    {
+      "text": "non-refundable",
+      "start": 1113.1991836734692,
+      "duration": 4.91201814058968
+    },
+    {
+      "text": "guitar",
+      "start": 1118.1112018140589,
+      "duration": 3.423990929705269
+    },
+    {
+      "text": "piano",
+      "start": 1121.5351927437641,
+      "duration": 3.3519727891157345
+    },
+    {
+      "text": "dollars",
+      "start": 1124.8871655328799,
+      "duration": 3.1160090702946945
+    },
+    {
+      "text": "pounds",
+      "start": 1128.0031746031746,
+      "duration": 3.5061224489795677
+    },
+    {
+      "text": "standard",
+      "start": 1131.5092970521541,
+      "duration": 3.7360090702948128
+    },
+    {
+      "text": "pence",
+      "start": 1135.245306122449,
+      "duration": 3.1599999999998545
+    },
+    {
+      "text": "station",
+      "start": 1138.4053061224488,
+      "duration": 3.8080272108843474
+    },
+    {
+      "text": "pottery",
+      "start": 1142.2133333333331,
+      "duration": 3.304036281179151
+    },
+    {
+      "text": "bowls",
+      "start": 1145.5173696145123,
+      "duration": 3.7840362811791692
+    },
+    {
+      "text": "shirt",
+      "start": 1149.3014058956915,
+      "duration": 3.160000000000082
+    },
+    {
+      "text": "brushes",
+      "start": 1152.4614058956915,
+      "duration": 4.048072562358129
+    },
+    {
+      "text": "waterproof",
+      "start": 1156.5094784580497,
+      "duration": 3.011927437641816
+    },
+    {
+      "text": "suncream",
+      "start": 1159.5214058956915,
+      "duration": 2.6080272108845293
+    },
+    {
+      "text": "canoe",
+      "start": 1162.129433106576,
+      "duration": 3.400000000000091
+    },
+    {
+      "text": "helicopter",
+      "start": 1165.529433106576,
+      "duration": 4.413061224489638
+    },
+    {
+      "text": "fireworks",
+      "start": 1169.9424943310657,
+      "duration": 3.976009070294822
+    },
+    {
+      "text": "golf",
+      "start": 1173.9185034013606,
+      "duration": 2.9827664399092555
+    },
+    {
+      "text": "Jacket",
+      "start": 1176.9012698412698,
+      "duration": 3.2703854875283014
+    },
+    {
+      "text": "garbage",
+      "start": 1180.1716553287981,
+      "duration": 3.2799999999999727
+    },
+    {
+      "text": "location",
+      "start": 1183.451655328798,
+      "duration": 4.3300680272109275
+    },
+    {
+      "text": "basement",
+      "start": 1187.781723356009,
+      "duration": 3.246349206349123
+    },
+    {
+      "text": "laundry",
+      "start": 1191.0280725623581,
+      "duration": 3.423990929705269
+    },
+    {
+      "text": "noise",
+      "start": 1194.4520634920634,
+      "duration": 3.182766439909301
+    },
+    {
+      "text": "under",
+      "start": 1197.6348299319727,
+      "duration": 3.0639909297051418
+    },
+    {
+      "text": "below",
+      "start": 1200.6988208616779,
+      "duration": 3.1461224489796678
+    },
+    {
+      "text": "leak",
+      "start": 1203.8449433106575,
+      "duration": 2.9920181405896074
+    },
+    {
+      "text": "sink",
+      "start": 1206.8369614512471,
+      "duration": 3.6160090702946945
+    },
+    {
+      "text": "paint",
+      "start": 1210.4529705215418,
+      "duration": 2.5840362811791238
+    },
+    {
+      "text": "lock",
+      "start": 1213.037006802721,
+      "duration": 3.0399999999999636
+    },
+    {
+      "text": "nasty",
+      "start": 1216.077006802721,
+      "duration": 3.567981859410338
+    },
+    {
+      "text": "parks",
+      "start": 1219.6449886621313,
+      "duration": 2.793469387755067
+    },
+    {
+      "text": "market",
+      "start": 1222.4384580498863,
+      "duration": 3.400000000000091
+    },
+    {
+      "text": "teenagers",
+      "start": 1225.8384580498864,
+      "duration": 3.627074829931871
+    },
+    {
+      "text": "biography",
+      "start": 1229.4655328798183,
+      "duration": 3.763083900226775
+    },
+    {
+      "text": "horror",
+      "start": 1233.228616780045,
+      "duration": 3.1839909297050326
+    },
+    {
+      "text": "hormone",
+      "start": 1236.41260770975,
+      "duration": 3.574603174603226
+    },
+    {
+      "text": "pain",
+      "start": 1239.9872108843533,
+      "duration": 3.7120181405896346
+    },
+    {
+      "text": "occurs",
+      "start": 1243.699229024943,
+      "duration": 3.4969614512472162
+    },
+    {
+      "text": "phrases",
+      "start": 1247.1961904761902,
+      "duration": 4.3145124716552345
+    },
+    {
+      "text": "diary",
+      "start": 1251.5107029478454,
+      "duration": 3.303990929705378
+    },
+    {
+      "text": "gender",
+      "start": 1254.8146938775508,
+      "duration": 3.2560090702947946
+    },
+    {
+      "text": "females",
+      "start": 1258.0707029478456,
+      "duration": 2.5840362811791238
+    },
+    {
+      "text": "joke",
+      "start": 1260.6547392290247,
+      "duration": 3.09551020408162
+    },
+    {
+      "text": "methodology",
+      "start": 1263.7502494331063,
+      "duration": 4.936009070294631
+    },
+    {
+      "text": "survey",
+      "start": 1268.686258503401,
+      "duration": 3.519999999999982
+    },
+    {
+      "text": "laughter",
+      "start": 1272.206258503401,
+      "duration": 3.447981859410447
+    },
+    {
+      "text": "questioner",
+      "start": 1275.6542403628114,
+      "duration": 4.168027210884247
+    },
+    {
+      "text": "suspicious",
+      "start": 1279.8222675736956,
+      "duration": 4.120000000000118
+    },
+    {
+      "text": "grasped",
+      "start": 1283.9422675736957,
+      "duration": 2.248027210884402
+    },
+    {
+      "text": "honesty",
+      "start": 1286.1902947845801,
+      "duration": 3.3381405895693206
+    },
+    {
+      "text": "puzzling",
+      "start": 1289.5284353741495,
+      "duration": 3.1731065759636294
+    },
+    {
+      "text": "distrust",
+      "start": 1292.701541950113,
+      "duration": 4.384036281179078
+    },
+    {
+      "text": "terminology",
+      "start": 1297.0855782312922,
+      "duration": 4.096009070294713
+    },
+    {
+      "text": "unwillingness",
+      "start": 1301.181587301587,
+      "duration": 4.744036281179206
+    },
+    {
+      "text": "closure",
+      "start": 1305.925623582766,
+      "duration": 4.072018140589762
+    },
+    {
+      "text": "unfamiliar",
+      "start": 1309.9976417233559,
+      "duration": 3.832018140589753
+    },
+    {
+      "text": "frightened",
+      "start": 1313.8296598639456,
+      "duration": 3.663990929705278
+    },
+    {
+      "text": "crucial",
+      "start": 1317.4936507936509,
+      "duration": 3.376009070294913
+    },
+    {
+      "text": "interviewer",
+      "start": 1320.8696598639458,
+      "duration": 3.511972789115589
+    },
+    {
+      "text": "rapport",
+      "start": 1324.3816326530614,
+      "duration": 3.759999999999991
+    },
+    {
+      "text": "unintelligent",
+      "start": 1328.1416326530614,
+      "duration": 4.768072562358384
+    },
+    {
+      "text": "opinions",
+      "start": 1332.9097052154198,
+      "duration": 3.568979591836751
+    },
+    {
+      "text": "naive",
+      "start": 1336.4786848072565,
+      "duration": 2.9134693877551854
+    },
+    {
+      "text": "procedure",
+      "start": 1339.3921541950117,
+      "duration": 3.5946938775509807
+    },
+    {
+      "text": "briefed",
+      "start": 1342.9868480725627,
+      "duration": 3.736054421768813
+    },
+    {
+      "text": "incident",
+      "start": 1346.7229024943315,
+      "duration": 3.300090702947955
+    },
+    {
+      "text": "lasts",
+      "start": 1350.0229931972794,
+      "duration": 3.337233560090681
+    },
+    {
+      "text": "reliability",
+      "start": 1353.3602267573701,
+      "duration": 5.032018140589571
+    },
+    {
+      "text": "cases",
+      "start": 1358.3922448979597,
+      "duration": 4.0
+    },
+    {
+      "text": "conclusions",
+      "start": 1362.3922448979597,
+      "duration": 4.170884353741485
+    },
+    {
+      "text": "comparatively",
+      "start": 1366.5631292517012,
+      "duration": 4.042675736961428
+    },
+    {
+      "text": "generally",
+      "start": 1370.6058049886626,
+      "duration": 3.4720181405896255
+    },
+    {
+      "text": "sophisticated",
+      "start": 1374.0778231292522,
+      "duration": 4.240000000000009
+    },
+    {
+      "text": "statements",
+      "start": 1378.3178231292522,
+      "duration": 3.8227210884351734
+    },
+    {
+      "text": "eyewitnesses",
+      "start": 1382.1405442176874,
+      "duration": 5.0147845804988265
+    },
+    {
+      "text": "seek",
+      "start": 1387.1553287981862,
+      "duration": 3.688027210884229
+    },
+    {
+      "text": "manufacturers",
+      "start": 1390.8433560090705,
+      "duration": 5.086213151927495
+    },
+    {
+      "text": "fame",
+      "start": 1395.929569160998,
+      "duration": 3.681723356008888
+    },
+    {
+      "text": "reputation",
+      "start": 1399.6112925170069,
+      "duration": 4.216009070294831
+    },
+    {
+      "text": "patients",
+      "start": 1403.8273015873017,
+      "duration": 3.7087528344670773
+    },
+    {
+      "text": "glasses",
+      "start": 1407.5360544217688,
+      "duration": 3.457414965986345
+    },
+    {
+      "text": "charity",
+      "start": 1410.993469387755,
+      "duration": 3.4480272108844474
+    },
+    {
+      "text": "corporations",
+      "start": 1414.4414965986396,
+      "duration": 4.188072562358457
+    },
+    {
+      "text": "occasional",
+      "start": 1418.629569160998,
+      "duration": 3.8320181405895255
+    },
+    {
+      "text": "medication",
+      "start": 1422.4615873015875,
+      "duration": 4.255192743764155
+    },
+    {
+      "text": "inform",
+      "start": 1426.7167800453517,
+      "duration": 3.5680272108843383
+    },
+    {
+      "text": "insurance",
+      "start": 1430.284807256236,
+      "duration": 4.101360544217641
+    },
+    {
+      "text": "unsuitable",
+      "start": 1434.3861678004537,
+      "duration": 3.6880272108844565
+    },
+    {
+      "text": "waterfall",
+      "start": 1438.0741950113381,
+      "duration": 3.8560090702947036
+    },
+    {
+      "text": "swim",
+      "start": 1441.9302040816328,
+      "duration": 3.303990929705378
+    },
+    {
+      "text": "mountains",
+      "start": 1445.2341950113382,
+      "duration": 4.384036281179078
+    },
+    {
+      "text": "sponsor",
+      "start": 1449.6182312925173,
+      "duration": 3.9520181405894164
+    },
+    {
+      "text": "citizens",
+      "start": 1453.5702494331067,
+      "duration": 3.6355102040815837
+    },
+    {
+      "text": "learning",
+      "start": 1457.2057596371883,
+      "duration": 3.400000000000091
+    },
+    {
+      "text": "remarkable",
+      "start": 1460.6057596371884,
+      "duration": 3.880000000000109
+    },
+    {
+      "text": "students",
+      "start": 1464.4857596371885,
+      "duration": 3.819138321995297
+    },
+    {
+      "text": "weather",
+      "start": 1468.3048979591838,
+      "duration": 3.2560090702947946
+    },
+    {
+      "text": "atmospheric",
+      "start": 1471.5609070294786,
+      "duration": 4.137959183673274
+    },
+    {
+      "text": "monitor",
+      "start": 1475.6988662131519,
+      "duration": 3.4720181405896255
+    },
+    {
+      "text": "science",
+      "start": 1479.1708843537415,
+      "duration": 3.478775510204059
+    },
+    {
+      "text": "onboard",
+      "start": 1482.6496598639455,
+      "duration": 4.096054421768713
+    },
+    {
+      "text": "fuel",
+      "start": 1486.7457142857143,
+      "duration": 3.376009070294913
+    },
+    {
+      "text": "desert",
+      "start": 1490.1217233560092,
+      "duration": 3.1120181405897256
+    },
+    {
+      "text": "magnet",
+      "start": 1493.233741496599,
+      "duration": 3.4239909297050417
+    },
+    {
+      "text": "detect",
+      "start": 1496.657732426304,
+      "duration": 3.3466213151925785
+    },
+    {
+      "text": "features",
+      "start": 1500.0043537414965,
+      "duration": 4.000045351473773
+    },
+    {
+      "text": "planet",
+      "start": 1504.0043990929703,
+      "duration": 3.1360090702949037
+    },
+    {
+      "text": "awareness",
+      "start": 1507.1404081632652,
+      "duration": 3.4960090702948037
+    },
+    {
+      "text": "missions",
+      "start": 1510.63641723356,
+      "duration": 3.843446712018249
+    },
+    {
+      "text": "satellites",
+      "start": 1514.4798639455782,
+      "duration": 3.8150566893423274
+    },
+    {
+      "text": "reflect",
+      "start": 1518.2949206349206,
+      "duration": 3.296009070294758
+    },
+    {
+      "text": "drawings",
+      "start": 1521.5909297052153,
+      "duration": 4.296870748299398
+    },
+    {
+      "text": "section",
+      "start": 1525.8878004535147,
+      "duration": 3.6160090702946945
+    },
+    {
+      "text": "bestsellers",
+      "start": 1529.5038095238094,
+      "duration": 4.265079365079373
+    },
+    {
+      "text": "previous",
+      "start": 1533.7688888888888,
+      "duration": 3.4720181405896255
+    },
+    {
+      "text": "prediction",
+      "start": 1537.2409070294784,
+      "duration": 3.7848072562360358
+    },
+    {
+      "text": "originally",
+      "start": 1541.0257142857145,
+      "duration": 3.8319727891157527
+    },
+    {
+      "text": "audience",
+      "start": 1544.8576870748302,
+      "duration": 3.4720181405896255
+    },
+    {
+      "text": "accurate",
+      "start": 1548.3297052154198,
+      "duration": 3.3279818594105564
+    },
+    {
+      "text": "fabric",
+      "start": 1551.6576870748304,
+      "duration": 3.4720181405896255
+    },
+    {
+      "text": "qualified",
+      "start": 1555.12970521542,
+      "duration": 3.6399999999998727
+    },
+    {
+      "text": "employ",
+      "start": 1558.76970521542,
+      "duration": 3.4960090702948037
+    },
+    {
+      "text": "supervised",
+      "start": 1562.2657142857147,
+      "duration": 3.7909750566893763
+    },
+    {
+      "text": "newspapers",
+      "start": 1566.056689342404,
+      "duration": 4.81605442176874
+    },
+    {
+      "text": "stand",
+      "start": 1570.8727437641728,
+      "duration": 3.6399999999998727
+    },
+    {
+      "text": "catalog",
+      "start": 1574.5127437641727,
+      "duration": 1.8320181405895255
+    },
+    {
+      "text": "past",
+      "start": 1576.3447619047622,
+      "duration": 3.1461224489796678
+    },
+    {
+      "text": "bookshelf",
+      "start": 1579.4908843537419,
+      "duration": 3.4960090702948037
+    },
+    {
+      "text": "Cushions",
+      "start": 1582.9868934240367,
+      "duration": 2.3440362811791147
+    },
+    {
+      "text": "stand",
+      "start": 1585.3309297052158,
+      "duration": 3.6399999999998727
+    },
+    {
+      "text": "knee",
+      "start": 1588.9709297052157,
+      "duration": 3.504036281178969
+    },
+    {
+      "text": "age",
+      "start": 1592.4749659863946,
+      "duration": 3.3520181405895073
+    },
+    {
+      "text": "thunderstorm",
+      "start": 1595.8269841269841,
+      "duration": 4.092063492063517
+    },
+    {
+      "text": "autumn",
+      "start": 1599.9190476190477,
+      "duration": 2.6585034013605764
+    },
+    {
+      "text": "recommend",
+      "start": 1602.5775510204082,
+      "duration": 3.653333333333194
+    },
+    {
+      "text": "month",
+      "start": 1606.2308843537414,
+      "duration": 3.640045351473873
+    },
+    {
+      "text": "sunrise",
+      "start": 1609.8709297052153,
+      "duration": 3.6399999999998727
+    },
+    {
+      "text": "balloon",
+      "start": 1613.5109297052152,
+      "duration": 3.6880272108844565
+    },
+    {
+      "text": "specific",
+      "start": 1617.1989569160996,
+      "duration": 4.023990929705178
+    },
+    {
+      "text": "Reservations",
+      "start": 1621.2229478458048,
+      "duration": 2.8960544217686675
+    },
+    {
+      "text": "certificate",
+      "start": 1624.1190022675735,
+      "duration": 4.119999999999891
+    },
+    {
+      "text": "Upon",
+      "start": 1628.2390022675734,
+      "duration": 3.5679818594105654
+    },
+    {
+      "text": "champagne",
+      "start": 1631.806984126984,
+      "duration": 3.9520181405896437
+    },
+    {
+      "text": "participants",
+      "start": 1635.7590022675736,
+      "duration": 4.020090702947982
+    },
+    {
+      "text": "sailing",
+      "start": 1639.7790929705216,
+      "duration": 4.416281179138423
+    },
+    {
+      "text": "surfing",
+      "start": 1644.19537414966,
+      "duration": 3.519999999999982
+    },
+    {
+      "text": "cookery",
+      "start": 1647.71537414966,
+      "duration": 3.2319727891156163
+    },
+    {
+      "text": "woodland",
+      "start": 1650.9473469387756,
+      "duration": 4.072018140589535
+    },
+    {
+      "text": "gallery",
+      "start": 1655.0193650793651,
+      "duration": 3.3173696145124723
+    },
+    {
+      "text": "swans",
+      "start": 1658.3367346938776,
+      "duration": 4.382403628118027
+    },
+    {
+      "text": "flamingos",
+      "start": 1662.7191383219956,
+      "duration": 4.648072562358266
+    },
+    {
+      "text": "rare",
+      "start": 1667.3672108843539,
+      "duration": 3.207981859410438
+    },
+    {
+      "text": "merchants",
+      "start": 1670.5751927437643,
+      "duration": 3.5920634920635166
+    },
+    {
+      "text": "chairs",
+      "start": 1674.1672562358278,
+      "duration": 4.155555555555338
+    },
+    {
+      "text": "mats",
+      "start": 1678.3228117913832,
+      "duration": 3.8697052154193443
+    },
+    {
+      "text": "stools",
+      "start": 1682.1925170068025,
+      "duration": 3.39278911564611
+    },
+    {
+      "text": "antiques",
+      "start": 1685.5853061224486,
+      "duration": 4.224036281178996
+    },
+    {
+      "text": "collapsed",
+      "start": 1689.8093424036276,
+      "duration": 4.288027210884366
+    },
+    {
+      "text": "wallpaper",
+      "start": 1694.097369614512,
+      "duration": 4.384036281179078
+    },
+    {
+      "text": "uninhabited",
+      "start": 1698.481405895691,
+      "duration": 4.6480272108842655
+    },
+    {
+      "text": "up",
+      "start": 1703.1294331065753,
+      "duration": 2.7999999999999545
+    },
+    {
+      "text": "opposite",
+      "start": 1705.9294331065753,
+      "duration": 3.2943764172334795
+    },
+    {
+      "text": "reception",
+      "start": 1709.2238095238088,
+      "duration": 3.7600000000002183
+    },
+    {
+      "text": "renovated",
+      "start": 1712.983809523809,
+      "duration": 3.815328798185874
+    },
+    {
+      "text": "runner",
+      "start": 1716.7991383219949,
+      "duration": 3.1786848072561042
+    },
+    {
+      "text": "treadmills",
+      "start": 1719.977823129251,
+      "duration": 3.405759637188112
+    },
+    {
+      "text": "updated",
+      "start": 1723.383582766439,
+      "duration": 3.4548299319728812
+    },
+    {
+      "text": "whenever",
+      "start": 1726.838412698412,
+      "duration": 3.462358276643954
+    },
+    {
+      "text": "enhancing",
+      "start": 1730.300770975056,
+      "duration": 3.656009070294658
+    },
+    {
+      "text": "install",
+      "start": 1733.9567800453506,
+      "duration": 3.0160090702947855
+    },
+    {
+      "text": "laptops",
+      "start": 1736.9727891156454,
+      "duration": 4.458458049886531
+    },
+    {
+      "text": "repair",
+      "start": 1741.4312471655319,
+      "duration": 3.400000000000091
+    },
+    {
+      "text": "maintenance",
+      "start": 1744.831247165532,
+      "duration": 3.1774149659863724
+    },
+    {
+      "text": "salary",
+      "start": 1748.0086621315183,
+      "duration": 3.4719727891156253
+    },
+    {
+      "text": "introduce",
+      "start": 1751.480634920634,
+      "duration": 3.9520181405896437
+    },
+    {
+      "text": "succeeded",
+      "start": 1755.4326530612236,
+      "duration": 3.605487528344611
+    },
+    {
+      "text": "musicians",
+      "start": 1759.0381405895682,
+      "duration": 4.68308390022662
+    },
+    {
+      "text": "seniors",
+      "start": 1763.7212244897948,
+      "duration": 3.58430839002267
+    },
+    {
+      "text": "satisfying",
+      "start": 1767.3055328798175,
+      "duration": 4.726802721088461
+    },
+    {
+      "text": "ingredient",
+      "start": 1772.032335600906,
+      "duration": 3.7360090702948128
+    },
+    {
+      "text": "raspberries",
+      "start": 1775.7683446712008,
+      "duration": 3.5122902494331356
+    },
+    {
+      "text": "jam",
+      "start": 1779.280634920634,
+      "duration": 3.08802721088432
+    },
+    {
+      "text": "sandwiches",
+      "start": 1782.3686621315182,
+      "duration": 4.214965986394645
+    },
+    {
+      "text": "peaches",
+      "start": 1786.583628117913,
+      "duration": 3.376009070294913
+    },
+    {
+      "text": "strawberries",
+      "start": 1789.9596371882078,
+      "duration": 4.7666666666666515
+    },
+    {
+      "text": "chef",
+      "start": 1794.7263038548745,
+      "duration": 3.0160090702947855
+    },
+    {
+      "text": "basket",
+      "start": 1797.7423129251692,
+      "duration": 3.4480272108844474
+    },
+    {
+      "text": "bride",
+      "start": 1801.1903401360537,
+      "duration": 3.2244897959183163
+    },
+    {
+      "text": "bridal",
+      "start": 1804.414829931972,
+      "duration": 4.000045351473773
+    },
+    {
+      "text": "online",
+      "start": 1808.4148752834458,
+      "duration": 3.5920181405895164
+    },
+    {
+      "text": "store",
+      "start": 1812.0068934240353,
+      "duration": 3.54399092970516
+    },
+    {
+      "text": "pattern",
+      "start": 1815.5508843537405,
+      "duration": 3.1360090702949037
+    },
+    {
+      "text": "saucers",
+      "start": 1818.6868934240354,
+      "duration": 2.53605442176854
+    }
+  ]
+}
