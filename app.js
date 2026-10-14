@@ -4470,7 +4470,7 @@
           if (token !== state.token) return;
           if (index < Math.max(1, Number(settings.repeat) || 1) - 1) await wait(900);
         }
-      } else if (state.voicePackIndex[item.text]?.file) {
+      } else if (state.voicePackIndex[item.text]?.file || item.text.trim().split(/\s+/).filter(Boolean).length <= 3) {
         await playRepeatedSpeech(item.text, settings.repeat, token);
       } else {
         for (let index = 0; index < Math.max(1, Number(settings.repeat) || 1); index += 1) {
