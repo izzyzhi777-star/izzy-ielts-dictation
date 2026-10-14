@@ -4546,6 +4546,38 @@
     }
   }
 
+  function hidePracticeReminder() {
+    if (dom.practiceReminder) dom.practiceReminder.hidden = true;
+  }
+
+  function togglePracticeReminder() {
+    if (!dom.practiceReminder || !state.customSession.started || state.customSession.complete) return;
+    const item = currentCustomItem();
+    if (!item) return;
+    if (!dom.practiceReminder.hidden) {
+      hidePracticeReminder();
+      return;
+    }
+    dom.practiceReminder.replaceChildren();
+    const addLine = (label, value) => {
+      if (!value) return;
+      const line = document.createElement("div");
+      const strong = document.createElement("strong");
+      strong.textContent = `${label}：`;
+      line.append(strong, document.createTextNode(String(value)));
+      dom.practiceReminder.appendChild(line);
+    };
+    if (state.customSession.source === "prediction") {
+      addLine("原始数字", item.text);
+      addLine("标准英文读法", item.audioText || predictionSpokenText(item.text, item.predictionType));
+    } else {
+      addLine("词汇提醒", item.text);
+      addLine("音标", item.phonetic || lookupPhonetic(item.text));
+      addLine("中文", item.translation || "");
+    }
+    dom.practiceReminder.hidden = false;
+  }
+
   function normalizePredictionAnswer(value) {
     return String(value || "")
       .trim()
