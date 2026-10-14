@@ -198,6 +198,7 @@
     customSubmitHint: $("customSubmitHint"),
     customAnswerInput: $("customAnswerInput"),
     customAnswerLabel: $("customAnswerLabel"),
+    practiceReminder: $("practiceReminder"),
     submitCustomButton: $("submitCustomButton"),
     nextCustomButton: $("nextCustomButton"),
     customResult: $("customResult"),
@@ -315,6 +316,9 @@
     continuousManifestPromise: null,
     continuousAudioPrefetched: false,
     singleWordAudioPrefetched: false,
+    previewPlaylist: [],
+    previewKey: "",
+    pendingStartIndex: null,
     listeningStartOptionsKey: "",
     neuralCooldownUntil: 0,
     ipaMap: new Map(),
@@ -1325,7 +1329,12 @@
     dom.listeningMode.addEventListener("change", restartListeningIfActive);
     dom.listeningRepeat.addEventListener("change", restartListeningIfActive);
     dom.listeningInterval.addEventListener("change", restartListeningIfActive);
-    dom.listeningCategories.addEventListener("change", restartListeningIfActive);
+    dom.listeningCategories.addEventListener("change", () => {
+      state.listening.previewKey = "";
+      state.listening.previewPlaylist = [];
+      if (state.listening.started) restartListeningIfActive();
+      else refreshListeningPreview();
+    });
     dom.listeningSpeed.addEventListener("change", () => {
       if (state.listening.audio) {
         state.listening.audio.playbackRate = Number(dom.listeningSpeed.value) || 1;
@@ -1343,6 +1352,19 @@
     document.addEventListener("keydown", (event) => {
       if (event.key === "Escape" && !dom.settingsDrawer.hidden) {
         closeSettings();
+        return;
+      }
+      if (
+        event.key === "3"
+        && dom.settingsDrawer.hidden
+        && state.activeTab === "custom"
+        && state.customSession.source !== "prediction"
+        && !event.metaKey
+        && !event.ctrlKey
+        && !event.altKey
+      ) {
+        event.preventDefault();
+        togglePracticeReminder();
         return;
       }
       if (
@@ -1409,6 +1431,7 @@
     renderTabs();
     if (tab === "dates") renderDateSession();
     if (tab === "listening") {
+      refreshListeningPreview();
       renderListening();
       prefetchContinuousAudio("all");
       prefetchContinuousAudio("single");
@@ -3146,7 +3169,13 @@
 
   async function startListening() {
     if (state.listening.preparing) return;
-    const playlist = buildListeningPlaylist();
+    const pendingStart = Number.isInteger(state.listening.pendingStartIndex)
+      ? state.listening.pendingStartIndex
+      : 0;
+    const playlist = state.listening.previewPlaylist.length
+      ? state.listening.previewPlaylist
+      : buildListeningPlaylist();
+    state.listening.previewPlaylist = [];
     if (!playlist.length) {
       dom.listeningEnglish.textContent = "还没有选择播放内容";
       dom.listeningChinese.textContent = "至少勾选一个分类。";
@@ -3156,7 +3185,7 @@
     const token = ++state.listening.token;
     state.listening.started = true;
     state.listening.playlist = playlist;
-    state.listening.index = 0;
+    state.listening.index = Math.min(Math.max(0, pendingStart), Math.max(0, playlist.length - 1));
     state.listening.currentTrack = -1;
     state.listening.playing = true;
     state.listening.preparing = true;
@@ -3175,10 +3204,11 @@
     );
     if (selected.size === 1 && dom.listeningMode.value === "english" && (selected.has("custom") || selected.has("singlewords"))) {
       const mode = selected.has("singlewords") ? "single" : "all";
-      startContinuousVocabulary(token, playlist, mode);
+      startContinuousVocabulary(token, playlist, mode, pendingStart);
       return;
     }
-    playListeningSequentially(playlist, token, 0).catch((error) => {
+    state.listening.pendingStartIndex = null;
+    playListeningSequentially(playlist, token, pendingStart).catch((error) => {
       if (token !== state.listening.token) return;
       state.listening.playing = false;
       console.error(error);
@@ -3192,8 +3222,9 @@
     }).catch((error) => console.debug("Voice preload stopped.", error));
   }
 
-  async function startContinuousVocabulary(token, playlist, mode = "all") {
+  async function startContinuousVocabulary(token, playlist, mode = "all", startIndex = 0) {
     const single = mode === "single";
+    const requestedText = playlist[startIndex]?.english || "";
     const manifest = (single ? state.singleWordManifest : state.continuousManifest)
       || await state.continuousManifestPromise
       || (single ? state.singleWordManifest : state.continuousManifest);
@@ -3210,13 +3241,15 @@
           duration: entry.duration
         }));
         state.listening.totalDuration = manifest.duration;
+        const requestedIndex = ordered.findIndex((entry) => entry.english === requestedText);
+        if (requestedIndex >= 0) startIndex = requestedIndex;
       }
     }
     const audio = state.listening.audio;
     state.listening.continuous = true;
     state.listening.playing = true;
     state.listening.currentTrack = -1;
-    state.listening.index = 0;
+    state.listening.index = Math.min(Math.max(0, startIndex), Math.max(0, state.listening.playlist.length - 1));
     audio.loop = true;
     audio.volume = 1;
     audio.playbackRate = Number(dom.listeningSpeed.value) || 1;
@@ -3226,7 +3259,12 @@
       ? "audio/continuous/custom-single-words-uk-us.mp3"
       : "audio/continuous/custom-uk-us.mp3";
     audio.load();
-    setListeningTrack(0);
+    const pending = state.listening.index;
+    state.listening.pendingStartIndex = null;
+    audio.onloadedmetadata = () => {
+      if (pending > 0) seekListeningToIndex(pending);
+    };
+    setListeningTrack(pending);
     renderListening();
     updateMediaSessionMetadata({
       english: single ? "我的单词 · 英式 + 美式" : "完整词库 · 英式 + 美式",
@@ -3260,7 +3298,13 @@
   function jumpToSelectedListening() {
     const selected = Number(dom.listeningStartSelect.value);
     if (!Number.isFinite(selected) || selected < 1) return;
-    seekListeningToIndex(Math.min(selected - 1, state.listening.playlist.length - 1));
+    const index = Math.min(selected - 1, state.listening.playlist.length - 1);
+    if (!state.listening.started) {
+      state.listening.pendingStartIndex = index;
+      startListening();
+      return;
+    }
+    seekListeningToIndex(index);
   }
 
   function seekListeningToIndex(next) {
@@ -3285,6 +3329,23 @@
     }
     setListeningTrack(next);
     if (state.listening.playing) resumeListeningAudio();
+  }
+
+  function refreshListeningPreview() {
+    if (state.listening.started) return;
+    const selected = Array.from(dom.listeningCategories.querySelectorAll("input:checked"))
+      .map((input) => input.dataset.listeningCategory)
+      .sort()
+      .join("|");
+    const key = `${selected}:${state.customItems.length}:${state.predictionItems.length}`;
+    if (state.listening.previewKey === key && state.listening.previewPlaylist.length) return;
+    state.listening.previewKey = key;
+    state.listening.previewPlaylist = buildListeningPlaylist();
+    state.listening.playlist = state.listening.previewPlaylist;
+    state.listening.index = 0;
+    state.listening.timeline = [];
+    state.listening.currentTrack = -1;
+    state.listeningStartOptionsKey = "";
   }
 
   function renderListeningStartOptions() {
@@ -4409,8 +4470,15 @@
           if (token !== state.token) return;
           if (index < Math.max(1, Number(settings.repeat) || 1) - 1) await wait(900);
         }
-      } else {
+      } else if (state.voicePackIndex[item.text]?.file) {
         await playRepeatedSpeech(item.text, settings.repeat, token);
+      } else {
+        for (let index = 0; index < Math.max(1, Number(settings.repeat) || 1); index += 1) {
+          if (token !== state.token) return;
+          await speakBrowserText(item.text, 0.82, token);
+          if (token !== state.token) return;
+          if (index < Math.max(1, Number(settings.repeat) || 1) - 1) await wait(900);
+        }
       }
       if (token === state.token) {
         setPlaying(false);
@@ -4424,6 +4492,26 @@
         dom.customPlayStatus.textContent = "播放完成，请填写答案";
       }
     }
+  }
+
+  function hidePracticeReminder() {
+    if (dom.practiceReminder) dom.practiceReminder.hidden = true;
+  }
+
+  function togglePracticeReminder() {
+    if (!dom.practiceReminder || !state.customSession.started || state.customSession.complete) return;
+    const item = currentCustomItem();
+    if (!item) return;
+    if (!dom.practiceReminder.hidden) {
+      hidePracticeReminder();
+      return;
+    }
+    if (state.customSession.source === "prediction") {
+      dom.practiceReminder.innerHTML = `<strong>原始数字：</strong>${item.text}<br><strong>标准英文读法：</strong>${item.audioText || predictionSpokenText(item.text, item.predictionType)}`;
+    } else {
+      dom.practiceReminder.innerHTML = `<strong>词汇提醒：</strong>${item.text}<br>${item.phonetic ? `<strong>音标：</strong>${item.phonetic}<br>` : ""}${item.translation ? `<strong>中文：</strong>${item.translation}` : ""}`;
+    }
+    dom.practiceReminder.hidden = false;
   }
 
   function normalizePredictionAnswer(value) {
@@ -4505,6 +4593,7 @@
   }
 
   function goNextCustom(autoPlay) {
+    hidePracticeReminder();
     if (!state.customSession.started || state.customSession.complete) return;
     if (state.customSession.index >= state.customSession.items.length - 1) {
       finishCustomRound();
@@ -4522,6 +4611,7 @@
   }
 
   function finishCustomRound() {
+    hidePracticeReminder();
     stopPlayback();
     state.customSession.complete = true;
     renderCustomSession();

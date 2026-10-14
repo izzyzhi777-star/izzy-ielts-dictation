@@ -2493,3 +2493,21 @@ footer {
     padding-left: 16px;
   }
 }
+.practice-reminder {
+  position: fixed;
+  z-index: 60;
+  left: 50%;
+  bottom: max(22px, env(safe-area-inset-bottom));
+  width: min(680px, calc(100% - 32px));
+  padding: 16px 18px;
+  border: 1px solid var(--line-strong);
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: var(--shadow);
+  transform: translateX(-50%);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.practice-reminder strong {
+  color: var(--signal);
+}
