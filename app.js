@@ -1361,6 +1361,24 @@
         return;
       }
       if (
+        event.key === "Enter"
+        && !event.defaultPrevented
+        && dom.settingsDrawer.hidden
+        && dom.customEditor.hidden
+        && dom.predictionEditor.hidden
+        && state.activeTab === "custom"
+        && state.customSession.started
+        && !state.customSession.complete
+        && !event.metaKey
+        && !event.ctrlKey
+        && !event.altKey
+      ) {
+        event.preventDefault();
+        if (state.customSession.checked) goNextCustom(true);
+        else submitCustomAnswer(false);
+        return;
+      }
+      if (
         event.key === "3"
         && dom.settingsDrawer.hidden
         && state.activeTab === "custom"
