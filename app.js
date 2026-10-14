@@ -1385,7 +1385,10 @@
       state.listening.previewKey = "";
       state.listening.previewPlaylist = [];
       if (state.listening.started) restartListeningIfActive();
-      else refreshListeningPreview();
+      else {
+        refreshListeningPreview();
+        renderListening();
+      }
     });
     dom.listeningSpeed.addEventListener("change", () => {
       if (state.listening.audio) {
