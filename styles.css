@@ -2511,3 +2511,12 @@ footer {
 .practice-reminder strong {
   color: var(--signal);
 }
+.listening-now,
+#customQuestionScreen .listen-panel {
+  cursor: pointer;
+}
+
+.listening-now:active,
+#customQuestionScreen .listen-panel:active {
+  background: var(--paper-soft);
+}
