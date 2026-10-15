@@ -1362,6 +1362,11 @@ footer {
     flex: 1;
   }
 
+  .practice-start-picker.compact {
+    width: 100%;
+    min-width: 0;
+  }
+
   .wrongbook-list {
     grid-template-columns: 1fr;
     border-left: 0;
@@ -2028,6 +2033,37 @@ footer {
   color: var(--muted);
 }
 
+.practice-start-picker {
+  display: grid;
+  width: min(100%, 620px);
+  gap: 6px;
+  margin: 0 0 18px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.practice-start-picker select {
+  width: 100%;
+  min-height: 44px;
+  padding: 9px 12px;
+  border: 1px solid var(--line-strong);
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.practice-start-picker.compact {
+  width: auto;
+  min-width: min(280px, 68vw);
+  margin: 0;
+}
+
+.practice-start-picker.compact select {
+  min-height: 38px;
+  font-size: 11px;
+}
+
 .custom-list-panel {
   align-self: start;
 }
@@ -2467,10 +2503,15 @@ footer {
     border-right: 0;
   }
 }
+.prediction-head-actions,
+.wrongbook-actions {
+  align-items: center;
+  flex-wrap: wrap;
+}
+
 .prediction-head-actions {
   display: flex;
   gap: 10px;
-  align-items: center;
 }
 .listening-jump {
   display: grid;

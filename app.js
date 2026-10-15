@@ -189,6 +189,7 @@
     customStartTitle: $("customStartTitle"),
     customStartDescription: $("customStartDescription"),
     startCustomPracticeButton: $("startCustomPracticeButton"),
+    customPracticeStartSelect: $("customPracticeStartSelect"),
     customQuestionScreen: $("customQuestionScreen"),
     customQuestionIndex: $("customQuestionIndex"),
     customQuestionTotal: $("customQuestionTotal"),
@@ -222,6 +223,7 @@
     customItemCount: $("customItemCount"),
     newPredictionButton: $("newPredictionButton"),
     startPredictionPracticeButton: $("startPredictionPracticeButton"),
+    predictionPracticeStartSelect: $("predictionPracticeStartSelect"),
     predictionEditor: $("predictionEditor"),
     predictionEditorTitle: $("predictionEditorTitle"),
     predictionValueInput: $("predictionValueInput"),
@@ -239,6 +241,7 @@
     navHearingWrongCount: $("navHearingWrongCount"),
     reviewDueWordsButton: $("reviewDueWordsButton"),
     reviewAllWordsButton: $("reviewAllWordsButton"),
+    hearingPracticeStartSelect: $("hearingPracticeStartSelect"),
     hearingWrongSummary: $("hearingWrongSummary"),
     hearingWrongList: $("hearingWrongList"),
     startListeningButton: $("startListeningButton"),
@@ -298,6 +301,7 @@
     sync: {
       ...loadedSyncConfig,
       inFlight: false,
+      queued: false,
       timer: null,
       applyingRemote: false
     },
@@ -818,6 +822,10 @@
 
   function scheduleCloudSync() {
     if (!state.sync.autoSync || state.sync.applyingRemote || !state.sync.token || !state.sync.gistId) return;
+    if (state.sync.inFlight) {
+      state.sync.queued = true;
+      return;
+    }
     if (state.sync.timer) window.clearTimeout(state.sync.timer);
     state.sync.timer = window.setTimeout(() => syncCloudData(false), 1800);
   }
@@ -856,6 +864,8 @@
     }
     state.sync.token = token;
     state.sync.gistId = dom.syncCodeInput.value.trim();
+    state.sync.autoSync = true;
+    dom.syncAutoToggle.checked = true;
     saveSyncConfig();
     if (!state.sync.gistId) {
       updateSyncStatus("首次使用，正在创建 PC / 手机同步空间…");
@@ -874,6 +884,8 @@
     }
     state.sync.token = token;
     state.sync.gistId = "";
+    state.sync.autoSync = true;
+    dom.syncAutoToggle.checked = true;
     updateSyncStatus("正在创建同步空间…");
     try {
       const response = await fetch("https://api.github.com/gists", {
@@ -895,7 +907,7 @@
       saveSyncConfig();
       dom.syncCodeInput.value = gist.id;
       state.sync.lastSyncAt = Date.now();
-      updateSyncStatus("同步空间已创建，可在另一台设备输入同步码连接。");
+      updateSyncStatus("同步空间已创建。点击“复制手机自动同步链接”，在手机 Safari 打开一次即可。");
     } catch (error) {
       updateSyncStatus(`创建失败：${String(error.message || error).slice(0, 120)}`, true);
     }
@@ -910,8 +922,11 @@
     }
     state.sync.token = token;
     state.sync.gistId = gistId;
+    state.sync.autoSync = true;
+    dom.syncAutoToggle.checked = true;
     saveSyncConfig();
     await syncCloudData(true);
+    updateSyncStatus("连接成功，自动同步已开启。");
   }
 
   async function syncCloudData(manual = true) {
@@ -941,6 +956,10 @@
       updateSyncStatus(`同步失败：${String(error.message || error).slice(0, 120)}`, true);
     } finally {
       state.sync.inFlight = false;
+      if (state.sync.queued) {
+        state.sync.queued = false;
+        window.setTimeout(() => syncCloudData(false), 1200);
+      }
     }
   }
 
@@ -1027,7 +1046,7 @@
     dom.syncAutoToggle.checked = state.sync.autoSync !== false;
     updateSyncStatus(
       state.sync.gistId
-        ? `已连接同步码 ${state.sync.gistId.slice(0, 10)}…${state.sync.lastSyncAt ? ` · 上次同步 ${new Date(state.sync.lastSyncAt).toLocaleTimeString("zh-CN")}` : ""}`
+        ? `自动同步已开启 · ${state.sync.gistId.slice(0, 10)}…${state.sync.lastSyncAt ? ` · 上次同步 ${new Date(state.sync.lastSyncAt).toLocaleTimeString("zh-CN")}` : ""}`
         : "尚未连接同步空间"
     );
   }
@@ -1328,10 +1347,13 @@
         return;
       }
       try {
+        state.sync.autoSync = true;
+        dom.syncAutoToggle.checked = true;
+        saveSyncConfig();
         const payload = btoa(JSON.stringify({ t: state.sync.token, g: state.sync.gistId }));
-        const link = `${location.origin}${location.pathname}?v=autosync#sync=${payload}`;
+        const link = `${location.origin}${location.pathname}?v=autosync&auto=1#sync=${payload}`;
         await navigator.clipboard.writeText(link);
-        updateSyncStatus("自动同步链接已复制。在另一台设备打开一次，以后就会自动同步。");
+        updateSyncStatus("手机自动同步链接已复制。请在手机 Safari 打开一次，之后会自动同步。");
       } catch (error) {
         updateSyncStatus(`生成失败：${String(error.message || error).slice(0, 100)}`, true);
       }
@@ -1473,6 +1495,9 @@
       if (!document.hidden && state.sync.autoSync && state.sync.token && state.sync.gistId) {
         syncCloudData(false);
       }
+    });
+    window.addEventListener("pagehide", () => {
+      if (state.sync.autoSync && state.sync.token && state.sync.gistId) syncCloudData(false);
     });
   }
 
@@ -3932,8 +3957,18 @@
     return numberToEnglish(Number(source.replace(/[,\s]/g, ""))) || source;
   }
 
+  function renderPredictionStartOptions() {
+    renderSelectOptions(
+      dom.predictionPracticeStartSelect,
+      state.predictionItems,
+      (item) => item.id,
+      (item, index) => `${index + 1}. ${item.value}`
+    );
+  }
+
   function renderPrediction() {
     if (!dom.predictionList) return;
+    renderPredictionStartOptions();
     dom.startPredictionPracticeButton.disabled = state.predictionItems.length === 0;
     dom.predictionItemCount.textContent = String(state.predictionItems.length);
     dom.predictionList.replaceChildren();
@@ -4075,7 +4110,11 @@
       dom.predictionSaveStatus.textContent = "请先添加数字预测内容。";
       return;
     }
-    const practiceItems = state.predictionItems.map((item) => ({
+    const orderedItems = reorderFromSelected(
+      state.predictionItems,
+      dom.predictionPracticeStartSelect?.value || ""
+    );
+    const practiceItems = orderedItems.map((item) => ({
       id: `prediction-practice-${item.id}`,
       text: item.value,
       audioText: item.spokenText || predictionSpokenText(item.value, item.type),
@@ -4423,8 +4462,33 @@
     }
   }
 
+  function renderSelectOptions(select, items, getValue, getLabel) {
+    if (!select) return;
+    const selected = select.value;
+    select.replaceChildren();
+    items.forEach((item, index) => {
+      const option = document.createElement("option");
+      option.value = getValue(item, index);
+      option.textContent = getLabel(item, index);
+      select.appendChild(option);
+    });
+    const hasSelected = items.some((item, index) => getValue(item, index) === selected);
+    if (hasSelected) select.value = selected;
+    select.disabled = !items.length;
+  }
+
+  function renderCustomStartOptions() {
+    renderSelectOptions(
+      dom.customPracticeStartSelect,
+      state.customItems,
+      (item) => item.id,
+      (item, index) => `${index + 1}. ${item.text}`
+    );
+  }
+
   function renderCustom() {
     dom.customItemCount.textContent = String(state.customItems.length);
+    renderCustomStartOptions();
     renderCustomList();
     renderCustomSession();
   }
@@ -4549,8 +4613,18 @@
     return state.customSession.items[state.customSession.index] || null;
   }
 
+  function reorderFromSelected(items, selectedId) {
+    if (!Array.isArray(items) || !items.length || !selectedId) return items;
+    const selectedIndex = items.findIndex((item) => item.id === selectedId);
+    if (selectedIndex <= 0) return items;
+    return [...items.slice(selectedIndex), ...items.slice(0, selectedIndex)];
+  }
+
   function startCustomPractice(items = null, source = "all") {
-    const sourceItems = Array.isArray(items) ? items : state.customItems;
+    let sourceItems = Array.isArray(items) ? items : state.customItems;
+    if (!Array.isArray(items) && source === "all") {
+      sourceItems = reorderFromSelected(sourceItems, dom.customPracticeStartSelect?.value || "");
+    }
     if (!sourceItems.length) {
       if (source !== "hearing") switchTab("custom");
       renderCustom();
@@ -4801,7 +4875,8 @@
       renderHearingWrong();
       return;
     }
-    startCustomPractice(entries.map((entry) => ({
+    const orderedEntries = reorderFromSelected(entries, dom.hearingPracticeStartSelect?.value || "");
+    startCustomPractice(orderedEntries.map((entry) => ({
       id: entry.id,
       text: entry.text,
       phonetic: entry.phonetic || "",
@@ -4814,6 +4889,12 @@
 
   function renderHearingWrong() {
     const now = Date.now();
+    renderSelectOptions(
+      dom.hearingPracticeStartSelect,
+      state.hearingWrong,
+      (item) => item.id,
+      (item, index) => `${index + 1}. ${item.text}`
+    );
     const dueCount = state.hearingWrong.filter((item) => !item.nextReviewAt || item.nextReviewAt <= now).length;
     dom.navHearingWrongCount.textContent = String(state.hearingWrong.length);
     dom.reviewDueWordsButton.disabled = dueCount === 0;

@@ -10,7 +10,7 @@
   <title>IZZY IELTS-DICTATION</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=20261013y">
+  <link rel="stylesheet" href="styles.css?v=20261013z">
 </head>
 <body>
   <div class="app-shell">
@@ -483,6 +483,10 @@
                 <p class="section-kicker">READY</p>
                 <h2 id="customStartTitle">先添加你要拼写的英文</h2>
                 <p id="customStartDescription">保存词句后，可以听英文、填写拼写，并查看中文翻译和笔记。</p>
+                <label class="practice-start-picker" for="customPracticeStartSelect">
+                  <span>从哪一条开始拼写</span>
+                  <select id="customPracticeStartSelect"></select>
+                </label>
                 <button class="primary-button" id="startCustomPracticeButton" type="button">开始我的词句练习</button>
               </div>
             </div>
@@ -561,6 +565,10 @@
             <p>专门添加电话号码、金额、日期、年份、月份、时间、小数和其他易错数字。系统先转换成标准英文读法，再使用英式女声播报。</p>
           </div>
           <div class="prediction-head-actions">
+            <label class="practice-start-picker compact" for="predictionPracticeStartSelect">
+              <span>从哪一条开始</span>
+              <select id="predictionPracticeStartSelect"></select>
+            </label>
             <button class="secondary-button" id="startPredictionPracticeButton" type="button">开始拼写练习</button>
             <button class="primary-button" id="newPredictionButton" type="button">添加数字</button>
           </div>
@@ -628,6 +636,10 @@
             <p>自定义词句拼错后自动进入。按 5 分钟、30 分钟、12 小时、1/2/4/7/15/30 天安排复习，答对后进入下一阶段。</p>
           </div>
           <div class="wrongbook-actions">
+            <label class="practice-start-picker compact" for="hearingPracticeStartSelect">
+              <span>从哪一条开始</span>
+              <select id="hearingPracticeStartSelect"></select>
+            </label>
             <button class="primary-button" id="reviewDueWordsButton" type="button">复习到期</button>
             <button class="secondary-button" id="reviewAllWordsButton" type="button">全部复习</button>
           </div>
@@ -764,8 +776,8 @@
 
       <section class="setting-group sync-group">
         <div class="setting-copy">
-          <h3>PC / 手机数据同步</h3>
-          <p>两台设备首次输入同一个 Token 和同步码后，会自动同步；修改内容、切回页面、恢复网络和每分钟都会自动检查更新。</p>
+          <h3>PC / 手机自动同步</h3>
+          <p>电脑连接成功后，点“复制手机自动同步链接”，在手机 Safari 打开一次。之后两台设备修改单词、错词或笔记都会自动合并同步。</p>
         </div>
         <div class="sync-field">
           <label for="githubTokenInput">GitHub Token</label>
@@ -776,7 +788,8 @@
           <input id="syncCodeInput" type="text" autocomplete="off" placeholder="创建后会生成，其他设备填写同一个">
         </div>
         <div class="sync-actions sync-main-actions">
-          <button class="primary-button" id="syncNowButton" type="button">一键同步 PC / 手机</button>
+          <button class="primary-button" id="syncNowButton" type="button">立即同步 PC / 手机</button>
+          <button class="secondary-button" id="createSyncLinkButton" type="button">复制手机自动同步链接</button>
         </div>
         <details class="sync-advanced">
           <summary>首次配对 / 高级设置</summary>
@@ -788,13 +801,12 @@
             <button class="secondary-button" id="copyVocabularyButton" type="button">复制全部词库</button>
             <button class="secondary-button" id="importVocabularyButton" type="button">从剪贴板导入词库</button>
             <button class="secondary-button" id="exportVocabularyButton" type="button">导出词库文件</button>
-            <button class="secondary-button" id="createSyncLinkButton" type="button">生成自动同步链接</button>
             <button class="text-button" id="copySyncCodeButton" type="button">复制同步码</button>
           </div>
         </details>
         <label class="sync-auto">
           <input id="syncAutoToggle" type="checkbox" checked>
-          <span>修改后自动同步</span>
+          <span>始终保持自动同步（推荐）</span>
         </label>
         <div class="sync-status" id="syncStatus">尚未连接同步空间</div>
         <a class="sync-token-link" href="https://github.com/settings/tokens/new?scopes=gist&description=IZZY-IELTS-SYNC" target="_blank" rel="noreferrer">在手机 GitHub 创建 gist Token</a>
@@ -807,7 +819,7 @@
     </aside>
   </div>
 
-  <script src="neural-voice.js?v=20261013y"></script>
-  <script src="app.js?v=20261013y"></script>
+  <script src="neural-voice.js?v=20261013z"></script>
+  <script src="app.js?v=20261013z"></script>
 </body>
 </html>
