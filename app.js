@@ -398,9 +398,18 @@
     const syncWhenAvailable = () => {
       if (state.sync.autoSync && state.sync.token && state.sync.gistId) syncCloudData(false);
     };
-    window.addEventListener("focus", syncWhenAvailable);
+    const resumeListeningWhenAvailable = () => {
+      if (state.listening.interruptionPaused) scheduleListeningResumeAfterInterruption();
+    };
+    window.addEventListener("focus", () => {
+      syncWhenAvailable();
+      resumeListeningWhenAvailable();
+    });
     window.addEventListener("online", syncWhenAvailable);
-    window.addEventListener("pageshow", syncWhenAvailable);
+    window.addEventListener("pageshow", () => {
+      syncWhenAvailable();
+      resumeListeningWhenAvailable();
+    });
     window.addEventListener("pagehide", () => {
       if (state.sync.autoSync && state.sync.token && state.sync.gistId) syncCloudData(false);
     });
@@ -1584,9 +1593,9 @@
       }
     });
     document.addEventListener("visibilitychange", () => {
-      if (!document.hidden && state.sync.autoSync && state.sync.token && state.sync.gistId) {
-        syncCloudData(false);
-      }
+      if (document.hidden) return;
+      if (state.sync.autoSync && state.sync.token && state.sync.gistId) syncCloudData(false);
+      if (state.listening.interruptionPaused) scheduleListeningResumeAfterInterruption();
     });
     window.addEventListener("pagehide", () => {
       if (state.sync.autoSync && state.sync.token && state.sync.gistId) syncCloudData(false);
