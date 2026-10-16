@@ -356,8 +356,11 @@
       directFallback: false,
       continuous: false,
       audioContext: null,
+      audioContextGain: null,
       audioContextStarted: false,
-      interruptionPaused: false
+      interruptionPaused: false,
+      resumeAfterInterruption: false,
+      interruptionResumeTimer: null
     },
     autoSubmitTimer: null,
     lastThreeReplayAt: 0,
@@ -409,8 +412,38 @@
   function pauseForListeningInterruption() {
     if (!state.listening.started || !state.listening.playing) return;
     state.listening.interruptionPaused = true;
+    state.listening.resumeAfterInterruption = true;
     pauseListeningAudio();
     updateMediaSessionState("paused");
+  }
+
+  function scheduleListeningResumeAfterInterruption() {
+    if (!state.listening.started || !state.listening.interruptionPaused || !state.listening.resumeAfterInterruption) return;
+    if (state.listening.interruptionResumeTimer) window.clearTimeout(state.listening.interruptionResumeTimer);
+    state.listening.interruptionResumeTimer = window.setTimeout(async () => {
+      if (!state.listening.started || !state.listening.interruptionPaused || state.listening.playing) return;
+      const context = state.listening.audioContext;
+      if (context && context.state === "interrupted") return;
+      const audio = state.listening.audio;
+      if (!audio?.src) return;
+      try {
+        if (typeof audio.setSinkId === "function" && state.listening.resumeSinkId) {
+          await audio.setSinkId(state.listening.resumeSinkId).catch((error) => console.debug("Could not restore audio route.", error));
+        }
+        audio.volume = 0;
+        await audio.play();
+        window.setTimeout(() => {
+          if (!state.listening.started || !state.listening.playing || audio.paused) return;
+          audio.volume = 1;
+          state.listening.interruptionPaused = false;
+          state.listening.resumeAfterInterruption = false;
+          updateMediaSessionState("playing");
+          renderListening();
+        }, 1200);
+      } catch (error) {
+        console.debug("Listening resume after interruption skipped.", error);
+      }
+    }, 1600);
   }
 
   function ensureListeningAudioContext() {
@@ -419,20 +452,25 @@
     if (!state.listening.audioContext) {
       try {
         state.listening.audioContext = new AudioContextClass();
+        state.listening.audioContextGain = state.listening.audioContext.createGain();
+        state.listening.audioContextGain.gain.value = 0;
+        state.listening.audioContextGain.connect(state.listening.audioContext.destination);
         state.listening.audioContext.onstatechange = () => {
           const context = state.listening.audioContext;
           if (!context) return;
           if (context.state === "running") {
             state.listening.audioContextStarted = true;
+            if (state.listening.interruptionPaused) scheduleListeningResumeAfterInterruption();
             return;
           }
-          if (state.listening.audioContextStarted && (context.state === "interrupted" || context.state === "suspended")) {
+          if (state.listening.audioContextStarted && context.state === "interrupted") {
             pauseForListeningInterruption();
           }
         };
       } catch (error) {
         console.debug("Audio interruption monitor unavailable.", error);
         state.listening.audioContext = null;
+        state.listening.audioContextGain = null;
         return;
       }
     }
@@ -460,14 +498,24 @@
     });
     audio.addEventListener("pause", () => {
       if (!state.listening.started) return;
-      state.listening.playing = false;
-      updateMediaSessionState("paused");
-      renderListening();
+      const contextState = state.listening.audioContext?.state;
+      const systemInterruption = state.listening.interruptionPaused
+        || contextState === "interrupted"
+        || (document.hidden && contextState !== "running");
+      if (systemInterruption) {
+        state.listening.interruptionPaused = true;
+        state.listening.resumeAfterInterruption = true;
+        state.listening.playing = false;
+        scheduleListeningResumeAfterInterruption();
+        updateMediaSessionState("paused");
+        renderListening();
+      }
     });
     audio.addEventListener("interruptstart", pauseForListeningInterruption);
     audio.addEventListener("interruptend", () => {
       if (!state.listening.started) return;
       state.listening.playing = false;
+      scheduleListeningResumeAfterInterruption();
       updateMediaSessionState("paused");
       renderListening();
     });
@@ -567,6 +615,9 @@
     if (!state.listening.audio?.src) return;
     ensureListeningAudioContext();
     state.listening.playing = true;
+    state.listening.interruptionPaused = false;
+    state.listening.resumeAfterInterruption = false;
+    state.listening.audio.volume = 1;
     state.listening.audio.play().catch((error) => {
       console.debug(error);
       state.listening.playing = false;
@@ -3397,6 +3448,7 @@
     state.listening.preparing = false;
     state.listening.audio.loop = false;
     state.listening.audio.volume = 1;
+    state.listening.resumeSinkId = state.listening.audio.sinkId || "";
     ensureListeningAudioContext();
     configureSleepTimer();
     renderListening();
@@ -3521,7 +3573,11 @@
       startListening();
       return;
     }
-    if (state.listening.playing) pauseListeningAudio();
+    if (state.listening.playing) {
+      state.listening.interruptionPaused = false;
+      state.listening.resumeAfterInterruption = false;
+      pauseListeningAudio();
+    }
     else resumeListeningAudio();
   }
 
@@ -3876,7 +3932,11 @@
     state.listening.consumedSeconds = 0;
     state.listening.lastTime = 0;
     if (state.listening.sleepTimer) window.clearInterval(state.listening.sleepTimer);
+    if (state.listening.interruptionResumeTimer) window.clearTimeout(state.listening.interruptionResumeTimer);
     state.listening.sleepTimer = null;
+    state.listening.interruptionResumeTimer = null;
+    state.listening.interruptionPaused = false;
+    state.listening.resumeAfterInterruption = false;
     state.listening.sleepDeadline = 0;
     state.listening.sleepAudioDeadline = 0;
     state.listening.directFallback = false;
