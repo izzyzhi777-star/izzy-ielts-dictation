@@ -354,9 +354,13 @@
       sleepTimer: null,
       mediaHandlersReady: false,
       directFallback: false,
-      continuous: false
+      continuous: false,
+      audioContext: null,
+      audioContextStarted: false,
+      interruptionPaused: false
     },
     autoSubmitTimer: null,
+    lastThreeReplayAt: 0,
     preloaded: ""
   };
 
@@ -402,6 +406,42 @@
     }
   }
 
+  function pauseForListeningInterruption() {
+    if (!state.listening.started || !state.listening.playing) return;
+    state.listening.interruptionPaused = true;
+    pauseListeningAudio();
+    updateMediaSessionState("paused");
+  }
+
+  function ensureListeningAudioContext() {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return;
+    if (!state.listening.audioContext) {
+      try {
+        state.listening.audioContext = new AudioContextClass();
+        state.listening.audioContext.onstatechange = () => {
+          const context = state.listening.audioContext;
+          if (!context) return;
+          if (context.state === "running") {
+            state.listening.audioContextStarted = true;
+            return;
+          }
+          if (state.listening.audioContextStarted && (context.state === "interrupted" || context.state === "suspended")) {
+            pauseForListeningInterruption();
+          }
+        };
+      } catch (error) {
+        console.debug("Audio interruption monitor unavailable.", error);
+        state.listening.audioContext = null;
+        return;
+      }
+    }
+    const context = state.listening.audioContext;
+    if (context?.state === "suspended" || context?.state === "interrupted") {
+      context.resume().catch((error) => console.debug("Audio context resume failed.", error));
+    }
+  }
+
   function setupListeningAudio() {
     const audio = state.listening.audio;
     audio.addEventListener("loadedmetadata", () => {
@@ -413,12 +453,21 @@
     audio.addEventListener("play", () => {
       if (!state.listening.started) return;
       state.listening.playing = true;
+      state.listening.interruptionPaused = false;
       state.listening.lastTime = audio.currentTime;
       updateMediaSessionState("playing");
       renderListening();
     });
     audio.addEventListener("pause", () => {
       if (!state.listening.started) return;
+      state.listening.playing = false;
+      updateMediaSessionState("paused");
+      renderListening();
+    });
+    audio.addEventListener("interruptstart", pauseForListeningInterruption);
+    audio.addEventListener("interruptend", () => {
+      if (!state.listening.started) return;
+      state.listening.playing = false;
       updateMediaSessionState("paused");
       renderListening();
     });
@@ -516,6 +565,7 @@
 
   function resumeListeningAudio() {
     if (!state.listening.audio?.src) return;
+    ensureListeningAudioContext();
     state.listening.playing = true;
     state.listening.audio.play().catch((error) => {
       console.debug(error);
@@ -1452,21 +1502,12 @@
       if (
         (event.key === "3" || event.keyCode === 51)
         && dom.settingsDrawer.hidden
-        && state.activeTab === "custom"
-        && state.customSession.started
-        && !state.customSession.complete
         && !event.metaKey
         && !event.ctrlKey
         && !event.altKey
       ) {
-        const predictionHasAnswer = state.customSession.source === "prediction"
-          && Boolean(dom.customAnswerInput.value.trim())
-          && dom.practiceReminder.hidden;
-        if (!predictionHasAnswer) {
-          event.preventDefault();
-          togglePracticeReminder();
-          return;
-        }
+        handleThreeReplayShortcut(event);
+        return;
       }
       if (
         event.key === "Tab"
@@ -1499,6 +1540,50 @@
     window.addEventListener("pagehide", () => {
       if (state.sync.autoSync && state.sync.token && state.sync.gistId) syncCloudData(false);
     });
+  }
+
+  function activeInputAcceptsThreeAsDigit() {
+    if (document.activeElement === dom.answerInput && state.activeTab === "dictation") {
+      return answerMode() === "digits";
+    }
+    if (document.activeElement === dom.dateAnswerInput && state.activeTab === "dates") {
+      return true;
+    }
+    if (document.activeElement === dom.customAnswerInput && state.activeTab === "custom") {
+      const item = currentCustomItem();
+      return state.customSession.source === "prediction" || /\d/.test(item?.text || "");
+    }
+    return false;
+  }
+
+  function replayActivePractice() {
+    if (state.activeTab === "dictation" && state.session.started && !state.session.complete) {
+      playCurrent();
+      return;
+    }
+    if (state.activeTab === "dates" && state.dateSession.started && !state.dateSession.complete) {
+      playCurrentDate();
+      return;
+    }
+    if (state.activeTab === "custom" && state.customSession.started && !state.customSession.complete) {
+      playCurrentCustom();
+    }
+  }
+
+  function handleThreeReplayShortcut(event) {
+    const hasActivePractice =
+      (state.activeTab === "dictation" && state.session.started && !state.session.complete)
+      || (state.activeTab === "dates" && state.dateSession.started && !state.dateSession.complete)
+      || (state.activeTab === "custom" && state.customSession.started && !state.customSession.complete);
+    if (!hasActivePractice) return;
+
+    const acceptsDigit = activeInputAcceptsThreeAsDigit();
+    if (!acceptsDigit) event.preventDefault();
+    const now = Date.now();
+    if (now - state.lastThreeReplayAt < 350) return;
+    state.lastThreeReplayAt = now;
+    if (acceptsDigit) window.setTimeout(replayActivePractice, 0);
+    else replayActivePractice();
   }
 
   function bindOptionGroup(container, attribute, handler) {
@@ -1650,7 +1735,7 @@
       dom.answerTag.textContent = "阿拉伯数字";
       dom.orderTag.textContent = "错题重练";
       dom.listenTitle.textContent = "听音后填写阿拉伯数字";
-      dom.listenHint.textContent = "错题本只练阿拉伯数字。大数字可输入纯数字，不要求逗号。按 Tab 可重播。";
+      dom.listenHint.textContent = "错题本只练阿拉伯数字。大数字可输入纯数字，不要求逗号。按 3 或 Tab 可重播。";
       dom.answerInput.placeholder = "填写数字";
       dom.answerInput.inputMode = "numeric";
       dom.startTitle.textContent = "错题重练";
@@ -1663,8 +1748,8 @@
         : "顺序播报";
       dom.listenTitle.textContent = "听音后填写英文";
       dom.listenHint.textContent = randomRange
-        ? "英文读法不使用 and 连接词，hundred、thousand、million、billion 按英语数位分组。按 Tab 可重播。"
-        : "例如听到 thirteen，请填写 thirteen。按 Tab 可重播。";
+        ? "英文读法不使用 and 连接词，hundred、thousand、million、billion 按英语数位分组。按 3 或 Tab 可重播。"
+        : "例如听到 thirteen，请填写 thirteen。按 3 或 Tab 可重播。";
       dom.startTitle.textContent = randomRange
         ? `从 ${rangeLabel(state.range)} 随机抽取 100 个数字拼英文`
         : "从 1 到 100，按顺序拼写英文";
@@ -1684,7 +1769,7 @@
         ? "0 读作 oh，22 读作 double two，333 读作 triple three。只填写阿拉伯数字，保留开头的 0。"
         : state.range === "years"
           ? "1901 读作 nineteen oh one，1881 读作 eighteen eighty-one。只填写阿拉伯数字。"
-          : "只需要输入纯数字，逗号可以省略。按 Tab 可重播。";
+          : "只需要输入纯数字，逗号可以省略。按 3 或 Tab 可重播。";
       dom.answerInput.placeholder = "填写数字";
       dom.answerInput.inputMode = "numeric";
       dom.startTitle.textContent = state.range === "phone"
@@ -1793,14 +1878,14 @@
       dom.dateStartTitle.textContent = "听完整日期，填写星期、阿拉伯日号和月份";
       dom.dateStartDescription.textContent = "例如听到 “Saturday, the fourth of February”，填写 “Saturday, 4 February”。星期和月份用英文，只有日号写阿拉伯数字。";
       dom.dateListenTitle.textContent = "听音后填写混合日期";
-      dom.dateListenHint.textContent = "格式：Saturday, 4 February。星期和月份用英文，日号用阿拉伯数字。按 Tab 可重播。";
+      dom.dateListenHint.textContent = "格式：Saturday, 4 February。星期和月份用英文，日号用阿拉伯数字。按 3 或 Tab 可重播。";
       dom.dateAnswerInput.placeholder = "例如 Saturday, 4 February";
       dom.dateAnswerInput.inputMode = "text";
     } else {
       dom.dateStartTitle.textContent = "听英文序数，填写阿拉伯数字";
       dom.dateStartDescription.textContent = "从 1 号到 31 号播报，比如 “the twenty-seventh”，填写 27。";
       dom.dateListenTitle.textContent = "听音后填写阿拉伯数字";
-      dom.dateListenHint.textContent = "只需要填写 1–31 的数字，不要求填写月份。按 Tab 可重播。";
+      dom.dateListenHint.textContent = "只需要填写 1–31 的数字，不要求填写月份。按 3 或 Tab 可重播。";
       dom.dateAnswerInput.placeholder = "填写数字，例如 27";
       dom.dateAnswerInput.inputMode = "numeric";
     }
@@ -3312,6 +3397,7 @@
     state.listening.preparing = false;
     state.listening.audio.loop = false;
     state.listening.audio.volume = 1;
+    ensureListeningAudioContext();
     configureSleepTimer();
     renderListening();
     const selected = new Set(
@@ -4559,7 +4645,7 @@
     dom.customAnswerInput.placeholder = session.source === "prediction" ? "例如 07749132760 / £25.50 / March 15" : "填写完整英文";
     dom.customListenHint.textContent = session.source === "prediction"
       ? "听标准英文读法，填写你最初录入的“数字或日期内容”。轻触播放区域重播，Enter 提交/下一题。"
-      : "按 Tab 可重播当前内容";
+      : "按 3 或 Tab 可重播当前内容";
     dom.customSubmitHint.textContent = settings.submitMode === "auto" ? "自动提交" : "手动提交";
     dom.restartCustomButton.disabled = !session.started;
     dom.stopCustomButton.disabled = !state.playing;
