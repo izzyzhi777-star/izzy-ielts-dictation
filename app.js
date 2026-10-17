@@ -355,9 +355,7 @@
       mediaHandlersReady: false,
       directFallback: false,
       continuous: false,
-      audioContext: null,
-      audioContextGain: null,
-      audioContextStarted: false,
+      internalOperation: false,
       interruptionPaused: false,
       resumeAfterInterruption: false,
       interruptionResumeTimer: null
@@ -422,8 +420,10 @@
     if (!state.listening.started || !state.listening.playing) return;
     state.listening.interruptionPaused = true;
     state.listening.resumeAfterInterruption = true;
-    pauseListeningAudio();
+    state.listening.playing = false;
+    try { state.listening.audio.pause(); } catch (error) { console.debug(error); }
     updateMediaSessionState("paused");
+    renderListening();
   }
 
   function scheduleListeningResumeAfterInterruption() {
@@ -431,8 +431,6 @@
     if (state.listening.interruptionResumeTimer) window.clearTimeout(state.listening.interruptionResumeTimer);
     state.listening.interruptionResumeTimer = window.setTimeout(async () => {
       if (!state.listening.started || !state.listening.interruptionPaused || state.listening.playing) return;
-      const context = state.listening.audioContext;
-      if (context && context.state === "interrupted") return;
       const audio = state.listening.audio;
       if (!audio?.src) return;
       try {
@@ -455,40 +453,6 @@
     }, 1600);
   }
 
-  function ensureListeningAudioContext() {
-    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContextClass) return;
-    if (!state.listening.audioContext) {
-      try {
-        state.listening.audioContext = new AudioContextClass();
-        state.listening.audioContextGain = state.listening.audioContext.createGain();
-        state.listening.audioContextGain.gain.value = 0;
-        state.listening.audioContextGain.connect(state.listening.audioContext.destination);
-        state.listening.audioContext.onstatechange = () => {
-          const context = state.listening.audioContext;
-          if (!context) return;
-          if (context.state === "running") {
-            state.listening.audioContextStarted = true;
-            if (state.listening.interruptionPaused) scheduleListeningResumeAfterInterruption();
-            return;
-          }
-          if (state.listening.audioContextStarted && context.state === "interrupted") {
-            pauseForListeningInterruption();
-          }
-        };
-      } catch (error) {
-        console.debug("Audio interruption monitor unavailable.", error);
-        state.listening.audioContext = null;
-        state.listening.audioContextGain = null;
-        return;
-      }
-    }
-    const context = state.listening.audioContext;
-    if (context?.state === "suspended" || context?.state === "interrupted") {
-      context.resume().catch((error) => console.debug("Audio context resume failed.", error));
-    }
-  }
-
   function setupListeningAudio() {
     const audio = state.listening.audio;
     audio.addEventListener("loadedmetadata", () => {
@@ -506,12 +470,8 @@
       renderListening();
     });
     audio.addEventListener("pause", () => {
-      if (!state.listening.started) return;
-      const contextState = state.listening.audioContext?.state;
-      const systemInterruption = state.listening.interruptionPaused
-        || contextState === "interrupted"
-        || (document.hidden && contextState !== "running");
-      if (systemInterruption) {
+      if (!state.listening.started || state.listening.internalOperation) return;
+      if (state.listening.playing) {
         state.listening.interruptionPaused = true;
         state.listening.resumeAfterInterruption = true;
         state.listening.playing = false;
@@ -622,7 +582,6 @@
 
   function resumeListeningAudio() {
     if (!state.listening.audio?.src) return;
-    ensureListeningAudioContext();
     state.listening.playing = true;
     state.listening.interruptionPaused = false;
     state.listening.resumeAfterInterruption = false;
@@ -3214,8 +3173,10 @@
       audio.webkitPreservesPitch = true;
       const resolved = new URL(source, window.location.href).href;
       if (audio.src !== resolved) {
+        state.listening.internalOperation = true;
         audio.src = source;
         audio.load();
+        window.setTimeout(() => { state.listening.internalOperation = false; }, 0);
       } else if (audio.currentTime > 0) {
         audio.currentTime = 0;
       }
@@ -3458,7 +3419,6 @@
     state.listening.audio.loop = false;
     state.listening.audio.volume = 1;
     state.listening.resumeSinkId = state.listening.audio.sinkId || "";
-    ensureListeningAudioContext();
     configureSleepTimer();
     renderListening();
     const selected = new Set(
@@ -3549,12 +3509,14 @@
     audio.playbackRate = Number(dom.listeningSpeed.value) || 1;
     audio.preservesPitch = true;
     audio.webkitPreservesPitch = true;
+    state.listening.internalOperation = true;
     audio.src = bilingual
       ? "audio/continuous/custom-single-words-uk-us-cn-note.mp3"
       : (single
         ? "audio/continuous/custom-single-words-uk-us.mp3"
         : "audio/continuous/custom-uk-us.mp3");
     audio.load();
+    window.setTimeout(() => { state.listening.internalOperation = false; }, 0);
     const pending = state.listening.index;
     state.listening.pendingStartIndex = null;
     audio.onloadedmetadata = () => {
@@ -3920,8 +3882,10 @@
     state.listening.token += 1;
     const audio = state.listening.audio;
     if (audio) {
+      state.listening.internalOperation = true;
       try { audio.pause(); } catch (error) { console.debug(error); }
       try { audio.removeAttribute("src"); audio.load(); } catch (error) { console.debug(error); }
+      window.setTimeout(() => { state.listening.internalOperation = false; }, 0);
     }
     if (state.listening.audioUrl) {
       try { URL.revokeObjectURL(state.listening.audioUrl); } catch (error) { console.debug(error); }
