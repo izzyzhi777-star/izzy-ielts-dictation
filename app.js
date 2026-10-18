@@ -356,6 +356,7 @@
       directFallback: false,
       continuous: false,
       internalOperation: false,
+      internalOperationTimer: null,
       interruptionPaused: false,
       resumeAfterInterruption: false,
       interruptionResumeTimer: null
@@ -416,6 +417,21 @@
     }
   }
 
+  function beginListeningInternalOperation(timeout = 1800) {
+    state.listening.internalOperation = true;
+    if (state.listening.internalOperationTimer) window.clearTimeout(state.listening.internalOperationTimer);
+    state.listening.internalOperationTimer = window.setTimeout(() => {
+      state.listening.internalOperation = false;
+      state.listening.internalOperationTimer = null;
+    }, timeout);
+  }
+
+  function endListeningInternalOperation() {
+    if (state.listening.internalOperationTimer) window.clearTimeout(state.listening.internalOperationTimer);
+    state.listening.internalOperationTimer = null;
+    state.listening.internalOperation = false;
+  }
+
   function pauseForListeningInterruption() {
     if (!state.listening.started || !state.listening.playing) return;
     state.listening.interruptionPaused = true;
@@ -456,11 +472,14 @@
   function setupListeningAudio() {
     const audio = state.listening.audio;
     audio.addEventListener("loadedmetadata", () => {
+      endListeningInternalOperation();
       if (Number.isFinite(audio.duration) && audio.duration > 0) {
         state.listening.totalDuration = audio.duration;
       }
       updateMediaSessionPosition();
     });
+    audio.addEventListener("canplay", endListeningInternalOperation);
+    audio.addEventListener("loadeddata", endListeningInternalOperation);
     audio.addEventListener("play", () => {
       if (!state.listening.started) return;
       state.listening.playing = true;
@@ -490,6 +509,7 @@
     });
     audio.addEventListener("timeupdate", updateListeningProgress);
     audio.addEventListener("error", () => {
+      endListeningInternalOperation();
       if (!state.listening.started) return;
       dom.listeningEnglish.textContent = "音频暂时不可用";
       dom.listeningChinese.textContent = "请重新点击播放，已生成的语音会继续保留。";
@@ -3173,10 +3193,9 @@
       audio.webkitPreservesPitch = true;
       const resolved = new URL(source, window.location.href).href;
       if (audio.src !== resolved) {
-        state.listening.internalOperation = true;
+        beginListeningInternalOperation();
         audio.src = source;
         audio.load();
-        window.setTimeout(() => { state.listening.internalOperation = false; }, 0);
       } else if (audio.currentTime > 0) {
         audio.currentTime = 0;
       }
@@ -3509,14 +3528,13 @@
     audio.playbackRate = Number(dom.listeningSpeed.value) || 1;
     audio.preservesPitch = true;
     audio.webkitPreservesPitch = true;
-    state.listening.internalOperation = true;
+    beginListeningInternalOperation();
     audio.src = bilingual
       ? "audio/continuous/custom-single-words-uk-us-cn-note.mp3"
       : (single
         ? "audio/continuous/custom-single-words-uk-us.mp3"
         : "audio/continuous/custom-uk-us.mp3");
     audio.load();
-    window.setTimeout(() => { state.listening.internalOperation = false; }, 0);
     const pending = state.listening.index;
     state.listening.pendingStartIndex = null;
     audio.onloadedmetadata = () => {
@@ -3882,10 +3900,9 @@
     state.listening.token += 1;
     const audio = state.listening.audio;
     if (audio) {
-      state.listening.internalOperation = true;
+      beginListeningInternalOperation(600);
       try { audio.pause(); } catch (error) { console.debug(error); }
       try { audio.removeAttribute("src"); audio.load(); } catch (error) { console.debug(error); }
-      window.setTimeout(() => { state.listening.internalOperation = false; }, 0);
     }
     if (state.listening.audioUrl) {
       try { URL.revokeObjectURL(state.listening.audioUrl); } catch (error) { console.debug(error); }
@@ -3906,8 +3923,11 @@
     state.listening.lastTime = 0;
     if (state.listening.sleepTimer) window.clearInterval(state.listening.sleepTimer);
     if (state.listening.interruptionResumeTimer) window.clearTimeout(state.listening.interruptionResumeTimer);
+    if (state.listening.internalOperationTimer) window.clearTimeout(state.listening.internalOperationTimer);
     state.listening.sleepTimer = null;
     state.listening.interruptionResumeTimer = null;
+    state.listening.internalOperationTimer = null;
+    state.listening.internalOperation = false;
     state.listening.interruptionPaused = false;
     state.listening.resumeAfterInterruption = false;
     state.listening.sleepDeadline = 0;
