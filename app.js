@@ -359,7 +359,10 @@
       internalOperationTimer: null,
       interruptionPaused: false,
       resumeAfterInterruption: false,
-      interruptionResumeTimer: null
+      interruptionResumeTimer: null,
+      watchdogTimer: null,
+      lastActivityAt: 0,
+      lastRecoveryAt: 0
     },
     autoSubmitTimer: null,
     lastThreeReplayAt: 0,
@@ -432,6 +435,49 @@
     state.listening.internalOperation = false;
   }
 
+  function stopListeningWatchdog() {
+    if (state.listening.watchdogTimer) window.clearInterval(state.listening.watchdogTimer);
+    state.listening.watchdogTimer = null;
+    state.listening.lastActivityAt = 0;
+    state.listening.lastRecoveryAt = 0;
+  }
+
+  function recoverListeningPlayback() {
+    if (!state.listening.started || !state.listening.playing || state.listening.interruptionPaused || state.listening.internalOperation) return;
+    const audio = state.listening.audio;
+    if (!audio?.src) return;
+    const now = Date.now();
+    if (now - state.listening.lastRecoveryAt < 3000) return;
+    state.listening.lastRecoveryAt = now;
+    if (state.listening.timeline.length) {
+      seekListeningToIndex(state.listening.index);
+      return;
+    }
+    const token = ++state.listening.token;
+    playListeningSequentially(state.listening.playlist, token, state.listening.index).catch((error) => {
+      if (token !== state.listening.token) return;
+      console.warn("Listening recovery failed.", error);
+    });
+  }
+
+  function startListeningWatchdog() {
+    stopListeningWatchdog();
+    state.listening.lastActivityAt = Date.now();
+    state.listening.watchdogTimer = window.setInterval(() => {
+      if (!state.listening.started || !state.listening.playing || state.listening.interruptionPaused || state.listening.internalOperation) return;
+      const audio = state.listening.audio;
+      if (!audio?.src) return;
+      if (audio.paused) {
+        recoverListeningPlayback();
+        return;
+      }
+      if (Date.now() - state.listening.lastActivityAt > 12000) {
+        state.listening.lastActivityAt = Date.now();
+        recoverListeningPlayback();
+      }
+    }, 2200);
+  }
+
   function pauseForListeningInterruption() {
     if (!state.listening.started || !state.listening.playing) return;
     state.listening.interruptionPaused = true;
@@ -485,6 +531,7 @@
       state.listening.playing = true;
       state.listening.interruptionPaused = false;
       state.listening.lastTime = audio.currentTime;
+      state.listening.lastActivityAt = Date.now();
       updateMediaSessionState("playing");
       renderListening();
     });
@@ -574,6 +621,7 @@
       state.listening.consumedSeconds += delta * (Number(audio.playbackRate) || 1);
     }
     state.listening.lastTime = audio.currentTime;
+    state.listening.lastActivityAt = Date.now();
     const duration = Number.isFinite(audio.duration) && audio.duration > 0
       ? audio.duration
       : state.listening.totalDuration;
@@ -3440,6 +3488,7 @@
     state.listening.resumeSinkId = state.listening.audio.sinkId || "";
     configureSleepTimer();
     renderListening();
+    startListeningWatchdog();
     const selected = new Set(
       Array.from(dom.listeningCategories.querySelectorAll("input:checked")).map((input) => input.dataset.listeningCategory)
     );
@@ -3913,6 +3962,7 @@
 
   function stopListening() {
     stopListeningAudio();
+    stopListeningWatchdog();
     state.listening.playing = false;
     state.listening.started = false;
     state.listening.preparing = false;
