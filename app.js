@@ -9,6 +9,7 @@
   const DELETED_PREDICTION_KEY = "number-prediction-deleted-v1";
   const HEARING_WRONG_KEY = "number-dictation-hearing-wrong-v1";
   const SYNC_KEY = "izzy-ielts-sync-v1";
+  const MAX_PREPARED_LISTENING_ITEMS = 720;
   const LISTENING_PROGRESS_KEY = "number-dictation-listening-progress-v1";
   const EBBINGHAUS_INTERVALS = [
     5 * 60 * 1000,
@@ -362,7 +363,8 @@
       interruptionResumeTimer: null,
       watchdogTimer: null,
       lastActivityAt: 0,
-      lastRecoveryAt: 0
+      lastRecoveryAt: 0,
+      preparedCache: new Map()
     },
     autoSubmitTimer: null,
     lastThreeReplayAt: 0,
@@ -3498,6 +3500,11 @@
       startContinuousVocabulary(token, playlist, mode, pendingStart);
       return;
     }
+    if (playlist.length <= MAX_PREPARED_LISTENING_ITEMS) {
+      state.listening.pendingStartIndex = null;
+      startPreparedListening(playlist, token, pendingStart);
+      return;
+    }
     state.listening.pendingStartIndex = null;
     playListeningSequentially(playlist, token, pendingStart).catch((error) => {
       if (token !== state.listening.token) return;
@@ -3511,6 +3518,88 @@
       if (token !== state.listening.token || !total) return;
       dom.listeningProgress.textContent = `缓存 ${completed} / ${total}`;
     }).catch((error) => console.debug("Voice preload stopped.", error));
+  }
+
+  async function startPreparedListening(playlist, token, startIndex = 0) {
+    const safeStart = Math.min(Math.max(0, startIndex), Math.max(0, playlist.length - 1));
+    const orderedPlaylist = safeStart > 0
+      ? [...playlist.slice(safeStart), ...playlist.slice(0, safeStart)]
+      : playlist;
+    state.listening.playlist = orderedPlaylist;
+    state.listening.index = 0;
+    state.listening.currentTrack = -1;
+    state.listening.playing = true;
+    state.listening.preparing = true;
+    state.listening.timeline = [];
+    state.listening.totalDuration = 0;
+    beginListeningInternalOperation(1800);
+    unlockListeningAudio();
+    renderListening();
+    const cacheKey = [
+      orderedPlaylist.map((entry) => entry.key || entry.english || entry.audioText).join("|"),
+      dom.listeningMode.value,
+      dom.listeningRepeat.value,
+      dom.listeningInterval.value
+    ].join("::");
+    try {
+      let prepared = state.listening.preparedCache.get(cacheKey);
+      if (!prepared) {
+        dom.listeningEnglish.textContent = "正在准备连续音频";
+        dom.listeningChinese.textContent = "正在合成，完成后会自动开始播放";
+        prepared = await prepareListeningStream(orderedPlaylist, token, (completed, total, entry) => {
+          if (token !== state.listening.token) return;
+          dom.listeningProgress.textContent = `准备 ${completed} / ${total}`;
+          dom.listeningEnglish.textContent = "正在准备连续音频";
+          dom.listeningChinese.textContent = entry?.english ? `已完成：${entry.english}` : "正在合成连续音频";
+        });
+        if (token !== state.listening.token) return;
+        state.listening.preparedCache.clear();
+        state.listening.preparedCache.set(cacheKey, prepared);
+      }
+      if (token !== state.listening.token) return;
+      state.listening.timeline = prepared.timeline;
+      state.listening.totalDuration = prepared.duration;
+      state.listening.preparing = false;
+      const audio = state.listening.audio;
+      if (state.listening.audioUrl) {
+        try { URL.revokeObjectURL(state.listening.audioUrl); } catch (error) { console.debug(error); }
+      }
+      state.listening.audioUrl = URL.createObjectURL(prepared.blob);
+      audio.loop = true;
+      audio.volume = 1;
+      audio.playbackRate = Number(dom.listeningSpeed.value) || 1;
+      audio.preservesPitch = true;
+      audio.webkitPreservesPitch = true;
+      beginListeningInternalOperation();
+      audio.src = state.listening.audioUrl;
+      audio.load();
+      setListeningTrack(0);
+      renderListening();
+      startListeningWatchdog();
+      updateMediaSessionMetadata(orderedPlaylist[0], 0);
+      audio.play().catch((error) => {
+        if (token !== state.listening.token) return;
+        state.listening.playing = false;
+        console.warn("Prepared listening playback failed.", error);
+        renderListening();
+      });
+    } catch (error) {
+      if (token !== state.listening.token) return;
+      console.warn("Prepared listening failed; falling back to sequential playback.", error);
+      state.listening.preparing = false;
+      state.listening.audio.volume = 1;
+      state.listening.pendingStartIndex = null;
+      try {
+        await playListeningSequentially(orderedPlaylist, token, 0);
+      } catch (fallbackError) {
+        if (token !== state.listening.token) return;
+        state.listening.playing = false;
+        console.error(fallbackError);
+        dom.listeningEnglish.textContent = "随身听暂时不可用";
+        dom.listeningChinese.textContent = "请重新点击开始；已经缓存的语音不会丢失。";
+        renderListening();
+      }
+    }
   }
 
   async function startContinuousVocabulary(token, playlist, mode = "all", startIndex = 0) {
@@ -3701,6 +3790,74 @@
     dom.listeningStartFromButton.disabled = !playlist.length;
   }
 
+  function audioBufferToWav(audioBuffer) {
+    const channels = Math.min(1, audioBuffer.numberOfChannels);
+    const samples = audioBuffer.getChannelData(0);
+    const buffer = new ArrayBuffer(44 + samples.length * 2);
+    const view = new DataView(buffer);
+    const writeText = (offset, value) => {
+      for (let index = 0; index < value.length; index += 1) view.setUint8(offset + index, value.charCodeAt(index));
+    };
+    writeText(0, "RIFF");
+    view.setUint32(4, 36 + samples.length * 2, true);
+    writeText(8, "WAVE");
+    writeText(12, "fmt ");
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);
+    view.setUint16(22, channels, true);
+    view.setUint32(24, audioBuffer.sampleRate, true);
+    view.setUint32(28, audioBuffer.sampleRate * channels * 2, true);
+    view.setUint16(32, channels * 2, true);
+    view.setUint16(34, 16, true);
+    writeText(36, "data");
+    view.setUint32(40, samples.length * 2, true);
+    let offset = 44;
+    for (let index = 0; index < samples.length; index += 1) {
+      const sample = Math.max(-1, Math.min(1, samples[index]));
+      view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7fff, true);
+      offset += 2;
+    }
+    return new Blob([buffer], { type: "audio/wav" });
+  }
+
+  async function composeListeningParts(parts, token) {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    const OfflineContextClass = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    if (!AudioContextClass || !OfflineContextClass) {
+      return { blob: neuralVoice.compose(parts), duration: parts.reduce((sum, part) => sum + neuralVoice.estimateDuration(part), 0) };
+    }
+    const decoder = new AudioContextClass();
+    const buffers = [];
+    try {
+      for (const part of parts) {
+        if (token !== state.listening.token) throw new Error("Listening preparation cancelled");
+        if (!part?.size) continue;
+        try {
+          const data = await part.arrayBuffer();
+          buffers.push(await decoder.decodeAudioData(data));
+        } catch (error) {
+          console.warn("Could not decode listening part.", error);
+        }
+      }
+    } finally {
+      try { await decoder.close(); } catch (error) { console.debug(error); }
+    }
+    if (!buffers.length) throw new Error("No decodable listening audio");
+    const sampleRate = 24000;
+    const totalDuration = buffers.reduce((sum, buffer) => sum + buffer.duration, 0);
+    const offline = new OfflineContextClass(1, Math.max(1, Math.ceil(totalDuration * sampleRate)), sampleRate);
+    let cursor = 0;
+    buffers.forEach((buffer) => {
+      const source = offline.createBufferSource();
+      source.buffer = buffer;
+      source.connect(offline.destination);
+      source.start(cursor);
+      cursor += buffer.duration;
+    });
+    const rendered = await offline.startRendering();
+    return { blob: audioBufferToWav(rendered), duration: rendered.duration };
+  }
+
   async function prepareListeningStream(playlist, token, onProgress) {
     const parts = [];
     const timeline = [];
@@ -3777,10 +3934,11 @@
       if (!speechCount) {
         throw new Error("No neural speech was generated");
       }
+      const composed = await composeListeningParts(parts, token);
       return {
-        blob: neuralVoice.compose(parts),
+        blob: composed.blob,
         timeline,
-        duration: Math.max(0.1, cursor),
+        duration: composed.duration,
         failed
       };
     } finally {
