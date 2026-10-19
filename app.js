@@ -451,6 +451,14 @@
     const now = Date.now();
     if (now - state.listening.lastRecoveryAt < 3000) return;
     state.listening.lastRecoveryAt = now;
+    if (state.listening.continuous) {
+      if (audio.ended && state.listening.timeline.length) {
+        seekListeningToIndex(state.listening.index);
+      } else if (audio.paused) {
+        audio.play().catch((error) => console.debug("Continuous playback resume failed.", error));
+      }
+      return;
+    }
     if (state.listening.timeline.length) {
       seekListeningToIndex(state.listening.index);
       return;
@@ -466,7 +474,7 @@
     stopListeningWatchdog();
     state.listening.lastActivityAt = Date.now();
     state.listening.watchdogTimer = window.setInterval(() => {
-      if (!state.listening.started || !state.listening.playing || state.listening.interruptionPaused || state.listening.internalOperation) return;
+      if (document.hidden || !state.listening.started || !state.listening.playing || state.listening.interruptionPaused || state.listening.internalOperation) return;
       const audio = state.listening.audio;
       if (!audio?.src) return;
       if (audio.paused) {
@@ -1304,7 +1312,10 @@
     dom.stopButton.addEventListener("click", stopPlayback);
     dom.submitButton.addEventListener("click", () => submitAnswer(false));
     dom.nextButton.addEventListener("click", () => goNext(true));
-    dom.answerInput.addEventListener("input", handleAnswerInput);
+    dom.answerInput.addEventListener("input", (event) => {
+      handleAnswerInput();
+      handleThreeInputEvent(event);
+    });
     dom.answerInput.addEventListener("keydown", (event) => {
       if (event.key !== "Enter") return;
       event.preventDefault();
@@ -1336,7 +1347,10 @@
     dom.stopDateButton.addEventListener("click", stopPlayback);
     dom.submitDateButton.addEventListener("click", () => submitDateAnswer(false));
     dom.nextDateButton.addEventListener("click", () => goNextDate(true));
-    dom.dateAnswerInput.addEventListener("input", handleDateInput);
+    dom.dateAnswerInput.addEventListener("input", (event) => {
+      handleDateInput();
+      handleThreeInputEvent(event);
+    });
     dom.dateAnswerInput.addEventListener("keydown", (event) => {
       if (event.key !== "Enter") return;
       event.preventDefault();
@@ -1383,7 +1397,10 @@
     dom.stopCustomButton.addEventListener("click", stopPlayback);
     dom.submitCustomButton.addEventListener("click", () => submitCustomAnswer(false));
     dom.nextCustomButton.addEventListener("click", () => goNextCustom(true));
-    dom.customAnswerInput.addEventListener("input", handleCustomInput);
+    dom.customAnswerInput.addEventListener("input", (event) => {
+      handleCustomInput();
+      handleThreeInputEvent(event);
+    });
     let lastCustomEnterHandled = 0;
     const handleCustomEnter = (event) => {
       if (event.isComposing || (event.key !== "Enter" && event.keyCode !== 13)) return;
@@ -1631,6 +1648,15 @@
     });
   }
 
+  function handleThreeInputEvent(event) {
+    if (!event || event.isComposing || event.data !== "3") return;
+    if (!activeInputAcceptsThreeAsDigit()) return;
+    const now = Date.now();
+    if (now - state.lastThreeReplayAt < 350) return;
+    state.lastThreeReplayAt = now;
+    window.setTimeout(replayActivePractice, 0);
+  }
+
   function activeInputAcceptsThreeAsDigit() {
     if (document.activeElement === dom.answerInput && state.activeTab === "dictation") {
       return answerMode() === "digits";
@@ -1646,6 +1672,11 @@
   }
 
   function replayActivePractice() {
+    if (state.activeTab === "listening" && state.listening.started) {
+      if (state.listening.playing) seekListeningToIndex(state.listening.index);
+      else resumeListeningAudio();
+      return;
+    }
     if (state.activeTab === "dictation" && state.session.started && !state.session.complete) {
       playCurrent();
       return;
@@ -1661,7 +1692,8 @@
 
   function handleThreeReplayShortcut(event) {
     const hasActivePractice =
-      (state.activeTab === "dictation" && state.session.started && !state.session.complete)
+      (state.activeTab === "listening" && state.listening.started)
+      || (state.activeTab === "dictation" && state.session.started && !state.session.complete)
       || (state.activeTab === "dates" && state.dateSession.started && !state.dateSession.complete)
       || (state.activeTab === "custom" && state.customSession.started && !state.customSession.complete);
     if (!hasActivePractice) return;
@@ -3559,6 +3591,7 @@
       if (token !== state.listening.token) return;
       state.listening.timeline = prepared.timeline;
       state.listening.totalDuration = prepared.duration;
+      state.listening.continuous = true;
       state.listening.preparing = false;
       const audio = state.listening.audio;
       if (state.listening.audioUrl) {
