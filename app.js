@@ -1638,6 +1638,11 @@
         }
       }
     });
+    document.addEventListener("keyup", (event) => {
+      if ((event.key === "3" || event.keyCode === 51) && dom.settingsDrawer.hidden && !event.metaKey && !event.ctrlKey && !event.altKey) {
+        handleThreeReplayShortcut(event);
+      }
+    });
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) return;
       if (state.sync.autoSync && state.sync.token && state.sync.gistId) syncCloudData(false);
@@ -1648,13 +1653,33 @@
     });
   }
 
+  function hasActivePractice() {
+    return (state.activeTab === "listening" && state.listening.started)
+      || (state.activeTab === "dictation" && state.session.started && !state.session.complete)
+      || (state.activeTab === "dates" && state.dateSession.started && !state.dateSession.complete)
+      || (state.activeTab === "custom" && state.customSession.started && !state.customSession.complete);
+  }
+
   function handleThreeInputEvent(event) {
-    if (!event || event.isComposing || event.data !== "3") return;
-    if (!activeInputAcceptsThreeAsDigit()) return;
+    if (!event || event.isComposing) return;
+    const input = event.target;
+    if (!input || !("value" in input)) return;
+    const current = String(input.value || "");
+    const previous = String(input.dataset.threeLastValue || "");
+    input.dataset.threeLastValue = current;
+    const insertedThree = event.data === "3"
+      || (current.endsWith("3") && current !== previous && (current.length > previous.length || !previous));
+    if (!insertedThree || !hasActivePractice()) return;
     const now = Date.now();
     if (now - state.lastThreeReplayAt < 350) return;
     state.lastThreeReplayAt = now;
     window.setTimeout(replayActivePractice, 0);
+  }
+
+  function resetThreeInputTracking() {
+    [dom.answerInput, dom.dateAnswerInput, dom.customAnswerInput].forEach((input) => {
+      if (input) input.dataset.threeLastValue = "";
+    });
   }
 
   function activeInputAcceptsThreeAsDigit() {
@@ -2123,6 +2148,7 @@
       correct: 0
     };
     dom.dateAnswerInput.value = "";
+    resetThreeInputTracking();
     dom.dateResult.hidden = true;
     dom.dateResult.classList.remove("is-wrong");
     dom.dateUserAnswerRow.hidden = true;
@@ -2248,6 +2274,7 @@
     state.dateSession.index += 1;
     state.dateSession.checked = false;
     dom.dateAnswerInput.value = "";
+    resetThreeInputTracking();
     dom.dateResult.hidden = true;
     dom.dateResult.classList.remove("is-wrong");
     dom.dateUserAnswerRow.hidden = true;
@@ -2384,6 +2411,7 @@
       correct: 0
     };
     dom.answerInput.value = "";
+    resetThreeInputTracking();
     dom.result.hidden = true;
     dom.result.classList.remove("is-wrong");
     dom.userAnswerRow.hidden = true;
@@ -2785,6 +2813,7 @@
     state.session.index += 1;
     state.session.checked = false;
     dom.answerInput.value = "";
+    resetThreeInputTracking();
     dom.result.hidden = true;
     dom.result.classList.remove("is-wrong");
     dom.userAnswerRow.hidden = true;
@@ -5024,6 +5053,7 @@
     };
     switchTab("custom");
     dom.customAnswerInput.value = "";
+    resetThreeInputTracking();
     dom.customResult.hidden = true;
     renderCustomSession();
     dom.customAnswerInput.focus();
@@ -5180,6 +5210,7 @@
     state.customSession.index += 1;
     state.customSession.checked = false;
     dom.customAnswerInput.value = "";
+    resetThreeInputTracking();
     dom.customResult.hidden = true;
     dom.customUserAnswerRow.hidden = true;
     renderCustomSession();
