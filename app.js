@@ -4623,7 +4623,7 @@
 
   function warmCustomItemAudio(item) {
     if (!item) return;
-    [item.text, item.example, item.note].filter(Boolean).forEach((text) => {
+    [item.text, item.translation, item.example, item.exampleTranslation, item.note].filter(Boolean).forEach((text) => {
       preloadExternalSpeech(text);
     });
   }
