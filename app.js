@@ -11,6 +11,7 @@
   const SYNC_KEY = "izzy-ielts-sync-v1";
   const MAX_PREPARED_LISTENING_ITEMS = 720;
   const LISTENING_PROGRESS_KEY = "number-dictation-listening-progress-v1";
+  const CUSTOM_PRACTICE_POSITION_KEY = "number-dictation-custom-practice-position-v1";
   const EBBINGHAUS_INTERVALS = [
     5 * 60 * 1000,
     30 * 60 * 1000,
@@ -852,6 +853,24 @@
     }
   }
 
+  function loadCustomPracticePositionId() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(CUSTOM_PRACTICE_POSITION_KEY) || "{}");
+      return String(parsed.itemId || "");
+    } catch (error) {
+      return "";
+    }
+  }
+
+  function saveCustomPracticePositionId(itemId) {
+    try {
+      if (!itemId) return;
+      localStorage.setItem(CUSTOM_PRACTICE_POSITION_KEY, JSON.stringify({ itemId: String(itemId), savedAt: Date.now() }));
+    } catch (error) {
+      // Private browsing may block storage; the picker still works in this session.
+    }
+  }
+
   function loadDeletedCustomIds() {
     try {
       const raw = localStorage.getItem(DELETED_CUSTOM_KEY);
@@ -1380,6 +1399,9 @@
     });
     dom.customExampleTranslationInput.addEventListener("input", () => {
       state.customExampleAutoTranslation = false;
+    });
+    dom.customPracticeStartSelect.addEventListener("change", () => {
+      saveCustomPracticePositionId(dom.customPracticeStartSelect.value);
     });
     dom.startCustomPracticeButton.addEventListener("click", () => startCustomPractice());
     dom.restartCustomButton.addEventListener("click", () => startCustomPractice());
@@ -4868,6 +4890,10 @@
       (item) => item.id,
       (item, index) => `${index + 1}. ${item.text}`
     );
+    const savedId = loadCustomPracticePositionId();
+    if (savedId && Array.from(dom.customPracticeStartSelect.options).some((option) => option.value === savedId)) {
+      dom.customPracticeStartSelect.value = savedId;
+    }
   }
 
   function renderCustom() {
@@ -5008,6 +5034,10 @@
     let sourceItems = Array.isArray(items) ? items : state.customItems;
     if (!Array.isArray(items) && source === "all") {
       sourceItems = reorderFromSelected(sourceItems, dom.customPracticeStartSelect?.value || "");
+      if (sourceItems[0]?.id) {
+        saveCustomPracticePositionId(sourceItems[0].id);
+        dom.customPracticeStartSelect.value = sourceItems[0].id;
+      }
     }
     if (!sourceItems.length) {
       if (source !== "hearing") switchTab("custom");
@@ -5189,6 +5219,13 @@
     dom.customResult.hidden = true;
     dom.customUserAnswerRow.hidden = true;
     renderCustomSession();
+    if (state.customSession.source === "all") {
+      const current = currentCustomItem();
+      if (current?.id) {
+        saveCustomPracticePositionId(current.id);
+        dom.customPracticeStartSelect.value = current.id;
+      }
+    }
     dom.customAnswerInput.focus();
     if (autoPlay) playCurrentCustom();
   }
