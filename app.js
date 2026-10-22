@@ -3417,14 +3417,15 @@
         }
         if (!parts.length) return;
         if (parts.length === 1) {
-          entries.push({ ...parts[0], key: `custom:${item.id}` });
+          entries.push({ ...parts[0], key: `custom:${item.id}`, customOrder: Number(item.createdAt || item.updatedAt || 0) });
         } else {
           entries.push({
             kind: "group",
             parts,
             english: parts.map((part) => part.english).join(" / "),
             chinese: parts.map((part) => part.chinese).join(" / "),
-            key: `custom-group:${item.id}`
+            key: `custom-group:${item.id}`,
+            customOrder: Number(item.createdAt || item.updatedAt || 0)
           });
         }
       });
@@ -3438,7 +3439,8 @@
             english: item.text,
             chinese: item.translation || item.text,
             audioText: item.text,
-            key: `singleword:${item.id}`
+            key: `singleword:${item.id}`,
+            customOrder: Number(item.createdAt || item.updatedAt || 0)
           });
         });
     }
@@ -3489,8 +3491,12 @@
         });
       });
     }
-    const unique = new Map(entries.map((entry) => [entry.key, entry]));
-    return shuffle(Array.from(unique.values()));
+    const unique = Array.from(new Map(entries.map((entry) => [entry.key, entry])).values());
+    const customEntries = unique
+      .filter((entry) => Number.isFinite(entry.customOrder))
+      .sort((a, b) => b.customOrder - a.customOrder);
+    const otherEntries = unique.filter((entry) => !Number.isFinite(entry.customOrder));
+    return [...customEntries, ...shuffle(otherEntries)];
   }
 
   async function startListening() {
@@ -3530,12 +3536,6 @@
     const selected = new Set(
       Array.from(dom.listeningCategories.querySelectorAll("input:checked")).map((input) => input.dataset.listeningCategory)
     );
-    if (selected.size === 1 && (selected.has("custom") || selected.has("singlewords"))) {
-      let mode = "all";
-      if (selected.has("singlewords")) mode = dom.listeningMode.value === "bilingual" ? "single-bilingual" : "single";
-      startContinuousVocabulary(token, playlist, mode, pendingStart);
-      return;
-    }
     if (playlist.length <= MAX_PREPARED_LISTENING_ITEMS) {
       state.listening.pendingStartIndex = null;
       startPreparedListening(playlist, token, pendingStart);
