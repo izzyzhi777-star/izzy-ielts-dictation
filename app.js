@@ -3533,7 +3533,7 @@
     if (state.listening.preparing) return;
     const pendingStart = Number.isInteger(state.listening.pendingStartIndex)
       ? state.listening.pendingStartIndex
-      : loadListeningProgress();
+      : 0;
     const playlist = state.listening.previewPlaylist.length
       ? state.listening.previewPlaylist
       : buildListeningPlaylist();
@@ -4110,15 +4110,22 @@
     }
 
     if (!blob) {
-      if (Date.now() < state.neuralCooldownUntil) throw new Error("Neural voice is cooling down");
       const requestedVoice = options.voice || (neuralVoice.containsChinese(normalized) ? "zh-CN-XiaoxiaoNeural" : "en-GB-SoniaNeural");
-      try {
-        blob = options.session
-          ? await options.session.synthesize(normalized, { voice: requestedVoice })
-          : await neuralVoice.synthesize(normalized, { voice: requestedVoice });
-      } catch (error) {
-        state.neuralCooldownUntil = Date.now() + 60000;
-        throw error;
+      let lastError = null;
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        try {
+          blob = options.session
+            ? await options.session.synthesize(normalized, { voice: requestedVoice })
+            : await neuralVoice.synthesize(normalized, { voice: requestedVoice });
+          if (blob?.size) break;
+        } catch (error) {
+          lastError = error;
+          if (attempt < 2) await wait(300 * (attempt + 1));
+        }
+      }
+      if (!blob?.size) {
+        state.neuralCooldownUntil = Date.now() + 1500;
+        throw lastError || new Error("Neural voice unavailable");
       }
     }
     if (!blob?.size) throw new Error("Empty speech audio");
