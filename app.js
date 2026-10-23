@@ -3579,16 +3579,26 @@
     ].join("::");
     let prepared = state.listening.preparedCache.get(cacheKey);
     if (!prepared) {
-      if (showProgress) {
-        dom.listeningEnglish.textContent = "正在准备连续音频";
-        dom.listeningChinese.textContent = "正在合成，完成后会自动开始播放";
+      let lastError = null;
+      for (let attempt = 0; attempt < 4; attempt += 1) {
+        try {
+          if (showProgress) {
+            dom.listeningEnglish.textContent = "正在准备连续音频";
+            dom.listeningChinese.textContent = "正在合成，完成后会自动开始播放";
+          }
+          prepared = await prepareListeningStream(chunk, token, showProgress ? (completed, total, entry) => {
+            if (token !== state.listening.token) return;
+            dom.listeningProgress.textContent = `准备 ${completed} / ${total}`;
+            dom.listeningEnglish.textContent = "正在准备连续音频";
+            dom.listeningChinese.textContent = entry?.english ? `已完成：${entry.english}` : "正在合成连续音频";
+          } : null);
+          break;
+        } catch (error) {
+          lastError = error;
+          if (attempt < 3) await wait(700 * (attempt + 1));
+        }
       }
-      prepared = await prepareListeningStream(chunk, token, showProgress ? (completed, total, entry) => {
-        if (token !== state.listening.token) return;
-        dom.listeningProgress.textContent = `准备 ${completed} / ${total}`;
-        dom.listeningEnglish.textContent = "正在准备连续音频";
-        dom.listeningChinese.textContent = entry?.english ? `已完成：${entry.english}` : "正在合成连续音频";
-      } : null);
+      if (!prepared) throw lastError || new Error("Listening audio preparation failed");
       prepared.timeline = prepared.timeline.map((segment, index) => ({
         ...segment,
         entryIndex: chunkStart + index
@@ -3999,8 +4009,7 @@
           speechBlob = await getSpeechBlobForPart(part, { session: voiceSession });
         } catch (error) {
           failed += 1;
-          console.warn("Could not generate listening audio.", part, error);
-          continue;
+          throw new Error(`Could not generate listening audio for "${part.english || part.audioText || part.text || ""}": ${error.message || error}`);
         }
         speechCount += 1;
         const speechDuration = await decodedBlobDuration(speechBlob, durationDecoder);
@@ -4121,6 +4130,17 @@
         } catch (error) {
           lastError = error;
           if (attempt < 2) await wait(300 * (attempt + 1));
+        }
+      }
+      if (!blob?.size && options.session) {
+        for (let attempt = 0; attempt < 2; attempt += 1) {
+          try {
+            blob = await neuralVoice.synthesize(normalized, { voice: requestedVoice });
+            if (blob?.size) break;
+          } catch (error) {
+            lastError = error;
+            if (attempt === 0) await wait(500);
+          }
         }
       }
       if (!blob?.size) {
@@ -4715,7 +4735,32 @@
     if (!item) return;
     [item.text, item.translation, item.example, item.exampleTranslation, item.note].filter(Boolean).forEach((text) => {
       preloadExternalSpeech(text);
+      const normalized = neuralVoice.normalizeText(text);
+      if (!normalized || state.warmedTexts.has(normalized)) return;
+      state.warmedTexts.add(normalized);
+      state.warmQueue = state.warmQueue
+        .then(() => getSpeechBlob(normalized))
+        .catch((error) => {
+          state.warmedTexts.delete(normalized);
+          console.debug("Could not cache custom listening audio.", error);
+        });
     });
+  }
+
+  async function warmListeningLibraryAudio() {
+    for (const item of state.customItems) {
+      const text = String(item.text || "").trim();
+      if (!text) continue;
+      const normalized = neuralVoice.normalizeText(text);
+      if (!normalized || state.voicePackIndex[normalized] || state.warmedTexts.has(normalized)) continue;
+      state.warmedTexts.add(normalized);
+      try {
+        await getSpeechBlob(normalized);
+      } catch (error) {
+        state.warmedTexts.delete(normalized);
+        console.debug("Listening audio pre-cache skipped.", error);
+      }
+    }
   }
 
   function preloadPredictionSpeech(text, type) {
