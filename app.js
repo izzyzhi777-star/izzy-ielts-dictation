@@ -3954,6 +3954,20 @@
     return { blob: audioBufferToWav(rendered), duration: rendered.duration };
   }
 
+  function silenceDuration(seconds) {
+    return Math.round((Number(seconds) || 0) * 1000 / 24) * 0.024;
+  }
+
+  async function decodedBlobDuration(blob, decoder) {
+    if (!blob?.size || !decoder) return neuralVoice.estimateDuration(blob);
+    try {
+      const data = await blob.arrayBuffer();
+      return (await decoder.decodeAudioData(data)).duration;
+    } catch (error) {
+      return neuralVoice.estimateDuration(blob);
+    }
+  }
+
   async function prepareListeningStream(playlist, token, onProgress) {
     const parts = [];
     const timeline = [];
@@ -3964,6 +3978,13 @@
     let failed = 0;
     let speechCount = 0;
     const voiceSession = neuralVoice.createSession();
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    let durationDecoder = null;
+    try {
+      if (AudioContextClass) durationDecoder = new AudioContextClass();
+    } catch (error) {
+      durationDecoder = null;
+    }
 
     try {
       for (let entryIndex = 0; entryIndex < playlist.length; entryIndex += 1) {
@@ -3982,34 +4003,32 @@
           continue;
         }
         speechCount += 1;
+        const speechDuration = await decodedBlobDuration(speechBlob, durationDecoder);
         for (let count = 0; count < repeat; count += 1) {
           parts.push(speechBlob);
-          cursor += neuralVoice.estimateDuration(speechBlob);
+          cursor += speechDuration;
           if (count < repeat - 1) {
-            const gap = neuralVoice.silence(0.32);
-            parts.push(gap);
-            cursor += neuralVoice.estimateDuration(gap);
+            parts.push(neuralVoice.silence(0.32));
+            cursor += silenceDuration(0.32);
           }
         }
         const shouldTranslate = bilingual && !part.skipTranslation
           && part.chinese && part.chinese !== part.english && part.chinese !== part.audioText;
         if (shouldTranslate) {
-          const translationGap = neuralVoice.silence(0.28);
-          parts.push(translationGap);
-          cursor += neuralVoice.estimateDuration(translationGap);
+          parts.push(neuralVoice.silence(0.28));
+          cursor += silenceDuration(0.28);
           try {
             const translationBlob = await getSpeechBlob(String(part.chinese), { session: voiceSession });
             parts.push(translationBlob);
-            cursor += neuralVoice.estimateDuration(translationBlob);
+            cursor += await decodedBlobDuration(translationBlob, durationDecoder);
           } catch (error) {
             failed += 1;
             console.warn("Could not generate translation audio.", part.chinese, error);
           }
         }
         if (partIndex < entryParts.length - 1) {
-          const groupGap = neuralVoice.silence(0.34);
-          parts.push(groupGap);
-          cursor += neuralVoice.estimateDuration(groupGap);
+          parts.push(neuralVoice.silence(0.34));
+          cursor += silenceDuration(0.34);
         }
       }
       const entryEnd = cursor;
@@ -4020,9 +4039,8 @@
         duration: Math.max(0.05, entryEnd - entryStart)
       });
       if (intervalSeconds > 0) {
-        const interval = neuralVoice.silence(intervalSeconds);
-        parts.push(interval);
-        cursor += neuralVoice.estimateDuration(interval);
+        parts.push(neuralVoice.silence(intervalSeconds));
+        cursor += silenceDuration(intervalSeconds);
       }
       onProgress?.(entryIndex + 1, playlist.length, entry);
       await Promise.resolve();
@@ -4039,6 +4057,9 @@
       };
     } finally {
       voiceSession.close();
+      if (durationDecoder) {
+        try { await durationDecoder.close(); } catch (error) { console.debug(error); }
+      }
     }
   }
 
