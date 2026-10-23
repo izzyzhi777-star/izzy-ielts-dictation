@@ -9,7 +9,7 @@
   const DELETED_PREDICTION_KEY = "number-prediction-deleted-v1";
   const HEARING_WRONG_KEY = "number-dictation-hearing-wrong-v1";
   const SYNC_KEY = "izzy-ielts-sync-v1";
-  const MAX_PREPARED_LISTENING_ITEMS = 720;
+  const PREPARED_LISTENING_CHUNK_SIZE = 60;
   const LISTENING_PROGRESS_KEY = "number-dictation-listening-progress-v1";
   const CUSTOM_PRACTICE_POSITION_KEY = "number-dictation-custom-practice-position-v1";
   const EBBINGHAUS_INTERVALS = [
@@ -365,7 +365,8 @@
       watchdogTimer: null,
       lastActivityAt: 0,
       lastRecoveryAt: 0,
-      preparedCache: new Map()
+      preparedCache: new Map(),
+      preparedQueueActive: false
     },
     autoSubmitTimer: null,
     lastThreeHintAt: 0,
@@ -453,6 +454,12 @@
     if (now - state.listening.lastRecoveryAt < 3000) return;
     state.listening.lastRecoveryAt = now;
     if (state.listening.continuous) {
+      if (state.listening.preparedQueueActive) {
+        if (audio.paused && !audio.ended) {
+          audio.play().catch((error) => console.debug("Prepared playback resume failed.", error));
+        }
+        return;
+      }
       if (audio.ended && state.listening.timeline.length) {
         seekListeningToIndex(state.listening.index);
       } else if (audio.paused) {
@@ -639,7 +646,8 @@
     if (duration > 0 && state.listening.timeline.length) {
       const scaledTime = (audio.currentTime / duration) * state.listening.totalDuration;
       const index = state.listening.timeline.findIndex((segment) => scaledTime < segment.end);
-      setListeningTrack(index < 0 ? state.listening.timeline.length - 1 : index);
+      const segment = state.listening.timeline[index < 0 ? state.listening.timeline.length - 1 : index];
+      setListeningTrack(segment?.entryIndex ?? (index < 0 ? state.listening.timeline.length - 1 : index));
     }
     updateMediaSessionPosition();
     if (state.listening.sleepAudioDeadline > 0 && state.listening.consumedSeconds >= state.listening.sleepAudioDeadline) {
@@ -3558,24 +3566,86 @@
     const selected = new Set(
       Array.from(dom.listeningCategories.querySelectorAll("input:checked")).map((input) => input.dataset.listeningCategory)
     );
-    if (playlist.length <= MAX_PREPARED_LISTENING_ITEMS) {
-      state.listening.pendingStartIndex = null;
-      startPreparedListening(playlist, token, pendingStart);
-      return;
-    }
     state.listening.pendingStartIndex = null;
-    playListeningSequentially(playlist, token, pendingStart).catch((error) => {
-      if (token !== state.listening.token) return;
-      state.listening.playing = false;
-      console.error(error);
-      dom.listeningEnglish.textContent = "随身听暂时不可用";
-      dom.listeningChinese.textContent = "请重新点击开始；已经缓存的语音不会丢失。";
+    startPreparedListening(playlist, token, pendingStart);
+  }
+
+  async function preparePreparedListeningChunk(chunk, token, chunkStart, showProgress = false) {
+    const cacheKey = [
+      chunk.map((entry) => entry.key || entry.english || entry.audioText).join("|"),
+      dom.listeningMode.value,
+      dom.listeningRepeat.value,
+      dom.listeningInterval.value
+    ].join("::");
+    let prepared = state.listening.preparedCache.get(cacheKey);
+    if (!prepared) {
+      if (showProgress) {
+        dom.listeningEnglish.textContent = "正在准备连续音频";
+        dom.listeningChinese.textContent = "正在合成，完成后会自动开始播放";
+      }
+      prepared = await prepareListeningStream(chunk, token, showProgress ? (completed, total, entry) => {
+        if (token !== state.listening.token) return;
+        dom.listeningProgress.textContent = `准备 ${completed} / ${total}`;
+        dom.listeningEnglish.textContent = "正在准备连续音频";
+        dom.listeningChinese.textContent = entry?.english ? `已完成：${entry.english}` : "正在合成连续音频";
+      } : null);
+      prepared.timeline = prepared.timeline.map((segment, index) => ({
+        ...segment,
+        entryIndex: chunkStart + index
+      }));
+      prepared.count = chunk.length;
+      state.listening.preparedCache.set(cacheKey, prepared);
+      while (state.listening.preparedCache.size > 4) {
+        state.listening.preparedCache.delete(state.listening.preparedCache.keys().next().value);
+      }
+    }
+    return prepared;
+  }
+
+  function playPreparedListeningChunk(prepared, token) {
+    return new Promise((resolve, reject) => {
+      if (token !== state.listening.token || !state.listening.started) {
+        resolve();
+        return;
+      }
+      const audio = state.listening.audio;
+      state.listening.timeline = prepared.timeline;
+      state.listening.totalDuration = prepared.duration;
+      state.listening.continuous = true;
+      state.listening.preparing = false;
+      if (state.listening.audioUrl) {
+        try { URL.revokeObjectURL(state.listening.audioUrl); } catch (error) { console.debug(error); }
+      }
+      state.listening.audioUrl = URL.createObjectURL(prepared.blob);
+      audio.loop = false;
+      audio.volume = 1;
+      audio.playbackRate = Number(dom.listeningSpeed.value) || 1;
+      audio.preservesPitch = true;
+      audio.webkitPreservesPitch = true;
+      beginListeningInternalOperation();
+      audio.onended = () => {
+        audio.onended = null;
+        audio.onerror = null;
+        resolve();
+      };
+      audio.onerror = () => {
+        audio.onended = null;
+        audio.onerror = null;
+        reject(new Error("Prepared listening chunk failed"));
+      };
+      audio.src = state.listening.audioUrl;
+      audio.load();
+      const firstIndex = prepared.timeline[0]?.entryIndex || 0;
+      setListeningTrack(firstIndex);
       renderListening();
+      startListeningWatchdog();
+      updateMediaSessionMetadata(state.listening.playlist[firstIndex], firstIndex);
+      audio.play().catch((error) => {
+        audio.onended = null;
+        audio.onerror = null;
+        reject(error);
+      });
     });
-    preloadVoicePackForPlaylist(playlist, token, (completed, total) => {
-      if (token !== state.listening.token || !total) return;
-      dom.listeningProgress.textContent = `缓存 ${completed} / ${total}`;
-    }).catch((error) => console.debug("Voice preload stopped.", error));
   }
 
   async function startPreparedListening(playlist, token, startIndex = 0) {
@@ -3590,74 +3660,40 @@
     state.listening.preparing = true;
     state.listening.timeline = [];
     state.listening.totalDuration = 0;
+    state.listening.preparedQueueActive = true;
     beginListeningInternalOperation(1800);
     unlockListeningAudio();
     renderListening();
-    const cacheKey = [
-      orderedPlaylist.map((entry) => entry.key || entry.english || entry.audioText).join("|"),
-      dom.listeningMode.value,
-      dom.listeningRepeat.value,
-      dom.listeningInterval.value
-    ].join("::");
     try {
-      let prepared = state.listening.preparedCache.get(cacheKey);
-      if (!prepared) {
-        dom.listeningEnglish.textContent = "正在准备连续音频";
-        dom.listeningChinese.textContent = "正在合成，完成后会自动开始播放";
-        prepared = await prepareListeningStream(orderedPlaylist, token, (completed, total, entry) => {
-          if (token !== state.listening.token) return;
-          dom.listeningProgress.textContent = `准备 ${completed} / ${total}`;
-          dom.listeningEnglish.textContent = "正在准备连续音频";
-          dom.listeningChinese.textContent = entry?.english ? `已完成：${entry.english}` : "正在合成连续音频";
-        });
+      let chunkStart = 0;
+      let preparedPromise = preparePreparedListeningChunk(
+        orderedPlaylist.slice(0, PREPARED_LISTENING_CHUNK_SIZE),
+        token,
+        chunkStart,
+        true
+      );
+      while (token === state.listening.token && state.listening.started) {
+        const prepared = await preparedPromise;
         if (token !== state.listening.token) return;
-        state.listening.preparedCache.clear();
-        state.listening.preparedCache.set(cacheKey, prepared);
+        const nextStart = (chunkStart + prepared.count) % orderedPlaylist.length;
+        preparedPromise = preparePreparedListeningChunk(
+          orderedPlaylist.slice(nextStart, nextStart + PREPARED_LISTENING_CHUNK_SIZE),
+          token,
+          nextStart,
+          false
+        );
+        await playPreparedListeningChunk(prepared, token);
+        chunkStart = nextStart;
       }
-      if (token !== state.listening.token) return;
-      state.listening.timeline = prepared.timeline;
-      state.listening.totalDuration = prepared.duration;
-      state.listening.continuous = true;
-      state.listening.preparing = false;
-      const audio = state.listening.audio;
-      if (state.listening.audioUrl) {
-        try { URL.revokeObjectURL(state.listening.audioUrl); } catch (error) { console.debug(error); }
-      }
-      state.listening.audioUrl = URL.createObjectURL(prepared.blob);
-      audio.loop = true;
-      audio.volume = 1;
-      audio.playbackRate = Number(dom.listeningSpeed.value) || 1;
-      audio.preservesPitch = true;
-      audio.webkitPreservesPitch = true;
-      beginListeningInternalOperation();
-      audio.src = state.listening.audioUrl;
-      audio.load();
-      setListeningTrack(0);
-      renderListening();
-      startListeningWatchdog();
-      updateMediaSessionMetadata(orderedPlaylist[0], 0);
-      audio.play().catch((error) => {
-        if (token !== state.listening.token) return;
-        state.listening.playing = false;
-        console.warn("Prepared listening playback failed.", error);
-        renderListening();
-      });
     } catch (error) {
       if (token !== state.listening.token) return;
-      console.warn("Prepared listening failed; falling back to sequential playback.", error);
       state.listening.preparing = false;
-      state.listening.audio.volume = 1;
-      state.listening.pendingStartIndex = null;
-      try {
-        await playListeningSequentially(orderedPlaylist, token, 0);
-      } catch (fallbackError) {
-        if (token !== state.listening.token) return;
-        state.listening.playing = false;
-        console.error(fallbackError);
-        dom.listeningEnglish.textContent = "随身听暂时不可用";
-        dom.listeningChinese.textContent = "请重新点击开始；已经缓存的语音不会丢失。";
-        renderListening();
-      }
+      state.listening.playing = false;
+      state.listening.preparedQueueActive = false;
+      console.error(error);
+      dom.listeningEnglish.textContent = "随身听暂时不可用";
+      dom.listeningChinese.textContent = "请重新点击开始；音频会继续使用已准备好的内容。";
+      renderListening();
     }
   }
 
@@ -3799,7 +3835,8 @@
       if (wasPlaying) playListeningSequentially(state.listening.playlist, token, next);
       return;
     }
-    const segment = state.listening.timeline[next];
+    const segment = state.listening.timeline.find((entry) => entry.entryIndex === next)
+      || state.listening.timeline[next];
     const audio = state.listening.audio;
     if (segment && Number.isFinite(audio.duration) && audio.duration > 0 && state.listening.totalDuration > 0) {
       const scaledStart = (segment.start / state.listening.totalDuration) * audio.duration;
@@ -4167,6 +4204,8 @@
     const audio = state.listening.audio;
     if (audio) {
       beginListeningInternalOperation(600);
+      audio.onended = null;
+      audio.onerror = null;
       try { audio.pause(); } catch (error) { console.debug(error); }
       try { audio.removeAttribute("src"); audio.load(); } catch (error) { console.debug(error); }
     }
@@ -4201,6 +4240,7 @@
     state.listening.sleepAudioDeadline = 0;
     state.listening.directFallback = false;
     state.listening.continuous = false;
+    state.listening.preparedQueueActive = false;
     updateMediaSessionState("none");
     renderListening();
   }
