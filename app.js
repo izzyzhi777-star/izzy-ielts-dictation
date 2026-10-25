@@ -366,7 +366,9 @@
       lastActivityAt: 0,
       lastRecoveryAt: 0,
       preparedCache: new Map(),
-      preparedQueueActive: false
+      preparedQueueActive: false,
+      warmedTexts: new Set(),
+      warmQueue: Promise.resolve()
     },
     autoSubmitTimer: null,
     lastThreeHintAt: 0,
@@ -4916,10 +4918,13 @@
       dom.customEnglishInput.focus();
       return;
     }
-    if (state.ipaLoadPromise) await state.ipaLoadPromise;
+    if (state.ipaLoadPromise) {
+      await Promise.race([state.ipaLoadPromise, wait(450)]);
+    }
     if (!dom.customChineseInput.value.trim()) {
       try {
-        dom.customChineseInput.value = await fetchTranslation(text);
+        const translated = await Promise.race([fetchTranslation(text), wait(700).then(() => "")]);
+        if (translated) dom.customChineseInput.value = translated;
       } catch (error) {
         console.debug(error);
       }
@@ -4929,7 +4934,11 @@
     }
     if (dom.customExampleInput.value.trim() && !dom.customExampleTranslationInput.value.trim()) {
       try {
-        dom.customExampleTranslationInput.value = await fetchTranslation(dom.customExampleInput.value.trim());
+        const translated = await Promise.race([
+          fetchTranslation(dom.customExampleInput.value.trim()),
+          wait(700).then(() => "")
+        ]);
+        if (translated) dom.customExampleTranslationInput.value = translated;
       } catch (error) {
         console.debug(error);
       }
@@ -4960,7 +4969,11 @@
     }
     saveCustomItems();
     saveHearingWrong();
-    warmCustomItemAudio(entry);
+    try {
+      warmCustomItemAudio(entry);
+    } catch (error) {
+      console.debug("Custom audio warmup skipped.", error);
+    }
     renderCustom();
     renderHearingWrong();
     renderListening();
