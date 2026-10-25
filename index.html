@@ -10,7 +10,7 @@
   <title>IZZY IELTS-DICTATION</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=20261025a">
+  <link rel="stylesheet" href="styles.css?v=20261025b">
 </head>
 <body>
   <div class="app-shell">
@@ -27,6 +27,7 @@
         <button class="nav-tab is-active" type="button" data-tab="dictation">数字日期</button>
         <button class="nav-tab" type="button" data-tab="listening">随身听</button>
         <button class="nav-tab" type="button" data-tab="custom">我的词句</button>
+        <button class="nav-tab" type="button" data-tab="mapwords">P2 地图词</button>
         <button class="nav-tab" type="button" data-tab="prediction">数字预测篇</button>
         <button class="nav-tab" type="button" data-tab="words">词库</button>
         <button class="nav-tab" type="button" data-tab="wrong">
@@ -557,6 +558,108 @@
         </div>
       </section>
 
+      <section class="tab-panel" id="tab-mapwords" data-panel="mapwords">
+        <div class="section-intro">
+          <div>
+            <p class="section-kicker">IELTS LISTENING · PART 2 MAP</p>
+            <h2>P2 地图题 Key Words</h2>
+            <p>高频地图设施、方位、路线和地标表达。点击任意词条随时听，也可以选择起始位置后进入拼写练习。</p>
+          </div>
+          <div class="prediction-head-actions">
+            <label class="practice-start-picker compact" for="mapPracticeStartSelect">
+              <span>从哪一条开始拼写</span>
+              <select id="mapPracticeStartSelect"></select>
+            </label>
+            <button class="primary-button" id="startMapPracticeButton" type="button">开始拼写</button>
+          </div>
+        </div>
+
+        <div class="custom-layout">
+          <section class="custom-practice" aria-live="polite">
+            <div class="exercise-topline">
+              <div class="exercise-meta">
+                <span id="mapProgressLabel">P2 地图词 0 / 0</span>
+                <span class="hairline"></span>
+                <span id="mapModeLabel">地图词拼写</span>
+              </div>
+              <div class="exercise-actions">
+                <button class="text-button" id="restartMapButton" type="button" disabled>重开本轮</button>
+                <button class="text-button" id="stopMapButton" type="button" disabled>停止播报</button>
+              </div>
+            </div>
+            <div class="progress-track" aria-hidden="true"><span id="mapProgressBar"></span></div>
+
+            <div class="custom-start" id="mapStartScreen">
+              <div>
+                <p class="section-kicker">MAP KEY WORDS</p>
+                <h2>听清方向，再写下地图词</h2>
+                <p>覆盖 entrance、opposite、take the second turning、on the far side 等 P2 地图题高频表达。</p>
+                <button class="primary-button" id="mapStartInlineButton" type="button">开始地图词拼写</button>
+              </div>
+            </div>
+
+            <div class="custom-question" id="mapQuestionScreen" hidden>
+              <div class="question-heading">
+                <div class="question-index">
+                  <strong id="mapQuestionIndex">01</strong>
+                  <span id="mapQuestionTotal">/ 0</span>
+                </div>
+                <div class="question-tags"><span class="tag" id="mapQuestionCategory">地图词</span></div>
+              </div>
+              <section class="listen-panel">
+                <div class="listen-copy">
+                  <p class="section-kicker">LISTEN</p>
+                  <h2>听英文，填写完整拼写</h2>
+                  <p>按 Tab 重播当前内容 | Enter 提交 / 下一题</p>
+                </div>
+                <button class="play-button" id="mapPlayButton" type="button" aria-label="播放当前地图词">
+                  <svg class="icon-play" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 9 6-9 6V6Z"/></svg>
+                  <svg class="icon-stop" viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10"/></svg>
+                </button>
+                <div class="play-meta">
+                  <strong id="mapPlayStatus">按播放键开始</strong>
+                  <button class="text-button" id="mapReplayButton" type="button">重播当前词</button>
+                </div>
+              </section>
+              <section class="answer-section">
+                <div class="answer-label-row">
+                  <label for="mapAnswerInput">英文拼写</label>
+                  <span>手动提交</span>
+                </div>
+                <div class="answer-wrap"><input id="mapAnswerInput" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="填写完整英文"></div>
+                <div class="answer-actions">
+                  <button class="primary-button" id="submitMapButton" type="button">提交答案</button>
+                  <button class="secondary-button" id="nextMapButton" type="button" hidden>下一题</button>
+                </div>
+              </section>
+              <section class="result" id="mapResult" hidden>
+                <div class="result-head"><strong id="mapResultMark">正确</strong><span id="mapResultNote"></span></div>
+                <div class="result-line"><span>正确答案</span><p id="mapCorrectAnswer"></p></div>
+                <div class="result-line"><span>中文</span><p id="mapCorrectTranslation"></p></div>
+                <div class="result-line"><span>地图类型</span><p id="mapCorrectCategory"></p></div>
+                <div class="result-line wrong-line" id="mapUserAnswerRow" hidden><span>你的答案</span><p id="mapUserAnswer"></p></div>
+              </section>
+            </div>
+
+            <div class="complete-screen" id="mapCompleteScreen" hidden>
+              <div class="complete-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg></div>
+              <p class="section-kicker">MAP KEY WORDS COMPLETE</p>
+              <h2>本轮地图词练习完成</h2>
+              <p id="mapCompleteSummary">共 0 题，正确 0 题。</p>
+              <button class="primary-button" id="againMapButton" type="button">再练一次</button>
+            </div>
+          </section>
+
+          <aside class="custom-list-panel">
+            <div class="aside-head">
+              <p class="section-kicker">PART 2 MAP WORD BANK</p>
+              <h3>地图题高频词 <span id="mapWordCount">0</span></h3>
+            </div>
+            <div class="custom-list" id="mapWordList"></div>
+          </aside>
+        </div>
+      </section>
+
       <section class="tab-panel" id="tab-prediction" data-panel="prediction">
         <div class="section-intro">
           <div>
@@ -819,7 +922,7 @@
     </aside>
   </div>
 
-  <script src="neural-voice.js?v=20261025a"></script>
-  <script src="app.js?v=20261025a"></script>
+  <script src="neural-voice.js?v=20261025b"></script>
+  <script src="app.js?v=20261025b"></script>
 </body>
 </html>

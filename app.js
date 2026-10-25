@@ -32,6 +32,99 @@
     mode: "english",
     voice: "sonia"
   };
+  const P2_MAP_WORDS = [
+    ["entrance", "入口", "地图设施"],
+    ["exit", "出口", "地图设施"],
+    ["reception", "接待处", "地图设施"],
+    ["information desk", "咨询台", "地图设施"],
+    ["ticket office", "售票处", "地图设施"],
+    ["gift shop", "礼品店", "地图设施"],
+    ["café", "咖啡馆", "地图设施"],
+    ["restaurant", "餐厅", "地图设施"],
+    ["picnic area", "野餐区", "地图设施"],
+    ["car park", "停车场", "地图设施"],
+    ["bicycle rack", "自行车停放架", "地图设施"],
+    ["bus stop", "公交站", "地图设施"],
+    ["taxi rank", "出租车候客点", "地图设施"],
+    ["railway station", "火车站", "地图设施"],
+    ["toilets", "洗手间", "地图设施"],
+    ["cloakroom", "衣帽间", "地图设施"],
+    ["locker room", "更衣室", "地图设施"],
+    ["lift", "电梯", "地图设施"],
+    ["stairs", "楼梯", "地图设施"],
+    ["corridor", "走廊", "地图设施"],
+    ["courtyard", "庭院", "地图设施"],
+    ["garden", "花园", "地图设施"],
+    ["playground", "游乐场", "地图设施"],
+    ["sports hall", "体育馆", "地图设施"],
+    ["swimming pool", "游泳池", "地图设施"],
+    ["library", "图书馆", "地图设施"],
+    ["theatre", "剧院", "地图设施"],
+    ["gallery", "美术馆", "地图设施"],
+    ["museum", "博物馆", "地图设施"],
+    ["church", "教堂", "地图设施"],
+    ["castle", "城堡", "地图设施"],
+    ["farm", "农场", "地图设施"],
+    ["woodland", "林地", "地图设施"],
+    ["footpath", "步行道", "地图设施"],
+    ["cycle path", "自行车道", "地图设施"],
+    ["bridge", "桥", "地图设施"],
+    ["fountain", "喷泉", "地图设施"],
+    ["lake", "湖", "地图设施"],
+    ["river", "河流", "地图设施"],
+    ["canal", "运河", "地图设施"],
+    ["hill", "小山", "地图地标"],
+    ["meadow", "草地", "地图地标"],
+    ["orchard", "果园", "地图地标"],
+    ["greenhouse", "温室", "地图地标"],
+    ["viewpoint", "观景点", "地图地标"],
+    ["sculpture", "雕塑", "地图地标"],
+    ["statue", "雕像", "地图地标"],
+    ["main road", "主路", "地图地标"],
+    ["side road", "支路", "地图地标"],
+    ["crossroads", "十字路口", "地图地标"],
+    ["roundabout", "环岛", "地图地标"],
+    ["traffic lights", "红绿灯", "地图地标"],
+    ["pedestrian crossing", "人行横道", "地图地标"],
+    ["go straight ahead", "一直向前走", "方向路线"],
+    ["turn left", "左转", "方向路线"],
+    ["turn right", "右转", "方向路线"],
+    ["take the first turning", "走第一个路口", "方向路线"],
+    ["take the second turning", "走第二个路口", "方向路线"],
+    ["at the end of", "在……尽头", "方向路线"],
+    ["next to", "在……旁边", "方向路线"],
+    ["opposite", "在……对面", "方向路线"],
+    ["between", "在……之间", "方向路线"],
+    ["behind", "在……后面", "方向路线"],
+    ["in front of", "在……前面", "方向路线"],
+    ["beside", "在……旁边", "方向路线"],
+    ["on the left", "在左边", "方向路线"],
+    ["on the right", "在右边", "方向路线"],
+    ["follow the path", "沿着小路走", "方向路线"],
+    ["cross the bridge", "过桥", "方向路线"],
+    ["walk past", "经过", "方向路线"],
+    ["at the corner", "在拐角处", "方向路线"],
+    ["at the junction", "在交叉口", "方向路线"],
+    ["on the far side", "在较远的一侧", "方向路线"],
+    ["halfway along", "在……中途", "方向路线"],
+    ["towards", "朝向", "方向路线"],
+    ["beyond", "在……更远处", "方向路线"],
+    ["north", "北", "方向路线"],
+    ["south", "南", "方向路线"],
+    ["east", "东", "方向路线"],
+    ["west", "西", "方向路线"],
+    ["northeast", "东北", "方向路线"],
+    ["northwest", "西北", "方向路线"],
+    ["southeast", "东南", "方向路线"],
+    ["southwest", "西南", "方向路线"]
+  ].map(([text, translation, category], index) => ({
+    id: `p2-map-${index + 1}`,
+    text,
+    translation,
+    category,
+    note: "IELTS Listening Part 2 map key word"
+  }));
+
   const neuralVoice = window.IzzyNeuralVoice;
   const RANGE_CONFIG = {
     basic: { min: 1, max: 100, count: 100, shuffled: false },
@@ -239,6 +332,38 @@
     predictionSaveStatus: $("predictionSaveStatus"),
     predictionItemCount: $("predictionItemCount"),
     predictionList: $("predictionList"),
+    startMapPracticeButton: $("startMapPracticeButton"),
+    mapPracticeStartSelect: $("mapPracticeStartSelect"),
+    mapProgressLabel: $("mapProgressLabel"),
+    mapModeLabel: $("mapModeLabel"),
+    restartMapButton: $("restartMapButton"),
+    stopMapButton: $("stopMapButton"),
+    mapProgressBar: $("mapProgressBar"),
+    mapStartScreen: $("mapStartScreen"),
+    mapStartInlineButton: $("mapStartInlineButton"),
+    mapQuestionScreen: $("mapQuestionScreen"),
+    mapQuestionIndex: $("mapQuestionIndex"),
+    mapQuestionTotal: $("mapQuestionTotal"),
+    mapQuestionCategory: $("mapQuestionCategory"),
+    mapPlayButton: $("mapPlayButton"),
+    mapPlayStatus: $("mapPlayStatus"),
+    mapReplayButton: $("mapReplayButton"),
+    mapAnswerInput: $("mapAnswerInput"),
+    submitMapButton: $("submitMapButton"),
+    nextMapButton: $("nextMapButton"),
+    mapResult: $("mapResult"),
+    mapResultMark: $("mapResultMark"),
+    mapResultNote: $("mapResultNote"),
+    mapCorrectAnswer: $("mapCorrectAnswer"),
+    mapCorrectTranslation: $("mapCorrectTranslation"),
+    mapCorrectCategory: $("mapCorrectCategory"),
+    mapUserAnswerRow: $("mapUserAnswerRow"),
+    mapUserAnswer: $("mapUserAnswer"),
+    mapCompleteScreen: $("mapCompleteScreen"),
+    mapCompleteSummary: $("mapCompleteSummary"),
+    againMapButton: $("againMapButton"),
+    mapWordCount: $("mapWordCount"),
+    mapWordList: $("mapWordList"),
     customList: $("customList"),
     navHearingWrongCount: $("navHearingWrongCount"),
     reviewDueWordsButton: $("reviewDueWordsButton"),
@@ -299,6 +424,8 @@
     predictionEditorId: null,
     customEditorId: null,
     customSession: createEmptyCustomSession(),
+    mapSession: createEmptyMapSession(),
+    mapPlayingKey: null,
     hearingWrong: loadedHearingWrong,
     sync: {
       ...loadedSyncConfig,
@@ -1240,6 +1367,18 @@
     };
   }
 
+  function createEmptyMapSession() {
+    return {
+      started: false,
+      complete: false,
+      checked: false,
+      items: [],
+      index: 0,
+      answered: 0,
+      correct: 0
+    };
+  }
+
   function createEmptySession() {
     return {
       started: false,
@@ -1448,6 +1587,25 @@
     dom.customEnglishInput.addEventListener("input", () => {
       if (dom.customChineseInput.value.trim()) return;
     });
+    dom.startMapPracticeButton.addEventListener("click", startMapPractice);
+    dom.mapStartInlineButton.addEventListener("click", startMapPractice);
+    dom.restartMapButton.addEventListener("click", startMapPractice);
+    dom.againMapButton.addEventListener("click", startMapPractice);
+    dom.mapPlayButton.addEventListener("click", () => playMapItem(currentMapItem()));
+    dom.mapReplayButton.addEventListener("click", () => playMapItem(currentMapItem()));
+    dom.stopMapButton.addEventListener("click", () => {
+      stopPlayback();
+      renderMapPractice();
+    });
+    dom.submitMapButton.addEventListener("click", submitMapAnswer);
+    dom.nextMapButton.addEventListener("click", goNextMap);
+    dom.mapWordList.addEventListener("click", handleMapWordListClick);
+    dom.mapAnswerInput.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter") return;
+      event.preventDefault();
+      if (state.mapSession.checked) goNextMap();
+      else submitMapAnswer();
+    });
     dom.reviewDueWordsButton.addEventListener("click", () => startHearingReview("due"));
     dom.reviewAllWordsButton.addEventListener("click", () => startHearingReview("all"));
     dom.customList.addEventListener("click", handleCustomListClick);
@@ -1623,6 +1781,22 @@
         event.key === "Enter"
         && !event.defaultPrevented
         && dom.settingsDrawer.hidden
+        && state.activeTab === "mapwords"
+        && state.mapSession.started
+        && !state.mapSession.complete
+        && !event.metaKey
+        && !event.ctrlKey
+        && !event.altKey
+      ) {
+        event.preventDefault();
+        if (state.mapSession.checked) goNextMap();
+        else submitMapAnswer();
+        return;
+      }
+      if (
+        event.key === "Enter"
+        && !event.defaultPrevented
+        && dom.settingsDrawer.hidden
         && dom.customEditor.hidden
         && dom.predictionEditor.hidden
         && state.activeTab === "custom"
@@ -1662,6 +1836,11 @@
         if (state.activeTab === "dates" && state.dateSession.started && !state.dateSession.complete) {
           event.preventDefault();
           playCurrentDate();
+          return;
+        }
+        if (state.activeTab === "mapwords" && state.mapSession.started && !state.mapSession.complete) {
+          event.preventDefault();
+          playMapItem(currentMapItem());
           return;
         }
         if (state.activeTab === "custom" && state.customSession.started && !state.customSession.complete) {
@@ -1760,6 +1939,7 @@
     renderWeekdays();
     renderListening();
     renderCustom();
+    renderMapPractice();
     renderPrediction();
     renderWordDirectory();
     renderWrongBook();
@@ -1767,7 +1947,7 @@
   }
 
   function switchTab(tab) {
-    if (!["dictation", "dates", "listening", "custom", "prediction", "words", "wrong", "hearingwrong"].includes(tab)) return;
+    if (!["dictation", "dates", "listening", "custom", "mapwords", "prediction", "words", "wrong", "hearingwrong"].includes(tab)) return;
     if (["dictation", "dates"].includes(state.activeTab) && tab !== state.activeTab) stopPlayback();
     state.activeTab = tab;
     renderTabs();
@@ -1780,6 +1960,7 @@
       prefetchContinuousAudio("single-bilingual");
     }
     if (tab === "custom") renderCustom();
+    if (tab === "mapwords") renderMapPractice();
     if (tab === "prediction") renderPrediction();
     if (tab === "words") renderWordDirectory();
     if (tab === "wrong") renderWrongBook();
@@ -3360,6 +3541,8 @@
     dom.stopDateButton.disabled = !state.playing;
     dom.stopCustomButton.disabled = !state.playing;
     dom.customPlayButton.classList.toggle("is-playing", state.playing);
+    dom.mapPlayButton?.classList.toggle("is-playing", state.playing && String(state.playingWord || "").startsWith("map:"));
+    if (dom.stopMapButton) dom.stopMapButton.disabled = !state.playing;
   }
 
   function buildListeningPlaylist() {
@@ -5027,6 +5210,206 @@
     renderCustomStartOptions();
     renderCustomList();
     renderCustomSession();
+  }
+
+  function renderMapPracticeStartOptions() {
+    renderSelectOptions(
+      dom.mapPracticeStartSelect,
+      P2_MAP_WORDS,
+      (item) => item.id,
+      (item, index) => `${index + 1}. ${item.text}`
+    );
+  }
+
+  function renderMapWordList() {
+    dom.mapWordCount.textContent = String(P2_MAP_WORDS.length);
+    dom.mapWordList.replaceChildren();
+    P2_MAP_WORDS.forEach((item) => {
+      const card = document.createElement("article");
+      card.className = "custom-list-item";
+      const english = document.createElement("div");
+      english.className = "custom-list-english";
+      english.textContent = item.text;
+      const phonetic = document.createElement("div");
+      phonetic.className = "custom-list-phonetic";
+      phonetic.textContent = item.category;
+      const chinese = document.createElement("div");
+      chinese.className = "custom-list-chinese";
+      chinese.textContent = item.translation;
+      const actions = document.createElement("div");
+      actions.className = "custom-list-actions";
+      const play = document.createElement("button");
+      play.type = "button";
+      play.dataset.action = "play";
+      play.dataset.id = item.id;
+      play.textContent = state.playingWord === `map:${item.id}` && state.playing ? "停止" : "播放";
+      actions.appendChild(play);
+      card.append(english, phonetic, chinese, actions);
+      dom.mapWordList.appendChild(card);
+    });
+  }
+
+  function currentMapItem() {
+    return state.mapSession.items[state.mapSession.index] || null;
+  }
+
+  function renderMapPractice() {
+    const session = state.mapSession;
+    const total = session.items.length;
+    const current = currentMapItem();
+    dom.mapWordCount.textContent = String(P2_MAP_WORDS.length);
+    dom.mapProgressLabel.textContent = `P2 地图词 ${total ? Math.min(session.index + 1, total) : 0} / ${total}`;
+    dom.mapModeLabel.textContent = "地图词拼写";
+    dom.restartMapButton.disabled = !session.started;
+    dom.stopMapButton.disabled = !state.playing;
+    dom.mapProgressBar.style.width = total
+      ? `${session.checked ? ((session.index + 1) / total) * 100 : (session.index / total) * 100}%`
+      : "0%";
+    renderMapPracticeStartOptions();
+    renderMapWordList();
+
+    if (!session.started) {
+      dom.mapStartScreen.hidden = false;
+      dom.mapQuestionScreen.hidden = true;
+      dom.mapCompleteScreen.hidden = true;
+      return;
+    }
+    if (session.complete || !total) {
+      dom.mapStartScreen.hidden = true;
+      dom.mapQuestionScreen.hidden = true;
+      dom.mapCompleteScreen.hidden = false;
+      dom.mapCompleteSummary.textContent = `共 ${session.answered} 题，正确 ${session.correct} 题。`;
+      return;
+    }
+    if (!current) {
+      finishMapRound();
+      return;
+    }
+    dom.mapStartScreen.hidden = true;
+    dom.mapCompleteScreen.hidden = true;
+    dom.mapQuestionScreen.hidden = false;
+    dom.mapQuestionIndex.textContent = String(session.index + 1).padStart(2, "0");
+    dom.mapQuestionTotal.textContent = `/ ${String(total).padStart(3, "0")}`;
+    dom.mapQuestionCategory.textContent = current.category;
+    dom.mapAnswerInput.disabled = false;
+    dom.mapAnswerInput.readOnly = session.checked;
+    dom.submitMapButton.hidden = session.checked;
+    dom.nextMapButton.hidden = !session.checked;
+    dom.nextMapButton.textContent = session.index === total - 1 ? "完成本轮" : "下一题";
+    if (!state.playing) dom.mapPlayStatus.textContent = session.checked ? "本题已提交" : "按播放键开始";
+    dom.mapResult.hidden = session.checked ? false : true;
+    if (session.checked) {
+      const correct = session.lastCorrect;
+      dom.mapResult.classList.toggle("is-wrong", !correct);
+      dom.mapResultMark.textContent = correct ? "正确" : "需要再练";
+      dom.mapResultNote.textContent = correct ? "地图词拼写正确" : "看一下正确拼写和中文意思";
+      dom.mapCorrectAnswer.textContent = current.text;
+      dom.mapCorrectTranslation.textContent = current.translation || "未填写";
+      dom.mapCorrectCategory.textContent = current.category;
+      dom.mapUserAnswer.textContent = session.lastAnswer || "";
+      dom.mapUserAnswerRow.hidden = correct;
+    }
+  }
+
+  async function playMapItem(item) {
+    if (!item) return;
+    const key = `map:${item.id}`;
+    if (state.playingWord === key && state.playing) {
+      stopPlayback();
+      state.playingWord = null;
+      renderMapPractice();
+      return;
+    }
+    stopListening();
+    stopPlayback();
+    const token = ++state.token;
+    state.playingWord = key;
+    setPlaying(true);
+    renderMapPractice();
+    try {
+      await playRepeatedSpeech(item.text, settings.repeat, token, { type: "number" });
+    } catch (error) {
+      await speakEnglishFallback(item.text, token);
+    } finally {
+      if (token === state.token) {
+        state.playingWord = null;
+        setPlaying(false);
+        dom.mapPlayStatus.textContent = "播放完成，请填写答案";
+        renderMapPractice();
+        dom.mapAnswerInput.focus();
+      }
+    }
+  }
+
+  function startMapPractice() {
+    const selectedId = dom.mapPracticeStartSelect?.value || "";
+    const ordered = reorderFromSelected(P2_MAP_WORDS, selectedId);
+    state.mapSession = {
+      started: true,
+      complete: false,
+      checked: false,
+      items: ordered.map((item) => ({ ...item })),
+      index: 0,
+      answered: 0,
+      correct: 0
+    };
+    switchTab("mapwords");
+    dom.mapAnswerInput.value = "";
+    dom.mapResult.hidden = true;
+    dom.mapUserAnswerRow.hidden = true;
+    renderMapPractice();
+    dom.mapAnswerInput.focus();
+    playMapItem(currentMapItem());
+  }
+
+  function submitMapAnswer() {
+    const item = currentMapItem();
+    if (!item || state.mapSession.checked) return;
+    const answer = dom.mapAnswerInput.value.trim();
+    if (!answer) {
+      dom.mapAnswerInput.focus();
+      return;
+    }
+    const correct = normalizeEnglish(answer) === normalizeEnglish(item.text);
+    state.mapSession.checked = true;
+    state.mapSession.answered += 1;
+    if (correct) state.mapSession.correct += 1;
+    state.mapSession.lastCorrect = correct;
+    state.mapSession.lastAnswer = answer;
+    renderMapPractice();
+    dom.mapAnswerInput.focus();
+  }
+
+  function goNextMap() {
+    if (!state.mapSession.started || state.mapSession.complete) return;
+    if (state.mapSession.index >= state.mapSession.items.length - 1) {
+      finishMapRound();
+      return;
+    }
+    stopPlayback();
+    state.mapSession.index += 1;
+    state.mapSession.checked = false;
+    state.mapSession.lastCorrect = false;
+    state.mapSession.lastAnswer = "";
+    dom.mapAnswerInput.value = "";
+    dom.mapResult.hidden = true;
+    dom.mapUserAnswerRow.hidden = true;
+    renderMapPractice();
+    dom.mapAnswerInput.focus();
+    playMapItem(currentMapItem());
+  }
+
+  function finishMapRound() {
+    stopPlayback();
+    state.mapSession.complete = true;
+    renderMapPractice();
+  }
+
+  function handleMapWordListClick(event) {
+    const button = event.target.closest("[data-action='play']");
+    if (!button) return;
+    const item = P2_MAP_WORDS.find((entry) => entry.id === button.dataset.id);
+    playMapItem(item);
   }
 
   function renderCustomList() {
