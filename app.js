@@ -8,6 +8,8 @@
   const DELETED_CUSTOM_KEY = "number-dictation-deleted-custom-v1";
   const DELETED_PREDICTION_KEY = "number-prediction-deleted-v1";
   const HEARING_WRONG_KEY = "number-dictation-hearing-wrong-v1";
+  const MAP_CUSTOM_KEY = "number-dictation-p2-map-custom-v1";
+  const MAP_DELETED_KEY = "number-dictation-p2-map-deleted-v1";
   const SYNC_KEY = "izzy-ielts-sync-v1";
   const PREPARED_LISTENING_CHUNK_SIZE = 60;
   const LISTENING_PROGRESS_KEY = "number-dictation-listening-progress-v1";
@@ -364,6 +366,17 @@
     againMapButton: $("againMapButton"),
     mapWordCount: $("mapWordCount"),
     mapWordList: $("mapWordList"),
+    newMapWordButton: $("newMapWordButton"),
+    mapEditor: $("mapEditor"),
+    mapEditorTitle: $("mapEditorTitle"),
+    mapEnglishInput: $("mapEnglishInput"),
+    mapChineseInput: $("mapChineseInput"),
+    mapCategoryInput: $("mapCategoryInput"),
+    mapNoteInput: $("mapNoteInput"),
+    saveMapWordButton: $("saveMapWordButton"),
+    cancelMapEditButton: $("cancelMapEditButton"),
+    closeMapEditorButton: $("closeMapEditorButton"),
+    mapSaveStatus: $("mapSaveStatus"),
     customList: $("customList"),
     navHearingWrongCount: $("navHearingWrongCount"),
     reviewDueWordsButton: $("reviewDueWordsButton"),
@@ -412,6 +425,8 @@
   const loadedCustomItems = loadCustomItems().filter((item) => !loadedDeletedCustomIds.includes(item.id));
   const loadedHearingWrong = loadHearingWrong();
   const loadedSyncConfig = loadSyncConfig();
+  const loadedDeletedMapCustomIds = loadDeletedMapCustomIds();
+  const loadedMapCustomItems = loadMapCustomItems().filter((item) => !loadedDeletedMapCustomIds.includes(item.id));
   const state = {
     activeTab: "dictation",
     range: "basic",
@@ -426,6 +441,9 @@
     customSession: createEmptyCustomSession(),
     mapSession: createEmptyMapSession(),
     mapPlayingKey: null,
+    mapCustomItems: loadedMapCustomItems,
+    deletedMapCustomIds: loadedDeletedMapCustomIds,
+    mapEditorId: null,
     hearingWrong: loadedHearingWrong,
     sync: {
       ...loadedSyncConfig,
@@ -1027,6 +1045,45 @@
     scheduleCloudSync();
   }
 
+  function loadMapCustomItems() {
+    try {
+      const raw = localStorage.getItem(MAP_CUSTOM_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed.filter((item) => item && item.text) : [];
+    } catch (error) {
+      console.warn("Could not load P2 map words.", error);
+      return [];
+    }
+  }
+
+  function saveMapCustomItems() {
+    try {
+      localStorage.setItem(MAP_CUSTOM_KEY, JSON.stringify(state.mapCustomItems));
+    } catch (error) {
+      console.warn("Could not save P2 map words.", error);
+    }
+    scheduleCloudSync();
+  }
+
+  function loadDeletedMapCustomIds() {
+    try {
+      const raw = localStorage.getItem(MAP_DELETED_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed.filter(Boolean) : [];
+    } catch (error) {
+      return [];
+    }
+  }
+
+  function saveDeletedMapCustomIds() {
+    try {
+      localStorage.setItem(MAP_DELETED_KEY, JSON.stringify(state.deletedMapCustomIds));
+    } catch (error) {
+      console.warn("Could not save deleted P2 map word ids.", error);
+    }
+    scheduleCloudSync();
+  }
+
   function loadDeletedPredictionIds() {
     try {
       const raw = localStorage.getItem(DELETED_PREDICTION_KEY);
@@ -1152,6 +1209,8 @@
       deletedCustomIds: state.deletedCustomIds,
       deletedPredictionIds: state.deletedPredictionIds,
       predictionItems: state.predictionItems,
+      mapCustomItems: state.mapCustomItems,
+      deletedMapCustomIds: state.deletedMapCustomIds,
       wrongNumbers: state.wrongNumbers,
       wrongDates: state.wrongDates,
       hearingWrong: state.hearingWrong
@@ -1306,10 +1365,13 @@
       settings: newer ? { ...local.settings, ...remote.settings } : local.settings,
       deletedCustomIds: Array.from(new Set([...(local.deletedCustomIds || []), ...(remote.deletedCustomIds || [])])),
       deletedPredictionIds: Array.from(new Set([...(local.deletedPredictionIds || []), ...(remote.deletedPredictionIds || [])])),
+      deletedMapCustomIds: Array.from(new Set([...(local.deletedMapCustomIds || []), ...(remote.deletedMapCustomIds || [])])),
       customItems: mergeById(local.customItems, remote.customItems)
         .filter((item) => !new Set([...(local.deletedCustomIds || []), ...(remote.deletedCustomIds || [])]).has(item.id)),
       predictionItems: mergeById(local.predictionItems, remote.predictionItems)
         .filter((item) => !new Set([...(local.deletedPredictionIds || []), ...(remote.deletedPredictionIds || [])]).has(item.id)),
+      mapCustomItems: mergeById(local.mapCustomItems, remote.mapCustomItems)
+        .filter((item) => !new Set([...(local.deletedMapCustomIds || []), ...(remote.deletedMapCustomIds || [])]).has(item.id)),
       hearingWrong: mergeById(local.hearingWrong, remote.hearingWrong, "lastReviewedAt"),
       wrongNumbers: Array.from(new Set([...(local.wrongNumbers || []), ...(remote.wrongNumbers || [])])).sort(compareWrongEntries),
       wrongDates: mergeDateWrong(local.wrongDates, remote.wrongDates)
@@ -1323,13 +1385,16 @@
     settings.voice = "sonia";
     state.deletedCustomIds = snapshot.deletedCustomIds || [];
     state.deletedPredictionIds = snapshot.deletedPredictionIds || [];
+    state.deletedMapCustomIds = snapshot.deletedMapCustomIds || [];
     state.customItems = (snapshot.customItems || []).filter((item) => !state.deletedCustomIds.includes(item.id));
     state.predictionItems = (snapshot.predictionItems || []).filter((item) => !state.deletedPredictionIds.includes(item.id));
+    state.mapCustomItems = (snapshot.mapCustomItems || []).filter((item) => !state.deletedMapCustomIds.includes(item.id));
     state.hearingWrong = snapshot.hearingWrong || [];
     state.wrongNumbers = snapshot.wrongNumbers || [];
     state.wrongDates = snapshot.wrongDates || [];
     saveSettings();
     saveCustomItems();
+    saveMapCustomItems();
     saveHearingWrong();
     saveWrongData();
     state.sync.applyingRemote = false;
@@ -1587,6 +1652,10 @@
     dom.customEnglishInput.addEventListener("input", () => {
       if (dom.customChineseInput.value.trim()) return;
     });
+    dom.newMapWordButton.addEventListener("click", () => openMapEditor());
+    dom.closeMapEditorButton.addEventListener("click", closeMapEditor);
+    dom.cancelMapEditButton.addEventListener("click", closeMapEditor);
+    dom.saveMapWordButton.addEventListener("click", saveMapWord);
     dom.startMapPracticeButton.addEventListener("click", startMapPractice);
     dom.mapStartInlineButton.addEventListener("click", startMapPractice);
     dom.restartMapButton.addEventListener("click", startMapPractice);
@@ -5212,30 +5281,42 @@
     renderCustomSession();
   }
 
+  function allMapWordItems() {
+    return [
+      ...state.mapCustomItems.map((item) => ({ ...item, userAdded: true }))
+        .sort((a, b) => Number(b.createdAt || b.updatedAt || 0) - Number(a.createdAt || a.updatedAt || 0)),
+      ...P2_MAP_WORDS
+    ];
+  }
+
   function renderMapPracticeStartOptions() {
     renderSelectOptions(
       dom.mapPracticeStartSelect,
-      P2_MAP_WORDS,
+      allMapWordItems(),
       (item) => item.id,
       (item, index) => `${index + 1}. ${item.text}`
     );
   }
 
   function renderMapWordList() {
-    dom.mapWordCount.textContent = String(P2_MAP_WORDS.length);
+    const items = allMapWordItems();
+    dom.mapWordCount.textContent = String(items.length);
     dom.mapWordList.replaceChildren();
-    P2_MAP_WORDS.forEach((item) => {
+    items.forEach((item) => {
       const card = document.createElement("article");
       card.className = "custom-list-item";
       const english = document.createElement("div");
       english.className = "custom-list-english";
       english.textContent = item.text;
-      const phonetic = document.createElement("div");
-      phonetic.className = "custom-list-phonetic";
-      phonetic.textContent = item.category;
+      const category = document.createElement("div");
+      category.className = "custom-list-phonetic";
+      category.textContent = item.category || "自定义地图词";
       const chinese = document.createElement("div");
       chinese.className = "custom-list-chinese";
-      chinese.textContent = item.translation;
+      chinese.textContent = item.translation || "暂无中文意思";
+      const note = document.createElement("div");
+      note.className = "custom-list-note";
+      note.textContent = item.note || "";
       const actions = document.createElement("div");
       actions.className = "custom-list-actions";
       const play = document.createElement("button");
@@ -5244,7 +5325,20 @@
       play.dataset.id = item.id;
       play.textContent = state.playingWord === `map:${item.id}` && state.playing ? "停止" : "播放";
       actions.appendChild(play);
-      card.append(english, phonetic, chinese, actions);
+      if (item.userAdded) {
+        const edit = document.createElement("button");
+        edit.type = "button";
+        edit.dataset.action = "edit";
+        edit.dataset.id = item.id;
+        edit.textContent = "编辑";
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.dataset.action = "delete";
+        remove.dataset.id = item.id;
+        remove.textContent = "删除";
+        actions.append(edit, remove);
+      }
+      card.append(english, category, chinese, note, actions);
       dom.mapWordList.appendChild(card);
     });
   }
@@ -5257,7 +5351,7 @@
     const session = state.mapSession;
     const total = session.items.length;
     const current = currentMapItem();
-    dom.mapWordCount.textContent = String(P2_MAP_WORDS.length);
+    dom.mapWordCount.textContent = String(allMapWordItems().length);
     dom.mapProgressLabel.textContent = `P2 地图词 ${total ? Math.min(session.index + 1, total) : 0} / ${total}`;
     dom.mapModeLabel.textContent = "地图词拼写";
     dom.restartMapButton.disabled = !session.started;
@@ -5343,7 +5437,7 @@
 
   function startMapPractice() {
     const selectedId = dom.mapPracticeStartSelect?.value || "";
-    const ordered = reorderFromSelected(P2_MAP_WORDS, selectedId);
+    const ordered = reorderFromSelected(allMapWordItems(), selectedId);
     state.mapSession = {
       started: true,
       complete: false,
@@ -5405,11 +5499,72 @@
     renderMapPractice();
   }
 
+  function openMapEditor(itemId = null) {
+    const item = state.mapCustomItems.find((entry) => entry.id === itemId);
+    state.mapEditorId = item?.id || null;
+    dom.mapEditorTitle.textContent = item ? "编辑地图词" : "添加地图词";
+    dom.mapEnglishInput.value = item?.text || "";
+    dom.mapChineseInput.value = item?.translation || "";
+    dom.mapCategoryInput.value = item?.category || "地图设施";
+    dom.mapNoteInput.value = item?.note || "";
+    dom.mapSaveStatus.textContent = item ? "修改后点击保存地图词。" : "新增词会参与地图词播放和拼写。";
+    dom.mapEditor.hidden = false;
+    dom.mapEnglishInput.focus();
+  }
+
+  function closeMapEditor() {
+    state.mapEditorId = null;
+    dom.mapEditor.hidden = true;
+    dom.mapEnglishInput.value = "";
+    dom.mapChineseInput.value = "";
+    dom.mapCategoryInput.value = "地图设施";
+    dom.mapNoteInput.value = "";
+  }
+
+  function saveMapWord() {
+    const text = dom.mapEnglishInput.value.trim();
+    if (!text) {
+      dom.mapEnglishInput.focus();
+      dom.mapSaveStatus.textContent = "请先填写英文内容。";
+      return;
+    }
+    const entry = {
+      text,
+      translation: dom.mapChineseInput.value.trim(),
+      category: dom.mapCategoryInput.value,
+      note: dom.mapNoteInput.value.trim(),
+      updatedAt: Date.now()
+    };
+    if (state.mapEditorId) {
+      const index = state.mapCustomItems.findIndex((item) => item.id === state.mapEditorId);
+      if (index !== -1) state.mapCustomItems[index] = { ...state.mapCustomItems[index], ...entry };
+    } else {
+      state.mapCustomItems.unshift({
+        id: `map-custom-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+        createdAt: Date.now(),
+        ...entry
+      });
+    }
+    saveMapCustomItems();
+    renderMapPractice();
+    closeMapEditor();
+    dom.mapSaveStatus.textContent = `已保存“${text}”。`;
+  }
+
   function handleMapWordListClick(event) {
-    const button = event.target.closest("[data-action='play']");
+    const button = event.target.closest("[data-action]");
     if (!button) return;
-    const item = P2_MAP_WORDS.find((entry) => entry.id === button.dataset.id);
-    playMapItem(item);
+    const item = allMapWordItems().find((entry) => entry.id === button.dataset.id);
+    if (!item) return;
+    if (button.dataset.action === "play") playMapItem(item);
+    if (button.dataset.action === "edit") openMapEditor(item.id);
+    if (button.dataset.action === "delete") {
+      state.mapCustomItems = state.mapCustomItems.filter((entry) => entry.id !== item.id);
+      if (!state.deletedMapCustomIds.includes(item.id)) state.deletedMapCustomIds.push(item.id);
+      saveDeletedMapCustomIds();
+      saveMapCustomItems();
+      renderMapPractice();
+    }
   }
 
   function renderCustomList() {

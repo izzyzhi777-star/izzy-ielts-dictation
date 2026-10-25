@@ -10,7 +10,7 @@
   <title>IZZY IELTS-DICTATION</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=20261025b">
+  <link rel="stylesheet" href="styles.css?v=20261025c">
 </head>
 <body>
   <div class="app-shell">
@@ -571,8 +571,45 @@
               <select id="mapPracticeStartSelect"></select>
             </label>
             <button class="primary-button" id="startMapPracticeButton" type="button">开始拼写</button>
+            <button class="secondary-button" id="newMapWordButton" type="button">添加地图词</button>
           </div>
         </div>
+
+        <section class="custom-editor" id="mapEditor" hidden>
+          <div class="custom-editor-head">
+            <div>
+              <p class="section-kicker">ADD / EDIT MAP WORD</p>
+              <h3 id="mapEditorTitle">添加地图词</h3>
+            </div>
+            <button class="icon-button" id="closeMapEditorButton" type="button" aria-label="关闭编辑">×</button>
+          </div>
+          <label class="custom-field">
+            <span>英文内容</span>
+            <textarea id="mapEnglishInput" rows="2" placeholder="例如：on the far side / take the second turning"></textarea>
+          </label>
+          <label class="custom-field">
+            <span>中文意思</span>
+            <input id="mapChineseInput" type="text" placeholder="例如：在较远的一侧">
+          </label>
+          <label class="custom-field">
+            <span>地图类型</span>
+            <select id="mapCategoryInput">
+              <option value="地图设施">地图设施</option>
+              <option value="地图地标">地图地标</option>
+              <option value="方向路线">方向路线</option>
+              <option value="方位表达">方位表达</option>
+            </select>
+          </label>
+          <label class="custom-field">
+            <span>个人笔记</span>
+            <textarea id="mapNoteInput" rows="2" placeholder="记录易错点、连读或记忆方法"></textarea>
+          </label>
+          <div class="custom-editor-actions">
+            <button class="primary-button" id="saveMapWordButton" type="button">保存地图词</button>
+            <button class="text-button" id="cancelMapEditButton" type="button">取消</button>
+            <span class="custom-save-status" id="mapSaveStatus">新增词会参与地图词播放和拼写。</span>
+          </div>
+        </section>
 
         <div class="custom-layout">
           <section class="custom-practice" aria-live="polite">
@@ -922,7 +959,7 @@
     </aside>
   </div>
 
-  <script src="neural-voice.js?v=20261025b"></script>
-  <script src="app.js?v=20261025b"></script>
+  <script src="neural-voice.js?v=20261025c"></script>
+  <script src="app.js?v=20261025c"></script>
 </body>
 </html>
