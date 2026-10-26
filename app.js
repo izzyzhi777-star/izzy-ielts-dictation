@@ -279,6 +279,7 @@
     cancelCustomEditButton: $("cancelCustomEditButton"),
     customProgressLabel: $("customProgressLabel"),
     customModeLabel: $("customModeLabel"),
+    cancelCustomPracticeButton: $("cancelCustomPracticeButton"),
     restartCustomButton: $("restartCustomButton"),
     stopCustomButton: $("stopCustomButton"),
     customProgressBar: $("customProgressBar"),
@@ -338,6 +339,7 @@
     mapPracticeStartSelect: $("mapPracticeStartSelect"),
     mapProgressLabel: $("mapProgressLabel"),
     mapModeLabel: $("mapModeLabel"),
+    cancelMapPracticeButton: $("cancelMapPracticeButton"),
     restartMapButton: $("restartMapButton"),
     stopMapButton: $("stopMapButton"),
     mapProgressBar: $("mapProgressBar"),
@@ -350,6 +352,7 @@
     mapPlayButton: $("mapPlayButton"),
     mapPlayStatus: $("mapPlayStatus"),
     mapReplayButton: $("mapReplayButton"),
+    mapReminderButton: $("mapReminderButton"),
     mapAnswerInput: $("mapAnswerInput"),
     submitMapButton: $("submitMapButton"),
     nextMapButton: $("nextMapButton"),
@@ -442,6 +445,7 @@
     mapSession: createEmptyMapSession(),
     mapPlayingKey: null,
     mapAudioWarmStarted: false,
+    mapAutoTranslation: true,
     mapCustomItems: loadedMapCustomItems,
     deletedMapCustomIds: loadedDeletedMapCustomIds,
     mapEditorId: null,
@@ -1659,7 +1663,31 @@
     dom.newMapWordButton.addEventListener("click", () => openMapEditor());
     dom.closeMapEditorButton.addEventListener("click", closeMapEditor);
     dom.cancelMapEditButton.addEventListener("click", closeMapEditor);
+    let mapTranslationTimer = null;
+    dom.mapEnglishInput.addEventListener("input", () => {
+      state.mapAutoTranslation = true;
+      if (mapTranslationTimer) window.clearTimeout(mapTranslationTimer);
+      const text = dom.mapEnglishInput.value.trim();
+      if (!text) return;
+      mapTranslationTimer = window.setTimeout(async () => {
+        if (!state.mapAutoTranslation || dom.mapEnglishInput.value.trim() !== text) return;
+        try {
+          const translated = await Promise.race([fetchTranslation(text), wait(2500).then(() => "")]);
+          if (translated && state.mapAutoTranslation && dom.mapEnglishInput.value.trim() === text) {
+            dom.mapChineseInput.value = translated;
+          }
+        } catch (error) {
+          console.debug("Map word translation skipped.", error);
+        }
+      }, 550);
+    });
+    dom.mapChineseInput.addEventListener("input", () => {
+      state.mapAutoTranslation = false;
+    });
     dom.saveMapWordButton.addEventListener("click", saveMapWord);
+    dom.cancelCustomPracticeButton.addEventListener("click", cancelCustomPractice);
+    dom.cancelMapPracticeButton.addEventListener("click", cancelMapPractice);
+    dom.mapReminderButton.addEventListener("click", toggleMapReminder);
     dom.startMapPracticeButton.addEventListener("click", startMapPractice);
     dom.mapStartInlineButton.addEventListener("click", startMapPractice);
     dom.restartMapButton.addEventListener("click", startMapPractice);
@@ -1673,6 +1701,7 @@
     dom.submitMapButton.addEventListener("click", submitMapAnswer);
     dom.nextMapButton.addEventListener("click", goNextMap);
     dom.mapWordList.addEventListener("click", handleMapWordListClick);
+    dom.mapAnswerInput.addEventListener("input", (event) => handleThreeInputEvent(event));
     dom.mapAnswerInput.addEventListener("keydown", (event) => {
       if (event.key !== "Enter") return;
       event.preventDefault();
@@ -1945,6 +1974,37 @@
       && !state.customSession.complete;
   }
 
+  function isMapHintAvailable() {
+    return dom.settingsDrawer.hidden
+      && state.activeTab === "mapwords"
+      && state.mapSession.started
+      && !state.mapSession.complete;
+  }
+
+  function toggleMapReminder() {
+    if (!dom.practiceReminder || !state.mapSession.started || state.mapSession.complete) return;
+    const item = currentMapItem();
+    if (!item) return;
+    if (!dom.practiceReminder.hidden) {
+      hidePracticeReminder();
+      return;
+    }
+    dom.practiceReminder.replaceChildren();
+    const addLine = (label, value) => {
+      if (!value) return;
+      const line = document.createElement("div");
+      const strong = document.createElement("strong");
+      strong.textContent = `${label}：`;
+      line.append(strong, document.createTextNode(String(value)));
+      dom.practiceReminder.appendChild(line);
+    };
+    addLine("地图词", item.text);
+    addLine("中文", item.translation || "");
+    addLine("类型", item.category || "");
+    addLine("笔记", item.note || "");
+    dom.practiceReminder.hidden = false;
+  }
+
   function activeInputAcceptsThreeAsDigit() {
     if (document.activeElement === dom.customAnswerInput && state.activeTab === "custom") {
       const item = currentCustomItem();
@@ -1954,6 +2014,14 @@
   }
 
   function handleThreeShortcut(event) {
+    if (isMapHintAvailable()) {
+      event.preventDefault();
+      const now = Date.now();
+      if (now - state.lastThreeHintAt < 350) return;
+      state.lastThreeHintAt = now;
+      toggleMapReminder();
+      return;
+    }
     if (!isCustomHintAvailable()) return;
     const acceptsDigit = activeInputAcceptsThreeAsDigit();
     if (!acceptsDigit) event.preventDefault();
@@ -1965,7 +2033,7 @@
   }
 
   function handleThreeInputEvent(event) {
-    if (!event || event.isComposing || !isCustomHintAvailable()) return;
+    if (!event || event.isComposing) return;
     const input = event.target;
     if (!input || !("value" in input)) return;
     const current = String(input.value || "");
@@ -1974,6 +2042,17 @@
     const insertedThree = event.data === "3"
       || (current.endsWith("3") && current !== previous && (current.length > previous.length || !previous));
     if (!insertedThree) return;
+    if (isMapHintAvailable()) {
+      input.value = previous;
+      input.dataset.threeLastValue = previous;
+      try { input.setSelectionRange(previous.length, previous.length); } catch (error) { console.debug(error); }
+      const mapNow = Date.now();
+      if (mapNow - state.lastThreeHintAt < 350) return;
+      state.lastThreeHintAt = mapNow;
+      toggleMapReminder();
+      return;
+    }
+    if (!isCustomHintAvailable()) return;
     const acceptsDigit = activeInputAcceptsThreeAsDigit();
     if (!acceptsDigit) {
       input.value = previous;
@@ -1987,7 +2066,7 @@
   }
 
   function resetThreeInputTracking() {
-    [dom.answerInput, dom.dateAnswerInput, dom.customAnswerInput].forEach((input) => {
+    [dom.answerInput, dom.dateAnswerInput, dom.customAnswerInput, dom.mapAnswerInput].forEach((input) => {
       if (input) input.dataset.threeLastValue = "";
     });
   }
@@ -4906,6 +4985,11 @@
   }
 
   function startPredictionPractice() {
+    if (!dom.predictionEditor.hidden) {
+      dom.predictionValueInput.focus();
+      dom.predictionSaveStatus.textContent = "请先保存或取消正在添加的数字，再开始拼写。";
+      return;
+    }
     if (!state.predictionItems.length) {
       dom.predictionSaveStatus.textContent = "请先添加数字预测内容。";
       return;
@@ -5414,6 +5498,7 @@
     dom.mapWordCount.textContent = String(allMapWordItems().length);
     dom.mapProgressLabel.textContent = `P2 地图词 ${total ? Math.min(session.index + 1, total) : 0} / ${total}`;
     dom.mapModeLabel.textContent = "地图词拼写";
+    dom.cancelMapPracticeButton.disabled = !session.started;
     dom.restartMapButton.disabled = !session.started;
     dom.stopMapButton.disabled = !state.playing;
     dom.mapProgressBar.style.width = total
@@ -5496,8 +5581,14 @@
   }
 
   function startMapPractice() {
+    if (!dom.mapEditor.hidden) {
+      dom.mapEnglishInput.focus();
+      dom.mapSaveStatus.textContent = "请先保存或取消正在添加的地图词，再开始拼写。";
+      return;
+    }
     const selectedId = dom.mapPracticeStartSelect?.value || "";
     const ordered = reorderFromSelected(allMapWordItems(), selectedId);
+    hidePracticeReminder();
     state.mapSession = {
       started: true,
       complete: false,
@@ -5509,6 +5600,7 @@
     };
     switchTab("mapwords");
     dom.mapAnswerInput.value = "";
+    resetThreeInputTracking();
     dom.mapResult.hidden = true;
     dom.mapUserAnswerRow.hidden = true;
     renderMapPractice();
@@ -5535,6 +5627,7 @@
   }
 
   function goNextMap() {
+    hidePracticeReminder();
     if (!state.mapSession.started || state.mapSession.complete) return;
     if (state.mapSession.index >= state.mapSession.items.length - 1) {
       finishMapRound();
@@ -5546,6 +5639,7 @@
     state.mapSession.lastCorrect = false;
     state.mapSession.lastAnswer = "";
     dom.mapAnswerInput.value = "";
+    resetThreeInputTracking();
     dom.mapResult.hidden = true;
     dom.mapUserAnswerRow.hidden = true;
     renderMapPractice();
@@ -5554,14 +5648,23 @@
   }
 
   function finishMapRound() {
+    hidePracticeReminder();
     stopPlayback();
     state.mapSession.complete = true;
+    renderMapPractice();
+  }
+
+  function cancelMapPractice() {
+    hidePracticeReminder();
+    stopPlayback();
+    state.mapSession = createEmptyMapSession();
     renderMapPractice();
   }
 
   function openMapEditor(itemId = null) {
     const item = state.mapCustomItems.find((entry) => entry.id === itemId);
     state.mapEditorId = item?.id || null;
+    state.mapAutoTranslation = !item?.translation;
     dom.mapEditorTitle.textContent = item ? "编辑地图词" : "添加地图词";
     dom.mapEnglishInput.value = item?.text || "";
     dom.mapChineseInput.value = item?.translation || "";
@@ -5581,12 +5684,20 @@
     dom.mapNoteInput.value = "";
   }
 
-  function saveMapWord() {
+  async function saveMapWord() {
     const text = dom.mapEnglishInput.value.trim();
     if (!text) {
       dom.mapEnglishInput.focus();
       dom.mapSaveStatus.textContent = "请先填写英文内容。";
       return;
+    }
+    if (!dom.mapChineseInput.value.trim()) {
+      try {
+        const translated = await Promise.race([fetchTranslation(text), wait(700).then(() => "")]);
+        if (translated) dom.mapChineseInput.value = translated;
+      } catch (error) {
+        console.debug("Map word translation skipped.", error);
+      }
     }
     const entry = {
       text,
@@ -5698,6 +5809,7 @@
       ? "听标准英文读法，填写你最初录入的“数字或日期内容”。轻触播放区域重播，Enter 提交/下一题。"
       : "按 3 显示提示，Tab 重播当前内容";
     dom.customSubmitHint.textContent = settings.submitMode === "auto" ? "自动提交" : "手动提交";
+    dom.cancelCustomPracticeButton.disabled = !session.started;
     dom.restartCustomButton.disabled = !session.started;
     dom.stopCustomButton.disabled = !state.playing;
     dom.customProgressBar.style.width = total
@@ -5758,6 +5870,11 @@
   }
 
   function startCustomPractice(items = null, source = "all") {
+    if (source === "all" && !dom.customEditor.hidden) {
+      dom.customEnglishInput.focus();
+      dom.customSaveStatus.textContent = "请先保存或取消正在添加的词条，再开始拼写。";
+      return;
+    }
     let sourceItems = Array.isArray(items) ? items : state.customItems;
     if (!Array.isArray(items) && source === "all") {
       sourceItems = reorderFromSelected(sourceItems, dom.customPracticeStartSelect?.value || "");
@@ -5962,6 +6079,23 @@
     stopPlayback();
     state.customSession.complete = true;
     renderCustomSession();
+  }
+
+  function cancelCustomPractice() {
+    const source = state.customSession.source;
+    hidePracticeReminder();
+    stopPlayback();
+    state.customSession = createEmptyCustomSession();
+    if (source === "prediction") {
+      switchTab("prediction");
+      renderPrediction();
+    } else if (source === "hearing") {
+      switchTab("hearingwrong");
+      renderHearingWrong();
+    } else {
+      switchTab("custom");
+      renderCustom();
+    }
   }
 
   function addOrResetHearingWrong(item) {

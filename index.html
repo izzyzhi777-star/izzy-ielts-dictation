@@ -10,7 +10,7 @@
   <title>IZZY IELTS-DICTATION</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=20261026c">
+  <link rel="stylesheet" href="styles.css?v=20261026d">
 </head>
 <body>
   <div class="app-shell">
@@ -473,6 +473,7 @@
                 <span id="customModeLabel">拼写练习</span>
               </div>
               <div class="exercise-actions">
+                <button class="text-button" id="cancelCustomPracticeButton" type="button" disabled>退出拼写</button>
                 <button class="text-button" id="restartCustomButton" type="button" disabled>重开本轮</button>
                 <button class="text-button" id="stopCustomButton" type="button" disabled>停止播报</button>
               </div>
@@ -589,7 +590,7 @@
           </label>
           <label class="custom-field">
             <span>中文意思</span>
-            <input id="mapChineseInput" type="text" placeholder="例如：在较远的一侧">
+            <input id="mapChineseInput" type="text" placeholder="输入英文后自动翻译，也可以手动修改">
           </label>
           <label class="custom-field">
             <span>地图类型</span>
@@ -620,6 +621,7 @@
                 <span id="mapModeLabel">地图词拼写</span>
               </div>
               <div class="exercise-actions">
+                <button class="text-button" id="cancelMapPracticeButton" type="button" disabled>退出拼写</button>
                 <button class="text-button" id="restartMapButton" type="button" disabled>重开本轮</button>
                 <button class="text-button" id="stopMapButton" type="button" disabled>停止播报</button>
               </div>
@@ -656,6 +658,7 @@
                 <div class="play-meta">
                   <strong id="mapPlayStatus">按播放键开始</strong>
                   <button class="text-button" id="mapReplayButton" type="button">重播当前词</button>
+                  <button class="text-button" id="mapReminderButton" type="button">3 提示</button>
                 </div>
               </section>
               <section class="answer-section">
@@ -959,7 +962,7 @@
     </aside>
   </div>
 
-  <script src="neural-voice.js?v=20261026c"></script>
-  <script src="app.js?v=20261026c"></script>
+  <script src="neural-voice.js?v=20261026d"></script>
+  <script src="app.js?v=20261026d"></script>
 </body>
 </html>
