@@ -5883,11 +5883,6 @@
   }
 
   function startCustomPractice(items = null, source = "all") {
-    if (source === "all" && !dom.customEditor.hidden) {
-      dom.customEnglishInput.focus();
-      dom.customSaveStatus.textContent = "请先保存或取消正在添加的词条，再开始拼写。";
-      return;
-    }
     let sourceItems = Array.isArray(items) ? items : state.customItems;
     if (!Array.isArray(items) && source === "all") {
       sourceItems = reorderFromSelected(sourceItems, dom.customPracticeStartSelect?.value || "");
