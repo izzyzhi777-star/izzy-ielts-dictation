@@ -5718,8 +5718,9 @@
       note: dom.mapNoteInput.value.trim(),
       updatedAt: Date.now()
     };
-    if (state.mapEditorId) {
-      const index = state.mapCustomItems.findIndex((item) => item.id === state.mapEditorId);
+    const editingId = state.mapEditorId;
+    if (editingId) {
+      const index = state.mapCustomItems.findIndex((item) => item.id === editingId);
       if (index !== -1) state.mapCustomItems[index] = { ...state.mapCustomItems[index], ...entry };
     } else {
       state.mapCustomItems.unshift({
@@ -5738,8 +5739,20 @@
     }
     state.mapAudioWarmStarted = false;
     renderMapPractice();
-    closeMapEditor();
-    dom.mapSaveStatus.textContent = `已保存“${text}”。`;
+    if (editingId) {
+      closeMapEditor();
+      dom.mapSaveStatus.textContent = `已保存“${text}”。`;
+    } else {
+      state.mapEditorId = null;
+      state.mapAutoTranslation = true;
+      dom.mapEnglishInput.value = "";
+      dom.mapChineseInput.value = "";
+      dom.mapCategoryInput.value = "地图设施";
+      dom.mapNoteInput.value = "";
+      dom.mapSaveStatus.textContent = `已保存“${text}”，可以继续添加下一条。`;
+      dom.mapEditor.hidden = false;
+      dom.mapEnglishInput.focus();
+    }
   }
 
   function handleMapWordListClick(event) {
