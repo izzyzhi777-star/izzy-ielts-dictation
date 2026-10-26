@@ -487,6 +487,8 @@
       playing: false,
       playlist: [],
       index: 0,
+      previewPlaylist: [],
+      previewKey: "",
       token: 0,
       audio: null,
       audioUrl: "",

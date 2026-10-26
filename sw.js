@@ -1,4 +1,4 @@
-const CACHE_NAME = "izzy-ielts-app-v66";
+const CACHE_NAME = "izzy-ielts-app-v67";
 const APP_SHELL = [
   "./",
   "./index.html",
