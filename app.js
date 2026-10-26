@@ -5566,21 +5566,9 @@
     setPlaying(true);
     renderMapPractice();
     try {
-      const blob = await getSpeechBlob(item.text);
-      const repeat = Math.max(1, Number(settings.repeat) || 1);
-      for (let count = 0; count < repeat; count += 1) {
-        if (token !== state.token) return;
-        await playAudioBlob(blob, token);
-        if (count < repeat - 1) await wait(320);
-      }
+      await playRepeatedSpeech(item.text, settings.repeat, token, { type: "number" });
     } catch (error) {
-      console.debug("Map word neural audio unavailable; using fallback.", error);
-      try {
-        await playRepeatedSpeech(item.text, settings.repeat, token, { type: "number" });
-      } catch (fallbackError) {
-        console.debug("Map word external audio unavailable.", fallbackError);
-        await speakEnglishFallback(item.text, token);
-      }
+      await speakEnglishFallback(item.text, token);
     } finally {
       if (token === state.token) {
         state.playingWord = null;
@@ -5732,11 +5720,6 @@
     saveMapCustomItems();
     preloadExternalSpeech(entry.text);
     preloadExternalSpeech(entry.translation);
-    try {
-      warmCustomItemAudio(entry);
-    } catch (error) {
-      console.debug("Map word audio warmup skipped.", error);
-    }
     state.mapAudioWarmStarted = false;
     renderMapPractice();
     if (editingId) {
