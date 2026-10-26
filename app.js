@@ -11,7 +11,7 @@
   const MAP_CUSTOM_KEY = "number-dictation-p2-map-custom-v1";
   const MAP_DELETED_KEY = "number-dictation-p2-map-deleted-v1";
   const SYNC_KEY = "izzy-ielts-sync-v1";
-  const PREPARED_LISTENING_CHUNK_SIZE = 60;
+  const PREPARED_LISTENING_CHUNK_SIZE = 16;
   const LISTENING_PROGRESS_KEY = "number-dictation-listening-progress-v1";
   const CUSTOM_PRACTICE_POSITION_KEY = "number-dictation-custom-practice-position-v1";
   const EBBINGHAUS_INTERVALS = [
@@ -441,6 +441,7 @@
     customSession: createEmptyCustomSession(),
     mapSession: createEmptyMapSession(),
     mapPlayingKey: null,
+    mapAudioWarmStarted: false,
     mapCustomItems: loadedMapCustomItems,
     deletedMapCustomIds: loadedDeletedMapCustomIds,
     mapEditorId: null,
@@ -540,6 +541,7 @@
     setupMediaSession();
     state.ipaLoadPromise = loadIpaDictionary();
     renderAll();
+    window.setTimeout(() => prewarmListeningFirstChunk(), 700);
     if (state.sync.autoSync && state.sync.token && state.sync.gistId) {
       window.setTimeout(() => syncCloudData(false), 1200);
     }
@@ -1825,6 +1827,7 @@
       else {
         refreshListeningPreview();
         renderListening();
+        prewarmListeningFirstChunk();
       }
     });
     dom.listeningSpeed.addEventListener("change", () => {
@@ -2024,12 +2027,16 @@
     if (tab === "listening") {
       refreshListeningPreview();
       renderListening();
+      prewarmListeningFirstChunk();
       prefetchContinuousAudio("all");
       prefetchContinuousAudio("single");
       prefetchContinuousAudio("single-bilingual");
     }
     if (tab === "custom") renderCustom();
-    if (tab === "mapwords") renderMapPractice();
+    if (tab === "mapwords") {
+      renderMapPractice();
+      prewarmMapWordsAudio();
+    }
     if (tab === "prediction") renderPrediction();
     if (tab === "words") renderWordDirectory();
     if (tab === "wrong") renderWrongBook();
@@ -3866,6 +3873,25 @@
     return prepared;
   }
 
+  async function prewarmListeningFirstChunk() {
+    if (state.listening.started) return;
+    const playlist = state.listening.previewPlaylist.length
+      ? state.listening.previewPlaylist
+      : buildListeningPlaylist();
+    if (!playlist.length) return;
+    const token = state.listening.token;
+    try {
+      await preparePreparedListeningChunk(
+        playlist.slice(0, PREPARED_LISTENING_CHUNK_SIZE),
+        token,
+        0,
+        false
+      );
+    } catch (error) {
+      console.debug("Listening prewarm skipped.", error);
+    }
+  }
+
   function playPreparedListeningChunk(prepared, token) {
     return new Promise((resolve, reject) => {
       if (token !== state.listening.token || !state.listening.started) {
@@ -5281,6 +5307,14 @@
     renderCustomSession();
   }
 
+  function prewarmMapWordsAudio() {
+    if (state.mapAudioWarmStarted) return;
+    state.mapAudioWarmStarted = true;
+    allMapWordItems().forEach((item, index) => {
+      window.setTimeout(() => preloadExternalSpeech(item.text), index * 35);
+    });
+  }
+
   function allMapWordItems() {
     return [
       ...state.mapCustomItems.map((item) => ({ ...item, userAdded: true }))
@@ -5546,6 +5580,9 @@
       });
     }
     saveMapCustomItems();
+    preloadExternalSpeech(entry.text);
+    preloadExternalSpeech(entry.translation);
+    state.mapAudioWarmStarted = false;
     renderMapPractice();
     closeMapEditor();
     dom.mapSaveStatus.textContent = `已保存“${text}”。`;
