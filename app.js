@@ -3892,7 +3892,7 @@
     }
   }
 
-  function playPreparedListeningChunk(prepared, token) {
+  function playPreparedListeningChunk(prepared, token, startOffset = 0) {
     return new Promise((resolve, reject) => {
       if (token !== state.listening.token || !state.listening.started) {
         resolve();
@@ -3925,7 +3925,14 @@
       };
       audio.src = state.listening.audioUrl;
       audio.load();
-      const firstIndex = prepared.timeline[0]?.entryIndex || 0;
+      const firstSegment = prepared.timeline[startOffset] || prepared.timeline[0];
+      const firstIndex = firstSegment?.entryIndex || 0;
+      audio.onloadedmetadata = () => {
+        if (startOffset > 0 && firstSegment && Number.isFinite(audio.duration) && audio.duration > 0) {
+          const scaledStart = (firstSegment.start / prepared.duration) * audio.duration;
+          audio.currentTime = Math.min(Math.max(0, scaledStart + 0.005), Math.max(0, audio.duration - 0.05));
+        }
+      };
       setListeningTrack(firstIndex);
       renderListening();
       startListeningWatchdog();
@@ -3936,6 +3943,21 @@
         reject(error);
       });
     });
+  }
+
+  async function playFastStartListeningItem(item, token) {
+    if (!item || token !== state.listening.token) return;
+    const text = item.kind === "number"
+      ? numberToEnglish(item.number)
+      : (item.audioText || item.english || "");
+    if (!text) return;
+    setListeningTrack(state.listening.index);
+    renderListening();
+    try {
+      await playSmartListeningText(text, token, item.valueType || "number");
+    } catch (error) {
+      console.debug("Fast-start listening item skipped.", error);
+    }
   }
 
   async function startPreparedListening(playlist, token, startIndex = 0) {
@@ -3951,9 +3973,9 @@
     state.listening.timeline = [];
     state.listening.totalDuration = 0;
     state.listening.preparedQueueActive = true;
-    beginListeningInternalOperation(1800);
-    unlockListeningAudio();
+    state.listening.playing = true;
     renderListening();
+    const fastStartPromise = playFastStartListeningItem(orderedPlaylist[0], token);
     try {
       let chunkStart = 0;
       let preparedPromise = preparePreparedListeningChunk(
@@ -3972,7 +3994,9 @@
           nextStart,
           false
         );
-        await playPreparedListeningChunk(prepared, token);
+        const fastStartOffset = chunkStart === 0 && orderedPlaylist.length > 1 ? 1 : 0;
+        await fastStartPromise;
+        await playPreparedListeningChunk(prepared, token, fastStartOffset);
         chunkStart = nextStart;
       }
     } catch (error) {
