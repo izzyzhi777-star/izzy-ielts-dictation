@@ -2097,6 +2097,7 @@
     renderWordDirectory();
     renderWrongBook();
     renderHearingWrong();
+    renderSyncStatus();
   }
 
   function switchTab(tab) {
