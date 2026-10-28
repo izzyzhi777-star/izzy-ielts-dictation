@@ -5581,11 +5581,6 @@
   }
 
   function startMapPractice() {
-    if (!dom.mapEditor.hidden) {
-      dom.mapEnglishInput.focus();
-      dom.mapSaveStatus.textContent = "请先保存或取消正在添加的地图词，再开始拼写。";
-      return;
-    }
     const selectedId = dom.mapPracticeStartSelect?.value || "";
     const ordered = reorderFromSelected(allMapWordItems(), selectedId);
     hidePracticeReminder();
