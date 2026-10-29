@@ -1319,7 +1319,19 @@
       if (!response.ok) throw new Error(await response.text());
       const gist = await response.json();
       const file = gist.files?.["izzy-sync.json"] || Object.values(gist.files || {})[0];
-      const remote = file?.content ? JSON.parse(file.content) : null;
+      let remote = null;
+      if (file) {
+        try {
+          if (file.truncated) throw new Error("Gist content is truncated");
+          remote = file.content ? JSON.parse(file.content) : null;
+        } catch (parseError) {
+          if (!file.raw_url) throw parseError;
+          updateSyncStatus("同步文件较大，正在读取完整内容…");
+          const rawResponse = await fetch(file.raw_url, { cache: "no-store" });
+          if (!rawResponse.ok) throw new Error(await rawResponse.text());
+          remote = JSON.parse(await rawResponse.text());
+        }
+      }
       const merged = mergeSyncSnapshots(buildSyncSnapshot(), remote);
       applySyncSnapshot(merged);
       await writeSyncSnapshot(merged);
