@@ -10,7 +10,7 @@
   <title>IZZY IELTS-DICTATION</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=20261029a">
+  <link rel="stylesheet" href="styles.css?v=20261029b">
 </head>
 <body>
   <div class="app-shell">
@@ -944,7 +944,9 @@
             <button class="secondary-button" id="copyVocabularyButton" type="button">复制全部词库</button>
             <button class="secondary-button" id="importVocabularyButton" type="button">从剪贴板导入词库</button>
             <button class="secondary-button" id="exportVocabularyButton" type="button">导出完整词库文件</button>
+            <button class="secondary-button" id="showVocabularyDataButton" type="button">显示可复制词库数据</button>
             <button class="secondary-button" id="importVocabularyFileButton" type="button">从文件导入完整词库</button>
+            <textarea class="vocabulary-data-text" id="vocabularyDataText" rows="7" readonly hidden aria-label="完整词库数据"></textarea>
             <input id="importVocabularyFile" type="file" accept=".json,application/json,text/plain" hidden>
             <button class="text-button" id="copySyncCodeButton" type="button">复制同步码</button>
           </div>
@@ -964,7 +966,7 @@
     </aside>
   </div>
 
-  <script src="neural-voice.js?v=20261029a"></script>
-  <script src="app.js?v=20261029a"></script>
+  <script src="neural-voice.js?v=20261029b"></script>
+  <script src="app.js?v=20261029b"></script>
 </body>
 </html>

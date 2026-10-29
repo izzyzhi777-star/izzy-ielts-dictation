@@ -2561,3 +2561,15 @@ footer {
 #customQuestionScreen .listen-panel:active {
   background: var(--paper-soft);
 }
+
+.vocabulary-data-text {
+  width: 100%;
+  min-height: 170px;
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid var(--line-strong);
+  background: var(--paper-soft);
+  color: var(--ink-soft);
+  font: 11px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+  resize: vertical;
+}

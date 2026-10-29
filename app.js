@@ -416,6 +416,8 @@
     copyVocabularyButton: $("copyVocabularyButton"),
     importVocabularyButton: $("importVocabularyButton"),
     exportVocabularyButton: $("exportVocabularyButton"),
+    showVocabularyDataButton: $("showVocabularyDataButton"),
+    vocabularyDataText: $("vocabularyDataText"),
     importVocabularyFileButton: $("importVocabularyFileButton"),
     importVocabularyFile: $("importVocabularyFile"),
     createSyncLinkButton: $("createSyncLinkButton"),
@@ -1808,6 +1810,13 @@
         updateSyncStatus(`生成失败：${String(error.message || error).slice(0, 100)}`, true);
       }
     });
+    dom.showVocabularyDataButton.addEventListener("click", () => {
+      dom.vocabularyDataText.value = JSON.stringify(buildSyncSnapshot(), null, 2);
+      dom.vocabularyDataText.hidden = false;
+      dom.vocabularyDataText.focus();
+      dom.vocabularyDataText.select();
+      updateSyncStatus("完整数据已显示，请长按或全选复制这段文本。");
+    });
     dom.importVocabularyFileButton.addEventListener("click", () => {
       dom.importVocabularyFile.click();
     });
@@ -1821,6 +1830,7 @@
           : JSON.parse(text);
         const merged = mergeSyncSnapshots(buildSyncSnapshot(), payload);
         applySyncSnapshot(merged);
+        dom.vocabularyDataText.hidden = true;
         updateSyncStatus(`完整词库导入完成 · ${state.customItems.length} 条我的词句 · ${state.mapCustomItems.length} 条地图词`);
       } catch (error) {
         updateSyncStatus(`文件导入失败：${String(error.message || error).slice(0, 100)}`, true);
