@@ -10,7 +10,7 @@
   <title>IZZY IELTS-DICTATION</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=20261028b">
+  <link rel="stylesheet" href="styles.css?v=20261029a">
 </head>
 <body>
   <div class="app-shell">
@@ -920,7 +920,7 @@
       <section class="setting-group sync-group">
         <div class="setting-copy">
           <h3>PC / 手机自动同步</h3>
-          <p>电脑连接成功后，点“复制手机自动同步链接”，在手机 Safari 打开一次。之后两台设备修改单词、错词或笔记都会自动合并同步。</p>
+          <p>电脑连接成功后，点“复制手机自动同步链接”，在手机 Safari 打开一次。跨浏览器迁移也可以先导出完整词库，再在 Google / Safari 用文件导入一次。</p>
         </div>
         <div class="sync-field">
           <label for="githubTokenInput">GitHub Token</label>
@@ -943,7 +943,9 @@
             <button class="secondary-button" id="connectFromClipboardButton" type="button">从剪贴板连接</button>
             <button class="secondary-button" id="copyVocabularyButton" type="button">复制全部词库</button>
             <button class="secondary-button" id="importVocabularyButton" type="button">从剪贴板导入词库</button>
-            <button class="secondary-button" id="exportVocabularyButton" type="button">导出词库文件</button>
+            <button class="secondary-button" id="exportVocabularyButton" type="button">导出完整词库文件</button>
+            <button class="secondary-button" id="importVocabularyFileButton" type="button">从文件导入完整词库</button>
+            <input id="importVocabularyFile" type="file" accept=".json,application/json,text/plain" hidden>
             <button class="text-button" id="copySyncCodeButton" type="button">复制同步码</button>
           </div>
         </details>
@@ -962,7 +964,7 @@
     </aside>
   </div>
 
-  <script src="neural-voice.js?v=20261028b"></script>
-  <script src="app.js?v=20261028b"></script>
+  <script src="neural-voice.js?v=20261029a"></script>
+  <script src="app.js?v=20261029a"></script>
 </body>
 </html>

@@ -416,6 +416,8 @@
     copyVocabularyButton: $("copyVocabularyButton"),
     importVocabularyButton: $("importVocabularyButton"),
     exportVocabularyButton: $("exportVocabularyButton"),
+    importVocabularyFileButton: $("importVocabularyFileButton"),
+    importVocabularyFile: $("importVocabularyFile"),
     createSyncLinkButton: $("createSyncLinkButton"),
     syncAutoToggle: $("syncAutoToggle"),
     syncStatus: $("syncStatus")
@@ -1804,6 +1806,26 @@
         updateSyncStatus("手机自动同步链接已复制。请在手机 Safari 打开一次，之后会自动同步。");
       } catch (error) {
         updateSyncStatus(`生成失败：${String(error.message || error).slice(0, 100)}`, true);
+      }
+    });
+    dom.importVocabularyFileButton.addEventListener("click", () => {
+      dom.importVocabularyFile.click();
+    });
+    dom.importVocabularyFile.addEventListener("change", async () => {
+      const file = dom.importVocabularyFile.files?.[0];
+      if (!file) return;
+      try {
+        const text = (await file.text()).trim();
+        const payload = text.startsWith("IZZY-IELTS-DATA|")
+          ? JSON.parse(text.slice("IZZY-IELTS-DATA|".length))
+          : JSON.parse(text);
+        const merged = mergeSyncSnapshots(buildSyncSnapshot(), payload);
+        applySyncSnapshot(merged);
+        updateSyncStatus(`完整词库导入完成 · ${state.customItems.length} 条我的词句 · ${state.mapCustomItems.length} 条地图词`);
+      } catch (error) {
+        updateSyncStatus(`文件导入失败：${String(error.message || error).slice(0, 100)}`, true);
+      } finally {
+        dom.importVocabularyFile.value = "";
       }
     });
     dom.importVocabularyButton.addEventListener("click", async () => {
