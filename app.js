@@ -922,9 +922,17 @@
 
   async function loadVoicePackIndex() {
     try {
-      const response = await fetch("audio/voice-pack/index.json?v=20261013", { cache: "no-cache" });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      state.voicePackIndex = await response.json();
+      const [englishResponse, chineseResponse] = await Promise.all([
+        fetch("audio/voice-pack/index.json?v=20261013", { cache: "no-cache" }),
+        fetch("audio/chinese-pack/index.json?v=20261013", { cache: "no-cache" })
+      ]);
+      if (!englishResponse.ok) throw new Error(`HTTP ${englishResponse.status}`);
+      const english = await englishResponse.json();
+      const chinese = chineseResponse.ok ? await chineseResponse.json() : {};
+      Object.entries(chinese).forEach(([text, entry]) => {
+        if (entry?.file) english[text] = { ...entry, base: "audio/chinese-pack" };
+      });
+      state.voicePackIndex = english;
       state.voicePackLoaded = true;
     } catch (error) {
       state.voicePackIndex = {};
@@ -2753,9 +2761,14 @@
     }
   }
 
+  function voiceEntryUrl(entry) {
+    if (!entry?.file) return "";
+    return `${entry.base || "audio/voice-pack"}/${entry.file}`;
+  }
+
   function getTextAudioSource(text) {
     const voiceEntry = state.voicePackIndex[text];
-    if (voiceEntry?.file) return `audio/voice-pack/${voiceEntry.file}`;
+    if (voiceEntry?.file) return voiceEntryUrl(voiceEntry);
     if (!["localhost", "127.0.0.1"].includes(window.location.hostname)) return "";
     const params = new URLSearchParams({ text, voice: settings.voice });
     return `/api/text-speech?${params.toString()}`;
@@ -3233,7 +3246,7 @@
     const spoken = spokenTextForValue(number, type);
     if (type !== "number") return "";
     const voiceEntry = state.voicePackIndex[spoken];
-    if (voiceEntry?.file) return `audio/voice-pack/${voiceEntry.file}`;
+    if (voiceEntry?.file) return voiceEntryUrl(voiceEntry);
     if (!["localhost", "127.0.0.1"].includes(window.location.hostname)) return "";
     const params = new URLSearchParams({
       number: String(number),
@@ -3481,8 +3494,8 @@
     if (!normalized) return null;
     const voiceEntry = state.voicePackIndex[normalized];
     if (voiceEntry?.file) {
-      const sources = [`audio/voice-pack/${voiceEntry.file}`];
-      if (voiceEntry.usFile) sources.push(`audio/voice-pack/${voiceEntry.usFile}`);
+      const sources = [voiceEntryUrl(voiceEntry)];
+      if (voiceEntry.usFile) sources.push(`${voiceEntry.base || "audio/voice-pack"}/${voiceEntry.usFile}`);
       return { sources, revoke: false, external: false };
     }
     const blob = state.audioBlobCache.get(`text:${normalized}`);
@@ -3525,7 +3538,7 @@
     if (!normalized) return null;
     await state.voicePackPromise;
     const voiceEntry = state.voicePackIndex[normalized];
-    const cacheKey = voiceEntry?.file ? `pack:${voiceEntry.file}` : `text:${normalized}`;
+    const cacheKey = voiceEntry?.file ? `pack:${voiceEntry.base || "audio/voice-pack"}:${voiceEntry.file}` : `text:${normalized}`;
     if (voiceEntry?.file || state.audioBlobCache.has(cacheKey)) {
       return getSpeechBlob(normalized, options);
     }
@@ -4533,12 +4546,12 @@
     if (!normalized) throw new Error("Missing speech text");
     await state.voicePackPromise;
     const voiceEntry = state.voicePackIndex[normalized];
-    const cacheKey = voiceEntry?.file ? `pack:${voiceEntry.file}` : `text:${normalized}`;
+    const cacheKey = voiceEntry?.file ? `pack:${voiceEntry.base || "audio/voice-pack"}:${voiceEntry.file}` : `text:${normalized}`;
     if (state.audioBlobCache.has(cacheKey)) return state.audioBlobCache.get(cacheKey);
     let blob = null;
 
     if (voiceEntry?.file) {
-      blob = await neuralVoice.fetchAudioBlob(`audio/voice-pack/${voiceEntry.file}`);
+      blob = await neuralVoice.fetchAudioBlob(voiceEntryUrl(voiceEntry));
     } else if (["localhost", "127.0.0.1"].includes(window.location.hostname)) {
       try {
         const params = new URLSearchParams({ text: normalized, voice: settings.voice });
