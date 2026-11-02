@@ -127,6 +127,91 @@
     note: "IELTS Listening Part 2 map key word"
   }));
 
+  const UI_EN = new Map(Object.entries({
+    "设置":"Settings","关闭设置":"Close settings","播报声音":"Voice","播报速度":"Playback speed","提交方式":"Submit mode","自动提交":"Auto submit","播报次数":"Repeats","阿拉伯数字顺序":"Number order","日期数字顺序":"Date order","顺序播报":"Sequential","乱序播报":"Shuffle","顺序 1–31":"Sequence 1–31","乱序 1–31":"Shuffle 1–31",
+    "开始听写":"Start dictation","重开本轮":"Restart round","停止播报":"Stop audio","提交答案":"Submit answer","下一题":"Next item","完成本轮":"Finish round","再练一次":"Practise again","去错题本":"Open error book","正确答案":"Correct answer","你的答案":"Your answer","正确":"Correct","需要再练":"Try again","按播放键开始":"Press play to begin","播放完成，请填写答案":"Playback complete. Type your answer.","本题已提交":"Answer submitted","正在播放有道标准发音":"Playing standard audio",
+    "准备开始":"Ready","选择内容后点击开始":"Choose a source and press Start","从 1 到 100，按顺序拼写英文":"Spell 1–100 in English","听音后填写英文单词":"Hear it. Then spell it.","听音后填写日期英文":"Write the date in English","本轮听写完成":"Round complete","本轮日期听写完成":"Date round complete","本轮词句练习完成":"Word round complete","本轮地图词练习完成":"Map round complete",
+    "开始随身听":"Start listening","从此处播放":"Play from here","随身听设置":"Listening controls","睡眠模式关闭":"Sleep timer off","睡眠模式已结束":"Sleep timer ended","暂停":"Pause","继续":"Resume","播放":"Play","停止":"Stop","重播当前内容":"Replay current item","重播当前数字":"Replay current number","重播日期":"Replay date","重播当前词":"Replay current word","提醒词汇":"Hint","3 提示":"3 Hint",
+    "我的词句":"My Words","拼写练习":"Spelling practice","地图词拼写":"Map word spelling","退出拼写":"Exit practice","开始我的词句练习":"Start My Words practice","开始拼写":"Start spelling","开始拼写练习":"Start spelling","开始地图词拼写":"Start map spelling","从哪一条开始拼写":"Choose a starting item","从哪一条开始":"Choose a start item","从哪一条开始拼写（会记住位置）":"Choose a starting item · position remembered",
+    "添加词句":"Add item","添加地图词":"Add map word","添加数字":"Add number","保存并继续添加":"Save and add another","保存地图词":"Save map word","取消":"Cancel","翻译例句":"Translate example","自动翻译":"Auto translate","英文拼写":"English spelling","阿拉伯数字":"Arabic digits","你的答案":"Your answer","填写完整英文":"Type the full English","提交答案":"Submit answer",
+    "已保存词句":"Saved items","已保存数字":"Saved number items","地图题高频词":"Map word bank","听力错词本":"Word Error Book","数字错题本":"Number Error Book","数字单词目录":"Number Library","复习到期":"Review due","全部复习":"Review all","暂无错词":"No errors yet","清空错题":"Clear errors","数字错题再练":"Retry number errors","日期错题再练":"Retry date errors",
+    "消息":"Messages","笔记":"Note","中文":"Chinese","例句":"Example","例句翻译":"Example translation","中文翻译":"Chinese meaning","个人笔记":"Personal note","英式音标":"British IPA","标准英文读法":"Standard English reading","中文提示":"Chinese hint","地图类型":"Map category","中文意思":"Chinese meaning",
+    "播放当前数字":"Play current number","播放当前日期":"Play current date","播放当前词句":"Play current item","播放当前地图词":"Play current map word","地图词":"Map word","地图设施":"Facilities","地图地标":"Landmarks","方向路线":"Directions","方位表达":"Position phrases",
+    "复制同步码":"Copy sync code","立即同步 PC / 手机":"Sync now","复制手机自动同步链接":"Copy auto-sync link","首次配对 / 高级设置":"Pairing / Advanced","创建同步空间":"Create sync space","连接同步码":"Connect sync code","复制连接信息":"Copy connection info","从剪贴板连接":"Connect from clipboard","复制全部词库":"Copy full library","从剪贴板导入词库":"Import from clipboard","导出完整词库文件":"Export full library","显示可复制词库数据":"Show copyable library data","从文件导入完整词库":"Import full library file","复制同步码":"Copy sync code","尚未连接同步空间":"Not connected","始终保持自动同步（推荐）":"Keep sync on · recommended",
+    "正在同步数据…":"Syncing…","同步完成":"Sync complete","同步失败":"Sync failed","手机自动同步链接已复制。请在手机 Safari 打开一次，之后会自动同步。":"Auto-sync link copied. Open it once on your phone.","完整词库已复制。请在 Safari 设置中点击“从剪贴板导入词库”。":"Full library copied. Import it from the clipboard in Safari.","全部词库已复制。请在 Safari 设置中点击“从剪贴板导入词库”。":"Full library copied. Import it from the clipboard in Safari.",
+    "正在准备连续音频":"Preparing continuous audio","正在合成，完成后会自动开始播放":"Generating audio. Playback will begin automatically.","音频暂时不可用":"Audio temporarily unavailable","随身听暂时不可用":"Listening temporarily unavailable","请重新点击开始；已经缓存的语音不会丢失。":"Press Start again. Cached audio is safe.","没有选择播放内容":"Nothing selected","至少勾选一个分类。":"Select at least one category.","准备":"Preparing","已完成：":"Completed: ",
+    "准备练习数字预测拼写":"Ready for Number Lab spelling","准备练习你的词句":"Ready to practise your words","先添加你要拼写的英文":"Add your first English item","听标准英文读法，填写完整英文；提交后显示对应数字、中文提示和笔记。":"Listen to the standard English reading, then type the full answer. The number, hint and note appear after submission.","听英文，填写完整拼写；提交后显示中文翻译和个人笔记。":"Listen and type the full spelling. Your translation and note appear after submission.","保存词句后，可以听英文、填写拼写，并查看中文翻译和笔记。":"Save a word or phrase, listen, spell it and review your translation and note.","准备练习地图词":"Ready for map word spelling",
+    "暂无中文翻译":"No Chinese translation","暂无英式音标":"No British IPA","未填写":"Not provided","未添加例句":"No example sentence","未添加例句翻译":"No example translation","暂无英式音标":"No British IPA","暂无中文意思":"No Chinese meaning","暂无错词，自定义词句拼错后会自动进入这里。":"No errors yet. Missed custom words appear here automatically.",
+    "电话号码":"Phone number","金额":"Money","日期 / 月份日期":"Date / month","年份":"Year","时间":"Time","小数":"Decimal","普通数字":"General number","日期 / 月份":"Date / month",
+    "现在":"Now","今天":"Today","需要再练":"Try again","已自动加入听力错词本":"Added to Word Errors","拼写正确，已移出听力错词本":"Correct. Removed from Word Errors.","播放完成，请填写答案":"Playback complete. Type your answer.","按播放键开始":"Press play to begin",
+    "自动提交 · 停笔约 1 秒":"Auto submit · about 1 sec","错题重练 · 阿拉伯数字":"Error drill · Arabic digits","听音后填写阿拉伯数字":"Type the number you hear","错题本只练阿拉伯数字。大数字可输入纯数字，不要求逗号。按 Tab 可重播。":"Type Arabic digits only. Commas are optional. Tab replays.","填写数字":"Type the number","错题重练":"Error drill","错题重练固定填写阿拉伯数字。答对后会自动移出错题本。":"Type Arabic digits. Correct answers leave the error book.","听音后填写英文":"Type the English you hear","英文读法不使用 and 连接词，hundred、thousand、million、billion 按英语数位分组。按 Tab 可重播。":"English readings omit “and”. Follow English number groups. Tab replays.","例如听到 thirteen，请填写 thirteen。按 Tab 可重播。":"Example: hear “thirteen”, type “thirteen”. Tab replays.","填写英文":"Type the English","每次打开或重新开始都会重新抽取不同数字。重点训练 hundred、thousand、million 和 billion 的数位边界。":"Each new round draws different numbers. Focus on number-group boundaries.","点击开始后使用英式语音播报。提交后光标会留在输入框，按 Enter 进入下一题。":"Start with British audio. Press Enter to submit, then again for the next item.","0 读作 oh，22 读作 double two，333 读作 triple three。只填写阿拉伯数字，保留开头的 0。":"0 is read “oh”, 22 “double two”, 333 “triple three”. Type digits only; keep leading zeros.","1901 读作 nineteen oh one，1881 读作 eighteen eighty-one。只填写阿拉伯数字。":"1901 is “nineteen oh one”; 1881 is “eighteen eighty-one”. Type digits only.","只需要输入纯数字，逗号可以省略。按 Tab 可重播。":"Type digits only; commas are optional. Tab replays.","每次随机 50 个雅思机考高频电话号码":"50 high-frequency IELTS phone numbers","每次随机 30 个 1000–1999 年历史年份":"30 random years from 1000–1999","每次随机 100 题":"100 random items","每次随机 50 题":"50 random items","每次随机 30 题":"30 random items","打乱 1 到 100，拼写阿拉伯数字":"Shuffle 1–100 · Arabic digits","从 1 到 100，按顺序拼写阿拉伯数字":"Spell 1–100 in order · Arabic digits","随机":"Shuffle","月日英文":"Month + day","英文 + 数字":"English + digits","星期 + 日号 + 月份":"Weekday + day + month","日号":"Day","听完整日期，填写星期、阿拉伯日号和月份":"Hear the full date and write the weekday, day and month","例如听到 “Saturday, the fourth of February”，填写 “Saturday, 4 February”。星期和月份用英文，只有日号写阿拉伯数字。":"Example: hear “Saturday, the fourth of February” and type “Saturday, 4 February”.","听音后填写混合日期":"Type the date you hear","格式：Saturday, 4 February。星期和月份用英文，日号用阿拉伯数字。按 Tab 可重播。":"Format: Saturday, 4 February. English weekday and month; Arabic day. Tab replays.","填写英文日期":"Type the date in English","听英文序数，填写阿拉伯数字":"Hear the ordinal and type Arabic digits","从 1 号到 31 号播报，比如 “the twenty-seventh”，填写 27。":"Dates 1–31 are read aloud; for “the twenty-seventh”, type 27.","只需要填写 1–31 的数字，不要求填写月份。按 Tab 可重播。":"Type a number from 1–31. No month is required. Tab replays.","填写数字，例如 27":"Type a number, e.g. 27"
+  }));
+  const UI_PATTERNS = [
+    [/^本轮 (\d+) \/ (\d+)$/,"SESSION $1 / $2"],
+    [/^我的词句 (\d+) \/ (\d+)$/,"MY WORDS $1 / $2"],
+    [/^P2 地图词 (\d+) \/ (\d+)$/,"P2 MAPS $1 / $2"],
+    [/^日期听写 (\d+) \/ (\d+)$/,"DATE DRILL $1 / $2"],
+    [/^共 (\d+) 题，正确 (\d+) 题。$/,"$1 items · $2 correct."],
+    [/^播放 (\d+) 遍 · (.+)$/,"$1 repeats · $2"],
+    [/^睡眠剩余 (.+)$/,"Sleep remaining $1"],
+    [/^同步完成 · (.+)$/,"Sync complete · $1"],
+    [/^同步失败：(.+)$/,"Sync failed: $1"],
+    [/^已保存“(.+)”，可以继续添加下一条。$/,"Saved “$1”. Continue with the next item."],
+    [/^已保存“(.+)”。$/,"Saved “$1”."],
+    [/^共 (\d+) 个错词，(.+) 个到期；复习间隔按艾宾浩斯曲线执行。$/,"$1 errors · $2 due · Ebbinghaus review schedule."],
+    [/^复习阶段 (\d+)\/9 · 下次 (.+)$/,"Stage $1/9 · Next $2"],
+    [/^(\d+) 分钟后$/,"in $1 min"],
+    [/^(\d+) 小时后$/,"in $1 hr"],
+    [/^(\d+) 天后$/,"in $1 days"],
+    [/^已完成：(.+)$/,"Completed: $1"],
+    [/^准备 (\d+) \/ (\d+)$/,"Preparing $1 / $2"],
+    [/^缓存 (\d+) \/ (\d+)$/,"Cached $1 / $2"]
+  ];
+  const UI_FRAGMENTS = [
+    ["英文拼写","English spelling"],["阿拉伯数字","Arabic digits"],["顺序播报","Sequential"],
+    ["随机抽取","random selection"],["每次随机","random each round"],["自动提交","Auto submit"],
+    ["手动提交","Manual submit"],["神经女声","neural voice"],["神经男声","neural voice"],
+    ["遍","repeats"],["顺序","Sequential"],["乱序","Shuffle"]
+  ];
+  const UI_SKIP_SELECTOR = [
+    "#customList .custom-list-english", "#customList .custom-list-chinese", "#customList .custom-list-note",
+    "#mapWordList .custom-list-english", "#mapWordList .custom-list-chinese", "#mapWordList .custom-list-note",
+    "#hearingWrongList .hearing-wrong-english", "#hearingWrongList .hearing-wrong-chinese",
+    "#predictionList .prediction-card-value", "#predictionList .prediction-card-spoken", "#predictionList .prediction-card-note",
+    "#wordGrid .word-text", "#wordGrid .word-hint", ".result-line p", "#practiceReminder", "#listeningChinese",
+    "#customCorrectTranslation", "#customCorrectExample", "#customCorrectExampleTranslation", "#customCorrectNote",
+    "#mapCorrectTranslation", "#mapCorrectCategory", "#customUserAnswer", "#mapUserAnswer",
+    "#customChineseInput", "#mapChineseInput", "#predictionChineseInput", ".custom-list-chinese", ".custom-list-note"
+  ].join(",");
+  function translateUiValue(value) {
+    const text = String(value || "");
+    if (!text || !/[\u4e00-\u9fff]/.test(text)) return text;
+    if (UI_EN.has(text)) return UI_EN.get(text);
+    for (const [pattern, replacement] of UI_PATTERNS) {
+      if (pattern.test(text)) return text.replace(pattern, replacement);
+    }
+    let next = text;
+    for (const [from, to] of UI_FRAGMENTS) next = next.split(from).join(to);
+    return next;
+  }
+  function localizeInterface(root = document) {
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    let node;
+    while ((node = walker.nextNode())) {
+      if (node.parentElement?.closest(UI_SKIP_SELECTOR)) continue;
+      const next = translateUiValue(node.nodeValue);
+      if (next !== node.nodeValue) node.nodeValue = next;
+    }
+    root.querySelectorAll?.("[placeholder], [aria-label], [title]").forEach((el) => {
+      if (el.closest(UI_SKIP_SELECTOR)) return;
+      ["placeholder", "aria-label", "title"].forEach((attr) => {
+        if (el.hasAttribute(attr)) {
+          const next = translateUiValue(el.getAttribute(attr));
+          if (next !== el.getAttribute(attr)) el.setAttribute(attr, next);
+        }
+      });
+    });
+  }
   const neuralVoice = window.IzzyNeuralVoice;
   const RANGE_CONFIG = {
     basic: { min: 1, max: 100, count: 100, shuffled: false },
@@ -435,7 +520,7 @@
   const loadedDeletedMapCustomIds = loadDeletedMapCustomIds();
   const loadedMapCustomItems = loadMapCustomItems().filter((item) => !loadedDeletedMapCustomIds.includes(item.id));
   const state = {
-    activeTab: "dictation",
+    activeTab: "listening",
     range: "basic",
     wrongNumbers: loadedWrongData.numbers,
     wrongDates: loadedWrongData.dates,
@@ -550,7 +635,13 @@
     setupListeningAudio();
     setupMediaSession();
     state.ipaLoadPromise = loadIpaDictionary();
+    refreshListeningPreview();
     renderAll();
+    localizeInterface();
+    if (!globalThis.__izzyUiObserver) {
+      globalThis.__izzyUiObserver = new MutationObserver(() => localizeInterface());
+      globalThis.__izzyUiObserver.observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ["placeholder", "aria-label", "title"] });
+    }
     window.setTimeout(() => prewarmListeningFirstChunk(), 700);
     if (state.sync.autoSync && state.sync.token && state.sync.gistId) {
       window.setTimeout(() => syncCloudData(false), 1200);
@@ -2050,10 +2141,10 @@
       line.append(strong, document.createTextNode(String(value)));
       dom.practiceReminder.appendChild(line);
     };
-    addLine("地图词", item.text);
-    addLine("中文", item.translation || "");
-    addLine("类型", item.category || "");
-    addLine("笔记", item.note || "");
+    addLine("Map word", item.text);
+    addLine("Chinese", item.translation || "");
+    addLine("Category", mapCategoryLabel(item.category || ""));
+    addLine("Note", item.note || "");
     dom.practiceReminder.hidden = false;
   }
 
@@ -5475,6 +5566,15 @@
     renderCustomSession();
   }
 
+  function mapCategoryLabel(value) {
+    return {
+      "地图设施": "Facilities",
+      "地图地标": "Landmarks",
+      "方向路线": "Directions",
+      "方位表达": "Position phrases"
+    }[value] || value;
+  }
+
   function prewarmMapWordsAudio() {
     if (state.mapAudioWarmStarted) return;
     state.mapAudioWarmStarted = true;
@@ -5512,7 +5612,7 @@
       english.textContent = item.text;
       const category = document.createElement("div");
       category.className = "custom-list-phonetic";
-      category.textContent = item.category || "自定义地图词";
+      category.textContent = mapCategoryLabel(item.category || "Custom map word");
       const chinese = document.createElement("div");
       chinese.className = "custom-list-chinese";
       chinese.textContent = item.translation || "暂无中文意思";
@@ -5602,7 +5702,7 @@
       dom.mapResultNote.textContent = correct ? "地图词拼写正确" : "看一下正确拼写和中文意思";
       dom.mapCorrectAnswer.textContent = current.text;
       dom.mapCorrectTranslation.textContent = current.translation || "未填写";
-      dom.mapCorrectCategory.textContent = current.category;
+      dom.mapCorrectCategory.textContent = mapCategoryLabel(current.category);
       dom.mapUserAnswer.textContent = session.lastAnswer || "";
       dom.mapUserAnswerRow.hidden = correct;
     }
@@ -6021,12 +6121,12 @@
       dom.practiceReminder.appendChild(line);
     };
     if (state.customSession.source === "prediction") {
-      addLine("原始数字", item.text);
-      addLine("标准英文读法", item.audioText || predictionSpokenText(item.text, item.predictionType));
+      addLine("Original number", item.text);
+      addLine("Standard English reading", item.audioText || predictionSpokenText(item.text, item.predictionType));
     } else {
-      addLine("词汇提醒", item.text);
-      addLine("音标", item.phonetic || lookupPhonetic(item.text));
-      addLine("中文", item.translation || "");
+      addLine("Word", item.text);
+      addLine("British IPA", item.phonetic || lookupPhonetic(item.text));
+      addLine("Chinese", item.translation || "");
     }
     dom.practiceReminder.hidden = false;
   }
