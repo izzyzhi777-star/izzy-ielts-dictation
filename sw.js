@@ -1,4 +1,4 @@
-const CACHE_NAME = "izzy-ielts-app-v79";
+const CACHE_NAME = "izzy-ielts-app-v80";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -8,7 +8,7 @@ const APP_SHELL = [
   "./favicon.svg",
   "./manifest.webmanifest",
   "./data/en_UK_ipa.txt",
-  "./audio/voice-pack/index.json"
+  "./audio/voice-pack/index.json?v=20261105a"
 ];
 
 self.addEventListener("install", (event) => {
@@ -29,7 +29,7 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
 
-  if (url.pathname.includes("/audio/voice-pack/") || url.pathname.includes("/data/")) {
+  if (url.pathname.includes("/audio/voice-pack/") || url.pathname.includes("/audio/chinese-pack/") || url.pathname.includes("/data/")) {
     event.respondWith(
       caches.match(request).then((cached) => cached || fetch(request).then((response) => {
         const copy = response.clone();

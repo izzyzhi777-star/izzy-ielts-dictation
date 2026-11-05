@@ -11,7 +11,8 @@
   const MAP_CUSTOM_KEY = "number-dictation-p2-map-custom-v1";
   const MAP_DELETED_KEY = "number-dictation-p2-map-deleted-v1";
   const SYNC_KEY = "izzy-ielts-sync-v1";
-  const PREPARED_LISTENING_CHUNK_SIZE = 16;
+  const FIRST_PREPARED_LISTENING_CHUNK_SIZE = 12;
+  const PREPARED_LISTENING_CHUNK_SIZE = 48;
   const LISTENING_PROGRESS_KEY = "number-dictation-listening-progress-v1";
   const CUSTOM_PRACTICE_POSITION_KEY = "number-dictation-custom-practice-position-v1";
   const EBBINGHAUS_INTERVALS = [
@@ -1014,8 +1015,8 @@
   async function loadVoicePackIndex() {
     try {
       const [englishResponse, chineseResponse] = await Promise.all([
-        fetch("audio/voice-pack/index.json?v=20261013", { cache: "no-cache" }),
-        fetch("audio/chinese-pack/index.json?v=20261013", { cache: "no-cache" })
+        fetch("audio/voice-pack/index.json?v=20261105a", { cache: "no-cache" }),
+        fetch("audio/chinese-pack/index.json?v=20261105a", { cache: "no-cache" })
       ]);
       if (!englishResponse.ok) throw new Error(`HTTP ${englishResponse.status}`);
       const english = await englishResponse.json();
@@ -2790,6 +2791,7 @@
   }
 
   async function playCurrentDate() {
+    primeAudioElement(state.audio);
     stopListening();
     const item = currentDateItem();
     if (!item) return;
@@ -3347,6 +3349,7 @@
   }
 
   async function playCurrent() {
+    primeAudioElement(state.audio);
     stopListening();
     const number = currentNumber();
     if (number === null) return;
@@ -3374,6 +3377,7 @@
   }
 
   async function playDirectoryNumber(number) {
+    primeAudioElement(state.audio);
     stopListening();
     const key = `number:${number}`;
     if (state.playingWord === key && state.playing) {
@@ -3399,6 +3403,7 @@
   }
 
   async function playDirectoryText(text, key) {
+    primeAudioElement(state.audio);
     stopListening();
     if (state.playingWord === key && state.playing) {
       stopPlayback();
@@ -3751,21 +3756,35 @@
   }
 
   function primeAudioElement(audio) {
-    if (!audio || audio.__izzyPrimed) return;
+    if (!audio || audio.__izzyPrimed || audio.__izzyPriming) return;
     try {
       const url = URL.createObjectURL(neuralVoice.silence(0.024));
+      audio.__izzyPriming = true;
       audio.loop = false;
       audio.volume = 1;
       audio.src = url;
+      const primedSource = audio.src;
       const promise = audio.play();
       const finish = () => {
+        audio.__izzyPriming = false;
         audio.__izzyPrimed = true;
-        try { audio.pause(); } catch (error) { console.debug(error); }
+        // Only pause while the unlock clip is still loaded. If real speech has
+        // already replaced it, pausing here would silence the user's answer.
+        if (audio.src === primedSource) {
+          try { audio.pause(); } catch (error) { console.debug(error); }
+        }
         URL.revokeObjectURL(url);
       };
-      if (promise?.then) promise.then(finish).catch(() => URL.revokeObjectURL(url));
-      else finish();
+      if (promise?.then) {
+        promise.then(finish).catch(() => {
+          audio.__izzyPriming = false;
+          URL.revokeObjectURL(url);
+        });
+      } else {
+        finish();
+      }
     } catch (error) {
+      audio.__izzyPriming = false;
       console.debug("Audio unlock unavailable.", error);
     }
   }
@@ -4035,6 +4054,7 @@
       return;
     }
     stopListening();
+    primeAudioElement(state.listening.audio);
     const token = ++state.listening.token;
     state.listening.started = true;
     state.listening.playlist = playlist;
@@ -4112,7 +4132,7 @@
     const token = state.listening.token;
     try {
       await preparePreparedListeningChunk(
-        playlist.slice(0, PREPARED_LISTENING_CHUNK_SIZE),
+        playlist.slice(0, FIRST_PREPARED_LISTENING_CHUNK_SIZE),
         token,
         0,
         false
@@ -4209,7 +4229,7 @@
     try {
       let chunkStart = 0;
       let preparedPromise = preparePreparedListeningChunk(
-        orderedPlaylist.slice(0, PREPARED_LISTENING_CHUNK_SIZE),
+        orderedPlaylist.slice(0, FIRST_PREPARED_LISTENING_CHUNK_SIZE),
         token,
         chunkStart,
         true
@@ -5710,6 +5730,7 @@
 
   async function playMapItem(item) {
     if (!item) return;
+    primeAudioElement(state.audio);
     const key = `map:${item.id}`;
     if (state.playingWord === key && state.playing) {
       stopPlayback();
@@ -6071,6 +6092,7 @@
   }
 
   async function playCurrentCustom() {
+    primeAudioElement(state.audio);
     const item = currentCustomItem();
     if (!item) return;
     stopListening();
