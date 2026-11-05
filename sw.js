@@ -1,4 +1,4 @@
-const CACHE_NAME = "izzy-ielts-app-v80";
+const CACHE_NAME = "izzy-ielts-app-v81";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -8,7 +8,7 @@ const APP_SHELL = [
   "./favicon.svg",
   "./manifest.webmanifest",
   "./data/en_UK_ipa.txt",
-  "./audio/voice-pack/index.json?v=20261105a"
+  "./audio/voice-pack/index.json?v=20261105b"
 ];
 
 self.addEventListener("install", (event) => {

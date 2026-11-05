@@ -1015,8 +1015,8 @@
   async function loadVoicePackIndex() {
     try {
       const [englishResponse, chineseResponse] = await Promise.all([
-        fetch("audio/voice-pack/index.json?v=20261105a", { cache: "no-cache" }),
-        fetch("audio/chinese-pack/index.json?v=20261105a", { cache: "no-cache" })
+        fetch("audio/voice-pack/index.json?v=20261105b", { cache: "no-cache" }),
+        fetch("audio/chinese-pack/index.json?v=20261105b", { cache: "no-cache" })
       ]);
       if (!englishResponse.ok) throw new Error(`HTTP ${englishResponse.status}`);
       const english = await englishResponse.json();
